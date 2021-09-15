@@ -1,0 +1,5 @@
+test.py
+*.root
+*.png
+*.pyc
+**\__pycache__
