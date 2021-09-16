@@ -16,13 +16,23 @@ class TileHitRate:
         self.mu3e         = self.file.Get("mu3e")
         self.tiles        = self.file.Get("alignment/tiles")
 
-        self.tilehit_tile_dic = {}
-        self.tile_mc_i        = {}
-        self.tile_id_pos      = {}
-        self.tilehit_edep_dic = {}
+        self.tilehit_tile_dic    = {}
+        self.tile_mc_i           = {}
+        self.tile_id_pos         = {}
+        self.tilehit_edep_dic    = {}
 
-        self.tilehit_z        = []
-        self.tilehit_edep     = []
+        self.tilehit_z           = []
+        self.tilehit_edep        = []
+
+        self.z_total_arr         = []
+        self.z_primary_arr       = []
+        self.z_secondary_arr     = []
+        self.z_tertiary_arr      = []
+
+        self.edep_total_arr      = []
+        self.edep_primary_arr    = []
+        self.edep_secondary_arr  = []
+        self.edep_tertiary_arr   = []
 
         # initialize dictionaries
         for i in range(self.mu3e.GetEntries()):
@@ -56,14 +66,18 @@ class TileHitRate:
     #####################
     # private functions #
     #####################
+    def __Get_HID_from_MC_I (self, mc_i):
+            self.mu3e_mchits.GetEntry(mc_i)
+            hid = self.mu3e_mchits.hid
 
+            return hid
 
 
     #####################
     # public  functions #
     #####################
 
-    def Tile_Hit_Rate (self, n):
+    def tileHitRate (self, n):
         self.tilehit_z = []
         for i in range(self.mu3e.GetEntries()):
             for j in self.tilehit_tile_dic[i]:
@@ -80,5 +94,66 @@ class TileHitRate:
         return z_arr, edep_arr
 
     # ----
+    def tileHitRateHID(self, n = 0):
+
+        tilehit_z_total         = []
+        tilehit_z_primary       = []
+        tilehit_z_secondary     = []
+        tilehit_z_tertiary      = []
+        
+        tilehit_edep_total      = []
+        tilehit_edep_primary    = []
+        tilehit_edep_secondary  = []
+        tilehit_edep_tertiary   = []
+    
+        # Check Argument
+        if n > len(self.tilehit_tile_dic) or n == 0:
+            n = len(self.tilehit_tile_dic)
+        print(n, " of ",  len(self.tilehit_tile_dic))
+
+        # loop over all Root frames
+        for i in range(n):
+
+            # loop over all tile hits in one Root frame
+            for u in range(len(self.tilehit_tile_dic[i])):
+
+                tile_id  = self.tilehit_tile_dic[i][u]
+                hid_test = self.__Get_HID_from_MC_I(self.tile_mc_i[i][u])
+                j = self.tilehit_tile_dic[i][u]
+                k = self.tilehit_edep_dic[i][u]
+                tilehit_z_total.append(self.tile_id_pos[j][2])
+                tilehit_edep_total.append(k)
+                if np.abs(hid_test) == 1:
+                    tilehit_z_primary.append(self.tile_id_pos[j][2])
+                    tilehit_edep_primary.append(k)
+                elif np.abs(hid_test) == 2:
+                    tilehit_z_secondary.append(self.tile_id_pos[j][2])
+                    tilehit_edep_secondary.append(k)
+                elif np.abs(hid_test) == 3:
+                    tilehit_z_tertiary.append(self.tile_id_pos[j][2])
+                    tilehit_edep_tertiary.append(k)
+                    
+            # Print progress
+            if i % 1000 == 0 and i != 0:
+                print(round((i/n)*100,2), "%")
+        print("100%")
+
+        self.z_total_arr      = np.array(tilehit_z_total)
+        self.z_primary_arr    = np.array(tilehit_z_primary)
+        self.z_secondary_arr  = np.array(tilehit_z_secondary)
+        self.z_tertiary_arr   = np.array(tilehit_z_tertiary)
+
+        self.edep_total_arr      = np.array(tilehit_edep_total)
+        self.edep_primary_arr    = np.array(tilehit_edep_primary)
+        self.edep_secondary_arr  = np.array(tilehit_edep_secondary)
+        self.edep_tertiary_arr   = np.array(tilehit_edep_tertiary) 
+
+        return self.z_total_arr, self.z_primary_arr, self.z_secondary_arr, self.z_tertiary_arr, self.edep_total_arr, self.edep_primary_arr, self.edep_secondary_arr, self.edep_tertiary_arr 
+
+    # ----
     def getResult(self):
         return np.array(self.tilehit_z), np.array(self.tilehit_edep)
+
+    # ----
+    def getResultHID(self):
+        return np.array(self.tilehit_z_total), np.array(self.tilehit_z_primary), np.array(self.tilehit_z_secondary), np.array(self.tilehit_z_tertiary), self.edep_total_arr, self.edep_primary_arr, self.edep_secondary_arr, self.edep_tertiary_arr 
