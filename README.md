@@ -1,8 +1,8 @@
 # Mu3eHelper for tile analysis (for python) aka melp  
 
-# tilehitrate
+# melp.TileHitRate (class)
 
-## Usage example
+### Usage example
 ```
 test = melp.TileHitRate("sorted.root" ,"Test", "Test")
 
@@ -11,7 +11,7 @@ test.tileHitRateHID()
 z_total, z_primary, z_secondary, z_tertiary, edep_total, edep_primary, edep_secondary, edep_tertiary = test.getResultHID()
 ```
 
-## Functions:
+### Functions:
 1. **Tile hit rate and energy deposition in tiles in z-direction**
 ```
 tileHitRate(n) 
@@ -44,11 +44,11 @@ getResult()
 getResultHID()
 ```
 
-# tilehitangle
+# melp.TileHitAngle (class)
 
-## Usage example
+### Usage example
 ```
-test = melp.TileHitRate("sorted.root", "outtest")
+test = melp.TileHitAngle("sorted.root", "outtest")
 
 test.hitAngleTID(angle="phi")
 
@@ -58,7 +58,7 @@ test.saveTxt()
 test.saveCompressed()
 ```
 
-## Functions:
+### Functions:
 1. **Tile hit rate and energy deposition in tiles in z-direction**
 ```
 hitAngleTID(n, angle = [norm, theta, phi])
