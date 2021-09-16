@@ -1,15 +1,6 @@
 import ROOT
 import numpy as np
-
-def unit_vector(vector):
-    """ Returns the unit vector of the vector.  """
-    return vector / np.linalg.norm(vector)
-
-def angle_between(v1, v2):
-    """ Returns the angle in radians between vectors 'v1' and 'v2' """
-    v1_u = unit_vector(v1)
-    v2_u = unit_vector(v2)
-    return np.arccos(np.clip(np.dot(v1_u, v2_u), -1.0, 1.0))
+from melp.libs import mathfunctions as mf
 
 class TileHitAngle:
     def __init__ (self, filename, output_z, output_angle):
@@ -203,8 +194,8 @@ class TileHitAngle:
 
                     vector_sensor_tile = np.array(pixel_pos) - np.array(tile_pos)
 
-                    angle_sensor_tile.append(angle_between(vector_sensor_tile, self.tile_id_dir[tile_id]))
-                    #angle_sensor_tile.append(angle_between(vector_sensor_tile, [0,0,1]))
+                    angle_sensor_tile.append(mf.angle_between(vector_sensor_tile, self.tile_id_dir[tile_id]))
+                    #angle_sensor_tile.append(mf.angle_between(vector_sensor_tile, [0,0,1]))
                     z_arr.append(tile_pos[2])
 
             # Print progress
