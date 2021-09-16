@@ -48,7 +48,14 @@ getResultHID()
 
 ## Usage example
 ```
+test = melp.TileHitRate("sorted.root", "outtest")
 
+test.hitAngleTID(angle="phi")
+
+z, angle = test.getResult()
+
+test.saveTxt()
+test.saveCompressed()
 ```
 
 ## Functions:
