@@ -1,6 +1,7 @@
 import ROOT
 import numpy as np
 from melp.libs import mathfunctions as mf
+from melp.libs import helices as hl
 
 
 class TileHitAngle():
@@ -207,12 +208,12 @@ class TileHitAngle():
                     if angle == "norm":
                         angle_sensor_tile.append(mf.angle_between(vector_sensor_tile, self.tile_id_dir[tile_id]))
                     elif angle == "theta":
-                        angle_sensor_tile.append(mf.angle_between(vector_sensor_tile, [0,0,1]))
+                        angle_sensor_tile.append(mf.angle_between(vector_sensor_tile, np.array([0,0,1])))
                     elif angle == "phi":
                         vector = np.cross(self.tile_id_dir[tile_id],np.array([0,0,1]))
-                        angle_sensor_tile.append(mf.angle_between(vector_sensor_tile, vector))
+                        angle_sensor_tile.append(mf.angle_between(vector_sensor_tile[0:2], vector[0:2]))
                     else:
-                        print("ERROR: angle != [norm, theta, phi]")
+                        raise ValueError('ERROR: angle != [norm, theta, phi]')
                     z_arr.append(tile_pos[2])
 
             # Print progress
@@ -229,6 +230,18 @@ class TileHitAngle():
 
         return self.result_z, self.result_angle
 
+    # ----
+
+    def hitAngleHelix(self, angle="phi"):
+        """
+            TODO:
+                - loop over all Frames
+                - get trajectory ID for tilehit
+                - get trajectory information for ID
+                - get angle from helices
+        """
+
+        pass
 
     # ----
     def getResult(self):
