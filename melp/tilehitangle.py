@@ -2,11 +2,13 @@ import ROOT
 import numpy as np
 from melp.libs import mathfunctions as mf
 
-class TileHitAngle:
-    def __init__ (self, filename, output_z, output_angle):
+
+class TileHitAngle():
+    def __init__ (self, filename, output):
         self.filename     = filename
-        self.output_z     = output_z
-        self.output_angle = output_angle
+        self.output       = output
+        self.output_z     = output + "_z"
+        self.output_angle = output + "_angle"
 
         self.result_z     = np.zeros(0)
         self.result_angle = np.zeros(0)
@@ -55,6 +57,7 @@ class TileHitAngle:
     #####################
     # private functions #
     #####################
+
     def __Get_TID_from_Frame_ID (self, mc_i):
         self.mu3e_mchits.GetEntry(mc_i)
         tid = self.mu3e_mchits.tid
@@ -121,9 +124,11 @@ class TileHitAngle:
 
         return pos
 
-    # ----
+    #####################
+    # public  functions #
+    #####################
 
-    def Hit_Angle_TID(self, n):
+    def hitAngleTID(self, n=0, angle="norm"):
 
         # counters
         hid_discard = 0
@@ -133,9 +138,9 @@ class TileHitAngle:
 
 
         # Check Argument
-        if n > len(self.tilehit_tile_dic):
+        if n > len(self.tilehit_tile_dic) or n == 0:
             n = len(self.tilehit_tile_dic)
-        print(n, " of ",  len(self.tilehit_tile_dic))
+        print("Frames to analyze: ", n, " of ",  len(self.tilehit_tile_dic))
 
         # Define Arrays for result
         angle_sensor_tile = []
@@ -147,9 +152,10 @@ class TileHitAngle:
             # loop over all tile hits in one Root frame
             for u in range(len(self.tilehit_tile_dic[i])):
 
-                #################
+                ##################################
                 # HID CHECK
-                #################
+                # only first hit gets analyzed
+                ##################################
                 tile_id  = self.tilehit_tile_dic[i][u]
                 hid_test = self.__Get_HID_from_MC_I(self.tile_mc_i[i][u])
                 if hid_test != 1:
@@ -169,9 +175,10 @@ class TileHitAngle:
                 tid_tile_test   = self.__Get_TID_from_MC_I(self.tile_mc_i[i][u])
 
                 for v in range(len(sensor_ids)):
-                    #################
+                    ##################################
                     # TID CHECK
-                    #################
+                    # check for matching sensor and tile hits
+                    ##################################
                     tid_sensor_test = self.__Get_TID_from_MC_I(sensor_frame_mc_i[v])
                     if tid_sensor_test != tid_tile_test:
                         tid_discard = tid_discard +1
@@ -185,6 +192,9 @@ class TileHitAngle:
 
                     tmp_distance_tile_to_pixel.append(distance)
 
+                ##################################
+                # the nearest matching sensor hit is used to approximate the trajectory
+                ##################################
                 # tmp_distance_tile_to_pixel can be zero!
                 if len(tmp_distance_tile_to_pixel) != 0 :
                     index     = np.where(tmp_distance_tile_to_pixel == min(tmp_distance_tile_to_pixel))[0][0]
@@ -194,8 +204,15 @@ class TileHitAngle:
 
                     vector_sensor_tile = np.array(pixel_pos) - np.array(tile_pos)
 
-                    angle_sensor_tile.append(mf.angle_between(vector_sensor_tile, self.tile_id_dir[tile_id]))
-                    #angle_sensor_tile.append(mf.angle_between(vector_sensor_tile, [0,0,1]))
+                    if angle == "norm":
+                        angle_sensor_tile.append(mf.angle_between(vector_sensor_tile, self.tile_id_dir[tile_id]))
+                    elif angle == "theta":
+                        angle_sensor_tile.append(mf.angle_between(vector_sensor_tile, [0,0,1]))
+                    elif angle == "phi":
+                        vector = np.cross(self.tile_id_dir[tile_id],np.array([0,0,1]))
+                        angle_sensor_tile.append(mf.angle_between(vector_sensor_tile, vector))
+                    else:
+                        print("ERROR: angle != [norm, theta, phi]")
                     z_arr.append(tile_pos[2])
 
             # Print progress
@@ -205,6 +222,7 @@ class TileHitAngle:
 
         print("HID CHECK: ", hid_ok, " of " , hid_ok+ hid_discard, "ok")
         print("TID CHECK: ", tid_ok, " of " , tid_ok+ hid_discard, "ok")
+        print("Total Events with matching Tile and Sensor Hit: ", len(z_arr), " of: ", hid_ok, " primary Tile hits")
 
         self.result_z     = np.array(z_arr)
         self.result_angle = np.array(angle_sensor_tile)
@@ -218,5 +236,9 @@ class TileHitAngle:
 
     # ----
     def saveTxt(self):
-        np.savetxt("z_np.txt", self.result_z)
-        np.savetxt("angle_np.txt", self.result_angle)
+        np.savetxt(self.output_z, self.result_z)
+        np.savetxt(self.output_angle, self.result_angle)
+
+    # ----
+    def saveCompressed(self):
+        np.savez_compressed(self.output, z=self.result_z, angle=self.result_angle)
