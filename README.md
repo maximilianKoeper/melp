@@ -46,7 +46,7 @@ getResultHID()
 
 # tilehitangle
 
-##Usage example
+## Usage example
 ```
 
 ```
@@ -57,8 +57,11 @@ getResultHID()
 hitAngleTID(n, angle = [norm, theta, phi])
 ```
 Where n is the number of frames. When left blank it uses all frames. 
+
 ```norm``` returns the angle between the normal vector of the tile and the direction of the hit.
+
 ```theta``` returns the polar angle 
+
 ```phi``` returns the azimuth angle
 
 Returns two arrays:
