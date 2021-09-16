@@ -18,8 +18,8 @@ tileHitRate(n)
 ```
 Where n is the number of frames. When left blank it uses all frames.
 Returns two arrays:
-- z_arr: contains the #hits in z-direction
-- edep_arr: contains the energy deposition in z-direction
+- z_arr: contains the z-direction of the hits.
+- edep_arr: contains the energy deposition in z-direction.
 
 2. **Tile hit rate and energy deposition in tiles in z-direction split in different HIDs**
 ```
@@ -27,15 +27,15 @@ tileHitRateHID(n)
 ```
 Where n is the number of frames. When left blank it uses all frames.
 Returns eight arrays:
-- z_total_arr: contains the #hits in z-direction
-- z_primary_arr: contains the  #primary hits in z-direction
-- z_secondary_arr: contains the # secondary hits in z-direction
-- z_tertiary_arr: contains the #tertiary hits in z-direction
+- z_total_arr: contains z-direction of the hits.
+- z_primary_arr: contains z-direction of the primary hits.
+- z_secondary_arr: contains z-direction of the secondary hits.
+- z_tertiary_arr: contains z-direction of the tertiary hits.
 
-- edep_total_arr: contains the energy deposition in z-direction
-- edep_primary_arr: contains the energy deposition of primary hits in z-direction
-- edep_secondary_arr: contains the energy deposition of secondary hits in z-direction
-- edep_tertiary_arr: contains the energy deposition of tertiary hits in z-direction
+- edep_total_arr: contains the energy deposition in z-direction.
+- edep_primary_arr: contains the energy deposition of primary hits in z-direction.
+- edep_secondary_arr: contains the energy deposition of secondary hits in z-direction.
+- edep_tertiary_arr: contains the energy deposition of tertiary hits in z-direction.
 
 3. **Get Results**
 ```
