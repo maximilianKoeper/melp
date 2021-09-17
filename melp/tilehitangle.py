@@ -309,8 +309,10 @@ class TileHitAngle():
                 # electron or position
                 #if type == 2 or type == 3:
                 # TODO: dont mix electrons with positions
-                if True:
-                    helix = hl.Helices(vx, vy, vz, px, py, pz, 2, tile_pos)
+
+                type_1 = int(repr(type)[-1])
+                if type_1 == 1 or type_1 == 2:
+                    helix = hl.Helices(vx, vy, vz, px, py, pz, type_1, tile_pos)
                     angle.append(helix.hitAngle(self.tile_id_dir[tile_id]))
                     z_arr.append(tile_pos[2])
 

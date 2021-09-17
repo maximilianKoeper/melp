@@ -23,9 +23,9 @@ class Helices ():
         self.theta      = np.arctan2(pz, pt)
         self.phi        = np.arctan2(py, px)
 
-        if self.type == 2:
+        if self.type == 1:
             self.phi += np.pi / 2
-        elif self.type == 3:
+        elif self.type == 2:
             self.phi -= np.pi / 2
         else:
             raise ValueError('Helices: init: type not supported')
@@ -71,7 +71,7 @@ class Helices ():
         temp_phi    = self.__Get_XY_Plane_Phi()
         v1_tmp      = self.__Circle(temp_phi)
 
-        if self.type == 3:
+        if self.type == 2:
             offset = - 0.1
         else:
             offset = + 0.1

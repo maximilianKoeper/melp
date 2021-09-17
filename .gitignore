@@ -3,3 +3,5 @@ test.py
 *.png
 *.pyc
 **\__pycache__
+**\analysis_data
+**\.ipynb_checkpoints
