@@ -3,6 +3,7 @@ test_mt.py
 *.root
 *.png
 *.pyc
+*.identifier
 **\__pycache__
 **\analysis_data
 **\.ipynb_checkpoints
