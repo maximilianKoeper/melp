@@ -1,7 +1,9 @@
 test.py
+test_mt.py
 *.root
 *.png
 *.pyc
 **\__pycache__
 **\analysis_data
 **\.ipynb_checkpoints
+**\root_files
