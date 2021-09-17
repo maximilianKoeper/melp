@@ -8,7 +8,6 @@ import matplotlib.pyplot as plt
 from melp.libs import mathfunctions as mf
 
 class Helices ():
-    # WARNING: NOT TESTED
     def __init__ (self, vx, vy, vz, px, py, pz, type, tile_pos):
 
         self.bfield     = -1
@@ -38,10 +37,6 @@ class Helices ():
 
         self.xy_vec     = 0.
 
-        # DEBUG: FOR TESTING only
-        self.test1 = 0
-
-
     #####################
     # private functions #
     #####################
@@ -53,6 +48,8 @@ class Helices ():
 
         return xy
 
+    # ------------------------------------
+
     def __Minimize_Func_Angle (self, alpha):
         xy_circ    = self.__Circle(alpha)
         xy_tile    = np.zeros(2)
@@ -62,8 +59,12 @@ class Helices ():
 
         return distance
 
+    # ------------------------------------
+
     def __Get_XY_Plane_Phi (self):
         return minimize(self.__Minimize_Func_Angle, 0).x
+
+    # ------------------------------------
 
 
     def __Get_Primary_Tile_Hit_Vector_XY (self):
@@ -79,6 +80,7 @@ class Helices ():
         xy_hit_vector = np.array(v1_tmp) - np.array(v2_tmp)
         return xy_hit_vector
 
+    # ------------------------------------
 
     def __Get_Primary_Tile_Hit_Angle (self, tile_norm_vec , angle="phi"):
         """
@@ -98,23 +100,3 @@ class Helices ():
 
     def hitAngle(self, tile_norm_vec , angle="phi"):
         return self.__Get_Primary_Tile_Hit_Angle(tile_norm_vec , angle)
-
-
-    #####################
-    # TESTING functions #
-    #####################
-
-    def test (self):
-        self.test1 = minimize(self.__Minimize_Func_Angle, 0).x
-
-    def plottest (self):
-
-        plt.scatter(self.__Circle(self.phi)[0],self.__Circle(self.phi)[1], color="r")
-        i=self.phi
-        while i > -5:
-            plt.scatter(self.__Circle(i)[0],self.__Circle(i)[1], color="b", alpha = 0.1)
-            i-=0.1
-        plt.scatter(self.tile_pos[0],self.tile_pos[1])
-        plt.scatter(self.__Circle(self.test1)[0],self.__Circle(self.test1)[1])
-
-        plt.show()

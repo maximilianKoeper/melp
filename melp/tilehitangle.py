@@ -65,21 +65,21 @@ class TileHitAngle():
 
         return tid
 
-    # ----
+    # ------------------------------------
     def __Get_HID_from_MC_I (self, mc_i):
         self.mu3e_mchits.GetEntry(mc_i)
         hid = self.mu3e_mchits.hid
 
         return hid
 
-    # ----
+    # ------------------------------------
     def __Get_TID_from_MC_I (self, mc_i):
         self.mu3e_mchits.GetEntry(mc_i)
         tid = self.mu3e_mchits.tid
 
         return tid
 
-    # ----
+    # ------------------------------------
     def __Get_Sensor_IDs_from_Frame_ID (self, entry):
         self.mu3e.GetEntry(entry)
 
@@ -97,7 +97,7 @@ class TileHitAngle():
 
         return sensor_id_arr, mc_i_arr
 
-    # ----
+    # ------------------------------------
     def __Get_Sensor_Pos_from_Pixel_ID (self, pixelid):
         pixel = pixelid >> 16
         self.sensor.GetEntry(pixel)
@@ -125,11 +125,36 @@ class TileHitAngle():
 
         return pos
 
+    # ------------------------------------
+    def __Get_Traj_from_TID (self, entry, tid):
+        self.mu3e.GetEntry(entry)
+        traj_id = np.array(self.mu3e.traj_ID)
+        index = np.where(traj_id == tid)[0]
+        try:
+            index = int(index[0])
+        except:
+            return None, None, None, None, None, None, None
+
+        vx   = self.mu3e.traj_vx
+        vy   = self.mu3e.traj_vy
+        vz   = self.mu3e.traj_vz
+        px   = self.mu3e.traj_px
+        py   = self.mu3e.traj_py
+        pz   = self.mu3e.traj_pz
+        type = self.mu3e.traj_type
+
+        return vx[index], vy[index], vz[index], px[index], py[index], pz[index], type[index]
+
+
     #####################
     # public  functions #
     #####################
 
     def hitAngleTID(self, n=0, angle="norm"):
+        """
+            TODO:
+                - add new options for sensor tile matching (sensor cluster)
+        """
 
         # counters
         hid_discard = 0
@@ -155,17 +180,14 @@ class TileHitAngle():
 
                 ##################################
                 # HID CHECK
-                # only first hit gets analyzed
+                # only primary hit gets analyzed
                 ##################################
                 tile_id  = self.tilehit_tile_dic[i][u]
                 hid_test = self.__Get_HID_from_MC_I(self.tile_mc_i[i][u])
                 if hid_test != 1:
-                    hid_discard = hid_discard + 1
+                    hid_discard += 1
                     continue
-                hid_ok = hid_ok +1
-
-
-                # loop over all pixel hits in one Root frame
+                hid_ok += 1
 
                 tile_pos = self.tile_id_pos[tile_id]
 
@@ -175,6 +197,7 @@ class TileHitAngle():
                 # TID for tile
                 tid_tile_test   = self.__Get_TID_from_MC_I(self.tile_mc_i[i][u])
 
+                # loop over all pixel hits in one Root frame
                 for v in range(len(sensor_ids)):
                     ##################################
                     # TID CHECK
@@ -230,28 +253,91 @@ class TileHitAngle():
 
         return self.result_z, self.result_angle
 
-    # ----
+    # ------------------------------------
 
-    def hitAngleHelix(self, angle="phi"):
+    def hitAngleHelix(self, n = 0, angle="phi"):
         """
             TODO:
-                - loop over all Frames
-                - get trajectory ID for tilehit
-                - get trajectory information for ID
-                - get angle from helices
+                [done] get trajectory ID for tilehit
+                [done] get trajectory information from ID
+                [done] get angle from helices
+                - add angle "theta" and "norm"
+                - testing
+                - improve speed
         """
 
-        pass
+        # counters
+        hid_discard = 0
+        hid_ok      = 0
+        no_traj     = 0
 
-    # ----
+        if n > len(self.tilehit_tile_dic) or n == 0:
+            n = len(self.tilehit_tile_dic)
+        print("Frames to analyze: ", n, " of ",  len(self.tilehit_tile_dic))
+
+        # Define Arrays for result
+        angle = []
+        z_arr = []
+
+        # loop over all Root frames
+        for i in range(n):
+        #for i in range(100):
+            # loop over all tile hits in one Root frame
+            for u in range(len(self.tilehit_tile_dic[i])):
+
+                ##################################
+                # HID CHECK
+                # only primary hit gets analyzed
+                ##################################
+                tile_id  = self.tilehit_tile_dic[i][u]
+                hid_test = self.__Get_HID_from_MC_I(self.tile_mc_i[i][u])
+                if hid_test != 1:
+                    hid_discard += 1
+                    continue
+                hid_ok += 1
+
+                tile_pos = self.tile_id_pos[tile_id]
+
+                tid_tile_test   = self.__Get_TID_from_MC_I(self.tile_mc_i[i][u])
+
+                vx, vy, vz, px, py, pz, type = self.__Get_Traj_from_TID(i, tid_tile_test)
+                if type == None:
+                    # No matching trajectory was found
+                    no_traj += 1
+                    continue
+
+                # electron or position
+                #if type == 2 or type == 3:
+                # TODO: dont mix electrons with positions
+                if True:
+                    helix = hl.Helices(vx, vy, vz, px, py, pz, 2, tile_pos)
+                    angle.append(helix.hitAngle(self.tile_id_dir[tile_id]))
+                    z_arr.append(tile_pos[2])
+
+
+            if i % 100 == 0 and i != 0:
+                print(round((i/n)*100,2), "%  |  Hits:", len(z_arr), "  |  Hits without matching trajectory: ", no_traj)
+        print("100%")
+
+        self.result_z     = np.array(z_arr)
+        self.result_angle = np.array(angle)
+
+        return self.result_z, self.result_angle
+
+
+
+    # ------------------------------------
+
     def getResult(self):
         return self.result_z, self.result_angle
 
-    # ----
+    # ------------------------------------
+
     def saveTxt(self):
         np.savetxt(self.output_z, self.result_z)
         np.savetxt(self.output_angle, self.result_angle)
 
-    # ----
+    # ------------------------------------
+
     def saveCompressed(self):
         np.savez_compressed(self.output, z=self.result_z, angle=self.result_angle)
