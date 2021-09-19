@@ -8,11 +8,13 @@ class TileHitAngle():
     def __init__ (self, filename, output):
         self.filename     = filename
         self.output       = output
-        self.output_z     = output + "_z"
-        self.output_angle = output + "_angle"
+        self.output_z     = output + "_z.txt"
+        self.output_angle = output + "_angle.txt"
+        self.output_id    = output + "_id.txt"
 
         self.result_z     = np.zeros(0)
         self.result_angle = np.zeros(0)
+        self.result_id    = np.zeros(0)
 
         self.file         = ROOT.TFile(filename)
         self.mu3e_mchits  = self.file.Get("mu3e_mchits")
@@ -238,6 +240,7 @@ class TileHitAngle():
                     else:
                         raise ValueError('ERROR: angle != [norm, theta, phi]')
                     z_arr.append(tile_pos[2])
+                    id_arr.append(tile_id)
 
             # Print progress
             if i % 1000 == 0 and i != 0:
@@ -250,8 +253,9 @@ class TileHitAngle():
 
         self.result_z     = np.array(z_arr)
         self.result_angle = np.array(angle_sensor_tile)
+        self.result_id    = np.array(id_arr)
 
-        return self.result_z, self.result_angle
+        return self.result_z, self.result_angle, self.result_id
 
     # ------------------------------------
 
@@ -276,8 +280,9 @@ class TileHitAngle():
         print("Frames to analyze: ", n, " of ",  len(self.tilehit_tile_dic))
 
         # Define Arrays for result
-        angle = []
-        z_arr = []
+        angle  = []
+        z_arr  = []
+        id_arr = []
 
         # loop over all Root frames
         for i in range(n):
@@ -315,6 +320,8 @@ class TileHitAngle():
                     helix = hl.Helices(vx, vy, vz, px, py, pz, type_1, tile_pos)
                     angle.append(helix.hitAngle(self.tile_id_dir[tile_id]))
                     z_arr.append(tile_pos[2])
+                    id_arr.append(tile_id)
+
 
 
             if i % 100 == 0 and i != 0:
@@ -323,23 +330,42 @@ class TileHitAngle():
 
         self.result_z     = np.array(z_arr)
         self.result_angle = np.array(angle)
+        self.result_id    = np.array(id_arr)
 
-        return self.result_z, self.result_angle
+        return self.result_z, self.result_angle, self.result_id
 
 
 
     # ------------------------------------
 
+    def getBinned(self):
+        return np.histogram2d(self.result_z, self.result_angle, bins=[220,180])
+
+    # ------------------------------------
+
+    def saveBinned(self):
+        binned_data, xedges, yedges = np.histogram2d(self.result_z, self.result_angle, bins=[220,180])
+        np.savez(self.output, data=binned_data, xedges=xedges, yedges=yedges)
+
+    # ------------------------------------
+
     def getResult(self):
-        return self.result_z, self.result_angle
+        return self.result_z, self.result_angle, self.result_id
 
     # ------------------------------------
 
     def saveTxt(self):
         np.savetxt(self.output_z, self.result_z)
         np.savetxt(self.output_angle, self.result_angle)
+        np.savetxt(self.output_id, self.result_id)
 
     # ------------------------------------
 
     def saveCompressed(self):
-        np.savez_compressed(self.output, z=self.result_z, angle=self.result_angle)
+        np.savez_compressed(self.output, z=self.result_z, angle=self.result_angle, id=self.result_id)
+
+
+    # ------------------------------------
+
+    def saveNpz(self):
+        np.savez(self.output, z=self.result_z, angle=self.result_angle, id=self.result_id)
