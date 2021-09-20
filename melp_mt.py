@@ -2,6 +2,7 @@
 import melp
 import multiprocessing as mp
 import subprocess
+from glob import glob
 
 # set used threads
 unused_threads = 2 #set the number of threads you don't want to use
@@ -9,16 +10,20 @@ print("Available threads = ",mp.cpu_count())
 print("Used threads = ",mp.cpu_count() - unused_threads)
 
 # list of input files
-input_files =  ["sorted1.root", 
-                "sorted2.root",
-                "sorted3.root",
-                "sorted4.root",
-                "sorted5.root",
-                "sorted6.root",
-                "sorted7.root",
-                "sorted8.root",
-                "sorted9.root",
-                "sorted10.root"]
+#input_files =  ["sorted1.root", 
+#                "sorted2.root",
+#                "sorted3.root",
+#                "sorted4.root",
+#                "sorted5.root",
+#                "sorted6.root",
+#                "sorted7.root",
+#                "sorted8.root",
+#                "sorted9.root",
+#                "sorted10.root"]
+
+input_files = 
+
+
 
 # list of output files 
 output_files = ["out1", "out2", "out3", "out4", "out5", "out6", "out7", "out8", "out9", "out10"]
@@ -33,7 +38,7 @@ def multithreading_angle(i, angle = "norm"):
     calls.saveTxt()
 
 def multithreading_rate(i):
-    calls = melp.input_files[i], output_files[i], output_files[i]+"edep")
+    calls = melp.TileHitRate(input_files[i], output_files[i], output_files[i]+"edep")
     print("read file ", i+1)
     print("started thread ", i+1)
     calls.tileHitRateHID()  
