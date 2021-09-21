@@ -37,11 +37,14 @@ Returns eight arrays:
 - edep_secondary_arr: contains the energy deposition of secondary hits in z-direction.
 - edep_tertiary_arr: contains the energy deposition of tertiary hits in z-direction.
 
-3. **Get Results**
+3. **Get results**
 ```
 getResult()
+```
 
-getResultHID()
+4.**Save results**
+```
+saveNpz()
 ```
 
 # melp.TileHitAngle (class)
@@ -82,22 +85,20 @@ getResult()
 getBinned()
 ```
 
-3. **Save .txt file**
+3. **Save results**
+Save .txt file.
 ```
 saveTxt()
 ```
-
-4. **Save .npz file**
+Save .npz file.
 ```
 saveNpz()
 ```
-
-5. **Save compressed .npz file**
+Save compressed .npz file
 ```
 saveCompressed()
 ```
-
-6. **Save binned .npz file**
+Save binned .npz file
 ```
 saveBinned()
 ```
