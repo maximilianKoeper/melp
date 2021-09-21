@@ -2,7 +2,7 @@
 
 # melp.TileHitRate (class)
 
-### Usage example
+### Usage example:
 ```
 test = melp.TileHitRate("sorted.root" ,"Test", "Test")
 
@@ -49,7 +49,7 @@ saveNpz()
 
 # melp.TileHitAngle (class)
 
-### Usage example
+### Usage example:
 ```
 test = melp.TileHitAngle("sorted.root", "outtest")
 
@@ -67,7 +67,7 @@ test.saveCompressed()
 hitAngleTID(n, angle = [norm, theta, phi])
 ```
 
-Using helix reconstruction
+Using helix reconstruction:
 ```
 hitAngleHelix(n = 0, angle_req = [norm, theta, phi])
 ```
@@ -110,3 +110,12 @@ Save binned .npz file
 saveBinned()
 ```
 
+
+# melp.multithreading (module)
+
+### Usage example:
+```
+
+```
+
+### Functions:
