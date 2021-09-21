@@ -93,8 +93,8 @@ class Helices ():
 
     def __Get_Primary_Tile_Hit_Angle (self, tile_norm_vec , angle):
         if angle == "phi":
-            norm_vec = np.array(tile_norm_vec[0:2])
-            temp_vec = mf.angle_between(self.__Get_Primary_Tile_Hit_Vector()[0:2], norm_vec)
+            norm_vec = -np.array(tile_norm_vec)[0:2]
+            temp_vec = mf.angle_between_phi(self.__Get_Primary_Tile_Hit_Vector()[0:2], norm_vec)
             return temp_vec
         elif angle == "theta":
             norm_vec = np.array([0,0,1])

@@ -237,8 +237,8 @@ class TileHitAngle():
                 elif angle == "theta":
                     angle_arr.append(mf.angle_between(p_xyz, np.array([0,0,1])))
                 elif angle == "phi":
-                    vector = np.cross(self.tile_id_dir[tile_id],np.array([0,0,1]))
-                    angle_arr.append(mf.angle_between(p_xyz[0:2], vector[0:2]))
+                    vector = -np.array(self.tile_id_dir[tile_id])
+                    angle_arr.append(-mf.angle_between_phi(p_xyz[0:2], vector[0:2]))
                 else:
                     raise ValueError('ERROR: angle != [norm, theta, phi]')
 
@@ -330,6 +330,7 @@ class TileHitAngle():
 
                     tmp_distance_tile_to_pixel.append(distance)
 
+                #print(tmp_distance_tile_to_pixel)
                 ##################################
                 # the nearest matching sensor hit is used to approximate the trajectory
                 ##################################
@@ -347,8 +348,8 @@ class TileHitAngle():
                     elif angle == "theta":
                         angle_sensor_tile.append(mf.angle_between(vector_sensor_tile, np.array([0,0,1])))
                     elif angle == "phi":
-                        vector = np.cross(self.tile_id_dir[tile_id],np.array([0,0,1]))
-                        angle_sensor_tile.append(mf.angle_between(vector_sensor_tile[0:2], vector[0:2]))
+                        vector = -np.array(self.tile_id_dir[tile_id])
+                        angle_sensor_tile.append(-mf.angle_between_phi(vector_sensor_tile[0:2], vector[0:2]))
                     else:
                         raise ValueError('ERROR: angle != [norm, theta, phi]')
                     z_arr.append(tile_pos[2])
