@@ -152,7 +152,7 @@ class TileHitRate:
 
 
     # ----
-    def getResultHID(self):
+    def getResult(self):
         return self.z_total_arr, self.z_primary_arr, self.z_secondary_arr, self.z_tertiary_arr, self.edep_total_arr, self.edep_primary_arr, self.edep_secondary_arr, self.edep_tertiary_arr 
 
     # ----

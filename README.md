@@ -74,12 +74,11 @@ hitAngleHelix(n = 0, angle_req = [norm, theta, phi])
 
 Where n is the number of frames. When left blank it uses all frames. For ```angle``` and ```angle_req``` one of the following can be chosen:
 
+- ```norm``` returns the angle between the normal vector of the tile and the direction of the hit.
 
-    - ```norm``` returns the angle between the normal vector of the tile and the direction of the hit.
+- ```theta``` returns the polar angle. 
 
-    - ```theta``` returns the polar angle. 
-
-    - ```phi``` returns the azimuth angle.
+- ```phi``` returns the azimuth angle.
 
 Returns two arrays:
 - z_arr: z-component of tile position
@@ -113,6 +112,7 @@ saveBinned()
 
 
 # melp.multithreading (module)
+Runs multiple instances of the same function,  therefore multiple root files need to be provided, since the functions itself can't run on multiple cores. The corresponding output is saved as _.npz_ or _.txt_. For some functions also a binned output can be saved as _.npz_. These output files can later be merged. For an example, of how this can be done, take a look at the Jupyter notebook _TileHitAngle_Analyser.ipynb_.
 
 ### Usage example:
 ```

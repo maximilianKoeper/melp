@@ -8,6 +8,9 @@ import numpy as np
 
 
 #defining the functions with multithreading support
+#Arguments: 
+    #-txt, npz, binned: bool, if true it saves in that format
+    #-angle: str, "norm" = angle between hit direction and normal vector of tile, "theta" = polar angle, "phi" = azimuth angle
 def mt_tileHitRateHID(input_files, output_files, npz, i):
     calls = melp.TileHitRate(input_files[0][i], output_files[i], output_files[i]+"edep")
     print("read file ", i+1)
