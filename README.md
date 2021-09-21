@@ -127,6 +127,11 @@ mt.run_mt("mt_tileHitRateHID", "./testdata/sorted/sorted*.root", args)
 run_mt(function_str, src, args)
 ```
 Arguments:
--```function_str```: name of function that should be run, as str.
--```src```: directory of root files to analyse. The file names should include a digit in order for the glob module to work properly (see usage example).
--```args```: arguments for parallelized function which is called with ```function_str```.
+
+- ```function_str```: name of function that should be run, as str.
+
+- ```src```: directory of root files to analyse. The file names should include a digit in order for the glob module to work properly (see usage example).
+
+- ```args```: arguments for parallelized function which is called with ```function_str```.
+
+
