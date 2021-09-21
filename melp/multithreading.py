@@ -33,7 +33,7 @@ def mt_hitAngleTID(input_files, output_files, txt, npz, binned, angle, i):
         calls.saveBinned()
 
 
-def mt_hitAngleHelix(input_files, output_files, txt, npz, binned, i):
+def mt_hitAngleHelix(input_files, output_files, txt, npz, binned, angle, i):
     calls = melp.TileHitAngle(input_files[0][i], output_files[i])
     print("read file ", i+1)
     print("started thread ", i+1)
@@ -44,6 +44,20 @@ def mt_hitAngleHelix(input_files, output_files, txt, npz, binned, i):
         calls.saveNpz()
     if binned == True:
         calls.saveBinned()
+
+
+def mt_hitAngleTruth(input_files, output_files, txt, npz, binned, angle, hit_type, particle_type, i):
+    calls = melp.TileHitAngle(input_files[0][i], output_files[i])
+    print("read file ", i+1)
+    print("started thread ", i+1)
+    calls.hitAngleTruth()
+    if txt == True:
+        calls.saveTxt()
+    if npz == True:
+        calls.saveNpz()
+    if binned == True:
+        calls.saveBinned()
+
 
 
 
@@ -81,6 +95,11 @@ def run_mt(function_str, src, args):
     elif function_str == "mt_hitAngleHelix":
         func = partial(mt_hitAngleHelix, input_files, output_files, *args)
         pool.map(func, [i for i in range(len(input_files[0]))])
+    
+    elif function_str == "mt_hitAngleTruth":
+        func = partial(mt_hitAngleTruth, input_files, output_files, *args)
+        pool.map(func, [i for i in range(len(input_files[0]))])
+
     else:
         raise ValueError("Function not found")
 

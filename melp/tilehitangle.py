@@ -220,7 +220,8 @@ class TileHitAngle():
                     if pdg != 11:
                         continue
                 elif particle_type == "positron":
-                    if pdg != -11
+                    if pdg != -11:
+                        continue
                 elif particle_type == "all":
                     pass
                 else:
