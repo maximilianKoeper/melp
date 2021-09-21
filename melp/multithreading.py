@@ -72,14 +72,17 @@ def run_mt(function_str, src, args): #set func to the one you want to use from a
     if function_str == "mt_rate":
         func = partial(mt_rate, *args)
         pool.map(func, [i for i in range(len(input_files[0]))])
+        pool.close()
 
     elif function_str == "mt_angle":
         func = partial(mt_angle, *args)
         pool.map(func, [i for i in range(len(input_files[0]))])
+        pool.close()
 
     elif function_str == "mt_angleHelix": 
         func = partial(mt_angleHelix, *args)
         pool.map(func, [i for i in range(len(input_files[0]))])
+        pool.close()
 
 
 
