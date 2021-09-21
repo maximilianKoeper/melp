@@ -53,7 +53,7 @@ saveNpz()
 ```
 test = melp.TileHitAngle("sorted.root", "outtest")
 
-test.hitAngleTID(angle="phi")
+test.hitAngleRec(angle="phi")
 
 z, angle = test.getResult()
 
@@ -65,7 +65,7 @@ test.saveCompressed()
 1. **Tile hit rate and energy deposition in tiles in z-direction**
 Using a linear path to match tile hits and pixel hits.
 ```
-hitAngleTID(n, angle = ["norm", "theta", "phi"])
+hitAngleRec(n, angle = ["norm", "theta", "phi"])
 ```
 
 Using helix reconstruction:
@@ -156,7 +156,7 @@ Arguments:
 ```
 mt_tileHitRateHID(npz)
 
-mt_hitAngleTID(txt, npz, binned, angle)
+mt_hitAngleRec(txt, npz, binned, angle)
 
 mt_hitAngleHelix(txt, npz, binned, angle)
 

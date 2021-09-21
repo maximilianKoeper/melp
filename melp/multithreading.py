@@ -20,11 +20,11 @@ def mt_tileHitRateHID(input_files, output_files, npz, i):
         calls.saveNpz()
 
 
-def mt_hitAngleTID(input_files, output_files, txt, npz, binned, angle, i):
+def mt_hitAngleRec(input_files, output_files, txt, npz, binned, angle, i):
     calls = melp.TileHitAngle(input_files[0][i], output_files[i])
     print("read file ", i+1)
     print("started thread ", i+1)
-    calls.hitAngleTID(angle=angle)
+    calls.hitAngleRec(angle=angle)
     if txt == True:
         calls.saveTxt()
     if npz == True:
@@ -88,8 +88,8 @@ def run_mt(function_str, src, args):
         func = partial(mt_tileHitRateHID, input_files, output_files, args)
         pool.map(func, [i for i in range(len(input_files[0]))])
 
-    elif function_str == "mt_hitAngleTID":
-        func = partial(mt_hitAngleTID, input_files, output_files, *args)
+    elif function_str == "mt_hitAngleRec":
+        func = partial(mt_hitAngleRec, input_files, output_files, *args)
         pool.map(func, [i for i in range(len(input_files[0]))])
 
     elif function_str == "mt_hitAngleHelix":

@@ -24,6 +24,8 @@ class TileHitAngle():
         self.tile_id_pos      = {}
         self.tile_id_dir      = {}
 
+        self.sensor_id_index  = {}
+
         self.hit_type  = ""
         self.ana_tpye  = ""
         self.angle     = ""
@@ -57,6 +59,10 @@ class TileHitAngle():
             tile_xyz.append(self.tiles.posy)
             tile_xyz.append(self.tiles.posz)
             self.tile_id_pos[self.tiles.sensor] = tile_xyz
+
+        for i in range(self.sensor.GetEntries()):
+            self.sensor.GetEntry(i)
+            self.sensor_id_index[self.sensor.sensor] = i
 
     #####################
     # private functions #
@@ -102,12 +108,12 @@ class TileHitAngle():
 
     # ------------------------------------
     def __Get_Sensor_Pos_from_Pixel_ID (self, pixelid):
-        pixel = pixelid >> 16
-        self.sensor.GetEntry(pixel)
+        pixel       = pixelid >> 16
+        pixel_index = self.sensor_id_index[pixel]
+        self.sensor.GetEntry(pixel_index)
 
-        row_param = pixel & 0xFF
-        col_param = (pixel >> 8) & 0xFF
-
+        row_param = pixelid & 0xFF
+        col_param = (pixelid >> 8) & 0xFF
 
         sensor_pos_vxyz = []
         sensor_pos_vxyz.append(self.sensor.vx)
@@ -125,7 +131,6 @@ class TileHitAngle():
         sensor_pos_row.append(self.sensor.rowz)
 
         pos = np.array(sensor_pos_vxyz) + (col_param+0.5)*np.array(sensor_pos_col) + (row_param+0.5)*np.array(sensor_pos_row)
-
         return pos
 
     # ------------------------------------
@@ -247,7 +252,7 @@ class TileHitAngle():
 
 
 
-            if i % 100 == 0 and i != 0:
+            if i % 1000 == 0 and i != 0:
                 print(round((i/n)*100,2), "%  |  Hits:", len(z_arr))
         print("100%")
 
@@ -260,7 +265,7 @@ class TileHitAngle():
 
     # ------------------------------------
 
-    def hitAngleTID(self, n=0, angle="norm", matching="nearest"):
+    def hitAngleRec(self, n=0, angle="norm", matching="nearest"):
         """
             TODO:
                 - add new options for sensor tile matching (sensor cluster)
@@ -305,7 +310,7 @@ class TileHitAngle():
 
                 tile_pos = self.tile_id_pos[tile_id]
 
-                tmp_distance_tile_to_pixel = []
+                tmp_distance_tile_to_pixel    = []
                 sensor_ids, sensor_frame_mc_i = self.__Get_Sensor_IDs_from_Frame_ID(i)
 
                 # TID for tile
@@ -320,22 +325,23 @@ class TileHitAngle():
                     tid_sensor_test = self.__Get_TID_from_MC_I(sensor_frame_mc_i[v])
                     if tid_sensor_test != tid_tile_test:
                         tid_discard = tid_discard +1
+                        tmp_distance_tile_to_pixel.append(10000)
                         continue
                     tid_ok = tid_ok + 1
 
-                    pixel_id = sensor_ids[v]
+                    pixel_id  = sensor_ids[v]
                     pixel_pos = self.__Get_Sensor_Pos_from_Pixel_ID(pixel_id)
                     distance  = np.sqrt((tile_pos[0]-pixel_pos[0])**2 + (tile_pos[1]-pixel_pos[1])**2 + (tile_pos[2]-pixel_pos[2])**2)
 
 
                     tmp_distance_tile_to_pixel.append(distance)
 
-                #print(tmp_distance_tile_to_pixel)
+                # print(tmp_distance_tile_to_pixel)
                 ##################################
                 # the nearest matching sensor hit is used to approximate the trajectory
                 ##################################
                 # tmp_distance_tile_to_pixel can be zero!
-                if len(tmp_distance_tile_to_pixel) != 0 :
+                if len(tmp_distance_tile_to_pixel) != 0 and min(tmp_distance_tile_to_pixel) < 150:
                     index     = np.where(tmp_distance_tile_to_pixel == min(tmp_distance_tile_to_pixel))[0][0]
                     sensor_id = sensor_ids[index]
 
@@ -348,7 +354,7 @@ class TileHitAngle():
                     elif angle == "theta":
                         angle_sensor_tile.append(mf.angle_between(vector_sensor_tile, np.array([0,0,1])))
                     elif angle == "phi":
-                        vector = -np.array(self.tile_id_dir[tile_id])
+                        vector = np.array(self.tile_id_dir[tile_id])
                         angle_sensor_tile.append(-mf.angle_between_phi(vector_sensor_tile[0:2], vector[0:2]))
                     else:
                         raise ValueError('ERROR: angle != [norm, theta, phi]')
@@ -441,8 +447,7 @@ class TileHitAngle():
                     id_arr.append(tile_id)
 
 
-
-            if i % 100 == 0 and i != 0:
+            if i % 1000 == 0 and i != 0:
                 print(round((i/n)*100,2), "%  |  Hits:", len(z_arr), "  |  Hits without matching trajectory: ", no_traj)
         print("100%")
 
