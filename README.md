@@ -14,7 +14,7 @@ z_total, z_primary, z_secondary, z_tertiary, edep_total, edep_primary, edep_seco
 ### Functions:
 1. **Tile hit rate and energy deposition in tiles in z-direction**
 ```
-tileHitRate(n) 
+tileHitRate(n)
 ```
 Where n is the number of frames. When left blank it uses all frames.
 Returns two arrays:
@@ -79,7 +79,7 @@ hitAngleTruth(n=0, angle = ["norm", "theta", "phi"], hit_type = ["primary", "sec
 
 ```
 
-Where n is the number of frames. When left blank it uses all frames. 
+Where n is the number of frames. When left blank it uses all frames.
 
 For ```angle``` one of the following can be chosen:
 
@@ -89,14 +89,14 @@ For ```angle``` one of the following can be chosen:
 
 For ```hit_type``` one of the following can be chosen:
 
-- ```primary``` uses just primary hits. (Default)
-- ```secondary``` uses just secondary hits.
-- ```all``` uses all hits. 
+- ```primary``` uses only primary hits. (Default)
+- ```secondary``` uses only secondary hits.
+- ```all``` uses all hits.
 
 For ```particle_type``` one of the following can be chosen:
 
-- ```electron``` uses just electrons.
-- ```positron``` uses just positrons.
+- ```electron``` uses only electrons.
+- ```positron``` uses only positrons.
 - ```all``` uses all particles. (Default)
 
 2. **Get results**
@@ -159,11 +159,11 @@ mt_hitAngleTID(txt, npz, binned, angle)
 
 mt_hitAngleHelix(txt, npz, binned)
 ```
-Arguments: 
+Arguments:
 - txt, npz, binned: bool, if true it saves in that format
 - angle:
     - ```norm``` returns the angle between the normal vector of the tile and the direction of the hit.
 
-    - ```theta``` returns the polar angle. 
+    - ```theta``` returns the polar angle.
 
     - ```phi``` returns the azimuth angle.

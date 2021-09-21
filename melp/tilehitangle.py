@@ -223,6 +223,8 @@ class TileHitAngle():
                     if pdg != -11
                 elif particle_type == "all":
                     pass
+                else:
+                    raise ValueError("particle_type: not supported")
 
                 tile_pos = self.tile_id_pos[tile_id]
 

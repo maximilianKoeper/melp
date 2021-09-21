@@ -81,5 +81,7 @@ def run_mt(function_str, src, args):
     elif function_str == "mt_hitAngleHelix":
         func = partial(mt_hitAngleHelix, input_files, output_files, *args)
         pool.map(func, [i for i in range(len(input_files[0]))])
+    else:
+        raise ValueError("Function not found")
 
     pool.close()
