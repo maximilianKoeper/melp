@@ -86,6 +86,7 @@ getBinned()
 ```
 
 3. **Save results**
+
 Save .txt file.
 ```
 saveTxt()
