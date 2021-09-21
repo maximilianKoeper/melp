@@ -87,6 +87,11 @@ saveTxt()
 
 4. **Save .npz file**
 ```
+saveNpz()
+```
+
+5. **Save compressed .npz file**
+```
 saveCompressed()
 ```
 
