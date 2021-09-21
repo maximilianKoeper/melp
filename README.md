@@ -77,7 +77,9 @@ Returns two arrays:
 
 2. **Get results**
 ```
-getResult()
+getResult()  
+
+getBinned()
 ```
 
 3. **Save .txt file**
@@ -93,5 +95,10 @@ saveNpz()
 5. **Save compressed .npz file**
 ```
 saveCompressed()
+```
+
+6. **Save binned .npz file**
+```
+saveBinned()
 ```
 
