@@ -65,11 +65,13 @@ test.saveCompressed()
 1. **Tile hit rate and energy deposition in tiles in z-direction**
 ```
 hitAngleTID(n, angle = [norm, theta, phi])
-
-hitAngleHelix(n = 0, angle_req = [norm, theta, phi])
-
-
 ```
+
+Using helix reconstruction
+```
+hitAngleHelix(n = 0, angle_req = [norm, theta, phi])
+```
+
 Where n is the number of frames. When left blank it uses all frames. 
 
 ```norm``` returns the angle between the normal vector of the tile and the direction of the hit.
