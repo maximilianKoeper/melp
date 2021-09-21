@@ -152,7 +152,7 @@ class TileHitAngle():
     # public  functions #
     #####################
 
-    def hitAngleTID(self, n=0, angle="norm"):
+    def hitAngleTID(self, n=0, angle="norm", matching="nearest"):
         """
             TODO:
                 - add new options for sensor tile matching (sensor cluster)
@@ -172,7 +172,8 @@ class TileHitAngle():
 
         # Define Arrays for result
         angle_sensor_tile = []
-        z_arr = []
+        z_arr  = []
+        id_arr = []
 
         # loop over all Root frames
         for i in range(n):
@@ -259,7 +260,7 @@ class TileHitAngle():
 
     # ------------------------------------
 
-    def hitAngleHelix(self, n = 0, angle="phi"):
+    def hitAngleHelix(self, n = 0, angle_req="phi"):
         """
             TODO:
                 [done] get trajectory ID for tilehit
@@ -318,7 +319,7 @@ class TileHitAngle():
                 type_1 = int(repr(type)[-1])
                 if type_1 == 1 or type_1 == 2:
                     helix = hl.Helices(vx, vy, vz, px, py, pz, type_1, tile_pos)
-                    angle.append(helix.hitAngle(self.tile_id_dir[tile_id]))
+                    angle.append(helix.hitAngle(self.tile_id_dir[tile_id], angle_req))
                     z_arr.append(tile_pos[2])
                     id_arr.append(tile_id)
 
@@ -345,7 +346,7 @@ class TileHitAngle():
 
     def saveBinned(self):
         binned_data, xedges, yedges = np.histogram2d(self.result_z, self.result_angle, bins=[220,180])
-        np.savez(self.output, data=binned_data, xedges=xedges, yedges=yedges)
+        np.savez(self.output+"_binned", data=binned_data, xedges=xedges, yedges=yedges)
 
     # ------------------------------------
 

@@ -13,3 +13,7 @@ def angle_between(v1, v2):
 def distance_between_2d(p1, p2):
     """ Return the distance between two points """
     return np.sqrt((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2)
+
+def distance_between_3d(p1, p2):
+    """ Return the distance between two points """
+    return np.sqrt((p1[0]-p2[0])**2 + (p1[1]-p2[1])**2 + (p1[2]-p2[2])**2)
