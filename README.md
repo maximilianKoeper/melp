@@ -157,13 +157,10 @@ mt_tileHitRateHID(npz)
 
 mt_hitAngleTID(txt, npz, binned, angle)
 
-mt_hitAngleHelix(txt, npz, binned)
+mt_hitAngleHelix(txt, npz, binned, angle)
+
+mt_hitAngleTruth(txt, npz, binned, angle, hit_type, particle_type)
 ```
 Arguments:
-- txt, npz, binned: bool, if true it saves in that format
-- angle:
-    - ```norm``` returns the angle between the normal vector of the tile and the direction of the hit.
+- txt, npz, binned: bool, if true it saves in that format. 
 
-    - ```theta``` returns the polar angle.
-
-    - ```phi``` returns the azimuth angle.
