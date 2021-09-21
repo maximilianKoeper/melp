@@ -100,12 +100,12 @@ class Helices ():
             norm_vec = np.array([0,0,1])
             temp_vec = mf.angle_between(self.__Get_Primary_Tile_Hit_Vector(), norm_vec)
             return temp_vec
-        elif angle == "total":
+        elif angle == "norm":
             norm_vec == tile_norm_vec
             temp_vec = mf.angle_between(self.__Get_Primary_Tile_Hit_Vector(), norm_vec)
             return temp_vec
         else:
-            raise ValueError("angle != [phi/theta]")
+            raise ValueError("angle != [phi/theta/norm]")
 
 
     #####################

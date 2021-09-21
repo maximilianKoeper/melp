@@ -24,7 +24,7 @@ class TileHitAngle():
         self.tile_id_pos      = {}
         self.tile_id_dir      = {}
 
-        self.hit_type  = "primary"
+        self.hit_type  = ""
         self.ana_tpye  = ""
         self.angle     = ""
 
@@ -163,16 +163,21 @@ class TileHitAngle():
 
         return p_xyz
 
+    # ------------------------------------
+    def __Get_PDG_from_MC_I (self, mc_i):
+        self.mu3e_mchits.GetEntry(mc_i)
+
+        return self.mu3e_mchits.pdg
 
 
     #####################
     # public  functions #
     #####################
 
-    def hitAngleTruth(self, n=0, angle="norm", hit_type="primary"):
+    def hitAngleTruth(self, n=0, angle="norm", hit_type="primary", particle_type="all"):
 
         self.hit_type = hit_type
-        self.ana_tpye = "Truth"
+        self.ana_tpye = "Truth" + particle_type
         self.angle    = angle
 
         if n > len(self.tilehit_tile_dic) or n == 0:
@@ -191,21 +196,33 @@ class TileHitAngle():
             for u in range(len(self.tilehit_tile_dic[i])):
 
                 tile_id  = self.tilehit_tile_dic[i][u]
-                ############
-                # HID CHECK
-                ############
+                #############
+                # HID CHECK #
+                #############
                 hid_test = self.__Get_HID_from_MC_I(self.tile_mc_i[i][u])
                 if hit_type == "primary":
                     # only primary hit gets analyzed
                     if hid_test != 1:
                         continue
-                if hit_type == "secondary":
+                elif hit_type == "secondary":
                     if hid_test != 1:
                         continue
                 elif hit_type == "all":
                     pass
                 else:
                     raise ValueError("hit_type: not supported")
+
+                #############
+                # PDG Check #
+                #############
+                pdg = self.__Get_PDG_from_MC_I(self.tile_mc_i[i][u])
+                if particle_type == "electron":
+                    if pdg != 11:
+                        continue
+                elif particle_type == "positron":
+                    if pdg != -11
+                elif particle_type == "all":
+                    pass
 
                 tile_pos = self.tile_id_pos[tile_id]
 
@@ -237,13 +254,16 @@ class TileHitAngle():
 
         return self.result_z, self.result_angle, self.result_id
 
+
+    # ------------------------------------
+
     def hitAngleTID(self, n=0, angle="norm", matching="nearest"):
         """
             TODO:
                 - add new options for sensor tile matching (sensor cluster)
         """
-
-        self.ana_tpye = "SensorMatching"
+        self.hit_type  = "primary"
+        self.ana_tpye = "SensorMatching" + matching
         self.angle    = angle
 
         # counters
@@ -346,9 +366,10 @@ class TileHitAngle():
 
         return self.result_z, self.result_angle, self.result_id
 
+
     # ------------------------------------
 
-    def hitAngleHelix(self, n = 0, angle="phi"):
+    def hitAngleHelix(self, n = 0, angle="norm"):
         """
             TODO:
                 [done] get trajectory ID for tilehit
@@ -356,10 +377,10 @@ class TileHitAngle():
                 [done] get angle from helices
                 [done] add angle "theta" and "norm"
                 [...] testing
-                    - phi
+                    [...] phi
                 [use mt] improve speed
         """
-
+        self.hit_type  = "primary"
         self.ana_tpye = "Helix"
         self.angle    = angle
 
