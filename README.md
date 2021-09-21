@@ -63,26 +63,41 @@ test.saveCompressed()
 
 ### Functions:
 1. **Tile hit rate and energy deposition in tiles in z-direction**
+Using a linear path to match tile hits and pixel hits.
 ```
-hitAngleTID(n, angle = [norm, theta, phi])
+hitAngleTID(n, angle = ["norm", "theta", "phi"])
 ```
 
 Using helix reconstruction:
 ```
-hitAngleHelix(n = 0, angle_req = [norm, theta, phi])
+hitAngleHelix(n = 0, angle = ["norm", "theta", "phi"])
 ```
 
-Where n is the number of frames. When left blank it uses all frames. For ```angle``` and ```angle_req``` one of the following can be chosen:
+Using MC truth information:
+```
+hitAngleTruth(n=0, angle = ["norm", "theta", "phi"], hit_type = ["primary", "secondary", "all"], particle_type = ["electron", "positron", "all"])
 
-- ```norm``` returns the angle between the normal vector of the tile and the direction of the hit.
+```
 
-- ```theta``` returns the polar angle. 
+Where n is the number of frames. When left blank it uses all frames. 
 
+For ```angle``` one of the following can be chosen:
+
+- ```norm``` returns the angle between the normal vector of the tile and the direction of the hit. (Default)
+- ```theta``` returns the polar angle.
 - ```phi``` returns the azimuth angle.
 
-Returns two arrays:
-- z_arr: z-component of tile position
-- angle_sensor_tile: angle (depends on setting)
+For ```hit_type``` one of the following can be chosen:
+
+- ```primary``` uses just primary hits. (Default)
+- ```secondary``` uses just secondary hits.
+- ```all``` uses all hits. 
+
+For ```particle_type``` one of the following can be chosen:
+
+- ```electron``` uses just electrons.
+- ```positron``` uses just positrons.
+- ```all``` uses all particles. (Default)
 
 2. **Get results**
 ```
