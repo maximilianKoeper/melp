@@ -8,9 +8,6 @@ class TileHitAngle():
     def __init__ (self, filename, output):
         self.filename     = filename
         self.output       = output
-        self.output_z     = output + "_z.txt"
-        self.output_angle = output + "_angle.txt"
-        self.output_id    = output + "_id.txt"
 
         self.result_z     = np.zeros(0)
         self.result_angle = np.zeros(0)
@@ -26,6 +23,10 @@ class TileHitAngle():
         self.tile_mc_i        = {}
         self.tile_id_pos      = {}
         self.tile_id_dir      = {}
+
+        self.hit_type  = "primary"
+        self.ana_tpye  = ""
+        self.angle     = ""
 
         # initialize dictionaries
         for i in range(self.mu3e.GetEntries()):
@@ -147,16 +148,103 @@ class TileHitAngle():
 
         return vx[index], vy[index], vz[index], px[index], py[index], pz[index], type[index]
 
+    # ------------------------------------
+    def __Get_Momentum_from_MC_I (self, mc_i):
+        self.mu3e_mchits.GetEntry(mc_i)
+
+        px   = self.mu3e_mchits.p_in_x
+        py   = self.mu3e_mchits.p_in_y
+        pz   = self.mu3e_mchits.p_in_z
+
+        p_xyz    = np.zeros(3)
+        p_xyz[0] = px
+        p_xyz[1] = py
+        p_xyz[2] = pz
+
+        return p_xyz
+
+
 
     #####################
     # public  functions #
     #####################
+
+    def hitAngleTruth(self, n=0, angle="norm", hit_type="primary"):
+
+        self.hit_type = hit_type
+        self.ana_tpye = "Truth"
+        self.angle    = angle
+
+        if n > len(self.tilehit_tile_dic) or n == 0:
+            n = len(self.tilehit_tile_dic)
+        print("Frames to analyze: ", n, " of ",  len(self.tilehit_tile_dic))
+
+        # Define Arrays for result
+        angle_arr  = []
+        z_arr  = []
+        id_arr = []
+
+        # loop over all Root frames
+        for i in range(n):
+        #for i in range(100):
+            # loop over all tile hits in one Root frame
+            for u in range(len(self.tilehit_tile_dic[i])):
+
+                tile_id  = self.tilehit_tile_dic[i][u]
+                ############
+                # HID CHECK
+                ############
+                hid_test = self.__Get_HID_from_MC_I(self.tile_mc_i[i][u])
+                if hit_type == "primary":
+                    # only primary hit gets analyzed
+                    if hid_test != 1:
+                        continue
+                if hit_type == "secondary":
+                    if hid_test != 1:
+                        continue
+                elif hit_type == "all":
+                    pass
+                else:
+                    raise ValueError("hit_type: not supported")
+
+                tile_pos = self.tile_id_pos[tile_id]
+
+
+                p_xyz = self.__Get_Momentum_from_MC_I(self.tile_mc_i[i][u])
+
+                if  angle == "norm":
+                    angle_arr.append(mf.angle_between(p_xyz, self.tile_id_dir[tile_id]))
+                elif angle == "theta":
+                    angle_arr.append(mf.angle_between(p_xyz, np.array([0,0,1])))
+                elif angle == "phi":
+                    vector = np.cross(self.tile_id_dir[tile_id],np.array([0,0,1]))
+                    angle_arr.append(mf.angle_between(p_xyz[0:2], vector[0:2]))
+                else:
+                    raise ValueError('ERROR: angle != [norm, theta, phi]')
+
+                z_arr.append(tile_pos[2])
+                id_arr.append(tile_id)
+
+
+
+            if i % 100 == 0 and i != 0:
+                print(round((i/n)*100,2), "%  |  Hits:", len(z_arr))
+        print("100%")
+
+        self.result_z     = np.array(z_arr)
+        self.result_angle = np.array(angle_arr)
+        self.result_id    = np.array(id_arr)
+
+        return self.result_z, self.result_angle, self.result_id
 
     def hitAngleTID(self, n=0, angle="norm", matching="nearest"):
         """
             TODO:
                 - add new options for sensor tile matching (sensor cluster)
         """
+
+        self.ana_tpye = "SensorMatching"
+        self.angle    = angle
 
         # counters
         hid_discard = 0
@@ -260,16 +348,20 @@ class TileHitAngle():
 
     # ------------------------------------
 
-    def hitAngleHelix(self, n = 0, angle_req="phi"):
+    def hitAngleHelix(self, n = 0, angle="phi"):
         """
             TODO:
                 [done] get trajectory ID for tilehit
                 [done] get trajectory information from ID
                 [done] get angle from helices
-                - add angle "theta" and "norm"
-                - testing
-                - improve speed
+                [done] add angle "theta" and "norm"
+                [...] testing
+                    - phi
+                [use mt] improve speed
         """
+
+        self.ana_tpye = "Helix"
+        self.angle    = angle
 
         # counters
         hid_discard = 0
@@ -281,9 +373,9 @@ class TileHitAngle():
         print("Frames to analyze: ", n, " of ",  len(self.tilehit_tile_dic))
 
         # Define Arrays for result
-        angle  = []
-        z_arr  = []
-        id_arr = []
+        angle_arr  = []
+        z_arr      = []
+        id_arr     = []
 
         # loop over all Root frames
         for i in range(n):
@@ -313,13 +405,13 @@ class TileHitAngle():
                     continue
 
                 # electron or position
-                #if type == 2 or type == 3:
+                # if type == 2 or type == 3:
                 # TODO: dont mix electrons with positions
 
                 type_1 = int(repr(type)[-1])
                 if type_1 == 1 or type_1 == 2:
                     helix = hl.Helices(vx, vy, vz, px, py, pz, type_1, tile_pos)
-                    angle.append(helix.hitAngle(self.tile_id_dir[tile_id], angle_req))
+                    angle_arr.append(helix.hitAngle(self.tile_id_dir[tile_id], angle))
                     z_arr.append(tile_pos[2])
                     id_arr.append(tile_id)
 
@@ -330,7 +422,7 @@ class TileHitAngle():
         print("100%")
 
         self.result_z     = np.array(z_arr)
-        self.result_angle = np.array(angle)
+        self.result_angle = np.array(angle_arr)
         self.result_id    = np.array(id_arr)
 
         return self.result_z, self.result_angle, self.result_id
@@ -346,7 +438,7 @@ class TileHitAngle():
 
     def saveBinned(self):
         binned_data, xedges, yedges = np.histogram2d(self.result_z, self.result_angle, bins=[220,180])
-        np.savez(self.output+"_binned", data=binned_data, xedges=xedges, yedges=yedges)
+        np.savez(self.output + self.angle + self.ana_tpye + self.hit_type + "_binned", data=binned_data, xedges=xedges, yedges=yedges)
 
     # ------------------------------------
 
@@ -356,17 +448,17 @@ class TileHitAngle():
     # ------------------------------------
 
     def saveTxt(self):
-        np.savetxt(self.output_z, self.result_z)
-        np.savetxt(self.output_angle, self.result_angle)
-        np.savetxt(self.output_id, self.result_id)
+        np.savetxt(self.output + self.angle + self.ana_tpye + self.hit_type + "_z.txt", self.result_z)
+        np.savetxt(self.output + self.angle + self.ana_tpye + self.hit_type + "_angle.txt", self.result_angle)
+        np.savetxt(self.output + self.angle + self.ana_tpye + self.hit_type + "_id.txt", self.result_id)
 
     # ------------------------------------
 
     def saveCompressed(self):
-        np.savez_compressed(self.output, z=self.result_z, angle=self.result_angle, id=self.result_id)
+        np.savez_compressed(self.output + self.angle + self.ana_tpye + self.hit_type + "_compressed", z=self.result_z, angle=self.result_angle, id=self.result_id)
 
 
     # ------------------------------------
 
     def saveNpz(self):
-        np.savez(self.output, z=self.result_z, angle=self.result_angle, id=self.result_id)
+        np.savez(self.output + self.angle + self.ana_tpye + self.hit_type, z=self.result_z, angle=self.result_angle, id=self.result_id)

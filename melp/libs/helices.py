@@ -3,7 +3,7 @@ import numpy as np
 from scipy.optimize import minimize, brute
 
 # DEBUG: Delete after testing is finished
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 
 from melp.libs import mathfunctions as mf
 
@@ -35,9 +35,9 @@ class Helices ():
         self.xc         = self.r*np.cos(self.phi) + vx;
         self.yc         = self.r*np.sin(self.phi) + vy;
 
-        self.xy_vec     = 0.
+        #self.xy_vec     = 0.
 
-        self.test1      = 0.
+        #self.test1      = 0.
 
     #####################
     # private functions #
@@ -67,7 +67,7 @@ class Helices ():
 
     # ------------------------------------
 
-    def __Get_XY_Plane_Phi (self):
+    def __Get_Phi (self):
         tmp_min = brute(self.__Minimize_Func_Angle, ranges=((-10*np.pi,+10*np.pi),), Ns=100)[0]
         tmp_min = minimize(self.__Minimize_Func_Angle, tmp_min).x
 
@@ -76,39 +76,36 @@ class Helices ():
     # ------------------------------------
 
 
-    def __Get_Primary_Tile_Hit_Vector_XY (self):
-        temp_phi    = self.__Get_XY_Plane_Phi()#[0:2]
-        v1_tmp      = self.__Helix(temp_phi)#[0:2]
+    def __Get_Primary_Tile_Hit_Vector (self):
+        temp_phi    = self.__Get_Phi()
+        v1_tmp      = self.__Helix(temp_phi)
 
         if self.type == 2:
             offset = - 0.1
         else:
             offset = + 0.1
 
-        v2_tmp        = self.__Helix(temp_phi + offset)#[0:2]
+        v2_tmp        = self.__Helix(temp_phi + offset)
         xy_hit_vector = np.array(v1_tmp) - np.array(v2_tmp)
         return xy_hit_vector
 
     # ------------------------------------
 
     def __Get_Primary_Tile_Hit_Angle (self, tile_norm_vec , angle):
-        """
-            TODO:
-                - add theta
-                - add total
-        """
         if angle == "phi":
             norm_vec = np.array(tile_norm_vec[0:2])
-            temp_vec = mf.angle_between(self.__Get_Primary_Tile_Hit_Vector_XY()[0:2], norm_vec)
+            temp_vec = mf.angle_between(self.__Get_Primary_Tile_Hit_Vector()[0:2], norm_vec)
             return temp_vec
         elif angle == "theta":
             norm_vec = np.array([0,0,1])
-            temp_vec = mf.angle_between(self.__Get_Primary_Tile_Hit_Vector_XY(), norm_vec)
+            temp_vec = mf.angle_between(self.__Get_Primary_Tile_Hit_Vector(), norm_vec)
+            return temp_vec
+        elif angle == "total":
+            norm_vec == tile_norm_vec
+            temp_vec = mf.angle_between(self.__Get_Primary_Tile_Hit_Vector(), norm_vec)
             return temp_vec
         else:
             raise ValueError("angle != [phi/theta]")
-
-
 
 
     #####################
