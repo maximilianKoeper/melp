@@ -150,9 +150,6 @@ class TileHitRate:
 
         return self.z_total_arr, self.z_primary_arr, self.z_secondary_arr, self.z_tertiary_arr, self.edep_total_arr, self.edep_primary_arr, self.edep_secondary_arr, self.edep_tertiary_arr 
 
-    # ----
-    def getResult(self):
-        return np.array(self.tilehit_z), np.array(self.tilehit_edep)
 
     # ----
     def getResultHID(self):
@@ -162,3 +159,5 @@ class TileHitRate:
     def saveNpz(self):
         np.savez(self.output_z, total=self.z_total_arr, primary=self.z_primary_arr, secondary=self.z_secondary_arr, tertiary=self.z_tertiary_arr)
         np.savez(self.output_rate, total=self.edep_total_arr, primary=self.edep_primary_arr, secondary=self.edep_secondary_arr, tertiary=self.edep_tertiary_arr)
+
+    
