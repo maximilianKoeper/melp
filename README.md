@@ -74,6 +74,7 @@ hitAngleHelix(n = 0, angle = ["norm", "theta", "phi"])
 ```
 
 Using MC truth information:
+
 Note: The _digi.json_ file for the mu3eSim need to be modified. Set both ```truth_options``` to 2.
 ```
 hitAngleTruth(n=0, angle = ["norm", "theta", "phi"], hit_type = ["primary", "secondary", "all"], particle_type = ["electron", "positron", "all"])
