@@ -130,6 +130,8 @@ saveBinned()
 # melp.multithreading (module)
 Runs multiple instances of the same function,  therefore multiple root files need to be provided, since the functions itself can't run on multiple cores. The corresponding output is saved as _.npz_ or _.txt_. For some functions also a binned output can be saved as _.npz_. These output files can later be merged. For an example, of how this can be done, take a look at the Jupyter notebook _TileHitAngle_Analyser.ipynb_.
 
+The default is that all but two cores are used. This can be changed in _multithreading.py_.
+
 ### Usage example:
 ```
 from melp import multithreading as mt
