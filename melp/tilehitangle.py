@@ -3,6 +3,8 @@ import numpy as np
 from melp.libs import mathfunctions as mf
 from melp.libs import helices as hl
 
+import gc
+
 
 class TileHitAngle():
     def __init__ (self, filename, output):
@@ -240,7 +242,7 @@ class TileHitAngle():
                 if  angle == "norm":
                     angle_arr.append(mf.angle_between(p_xyz, self.tile_id_dir[tile_id]))
                 elif angle == "theta":
-                    angle_arr.append(mf.angle_between(p_xyz, np.array([0,0,1])))
+                    angle_arr.append(mf.angle_between(p_xyz, np.array([0,0,-1])))
                 elif angle == "phi":
                     vector = -np.array(self.tile_id_dir[tile_id])
                     angle_arr.append(-mf.angle_between_phi(p_xyz[0:2], vector[0:2]))
@@ -439,12 +441,14 @@ class TileHitAngle():
                 # if type == 2 or type == 3:
                 # TODO: dont mix electrons with positions
 
-                type_1 = int(repr(type)[-1])
+                type_1 = abs(int(repr(type)[-1]))
                 if type_1 == 1 or type_1 == 2:
                     helix = hl.Helices(vx, vy, vz, px, py, pz, type_1, tile_pos)
                     angle_arr.append(helix.hitAngle(self.tile_id_dir[tile_id], angle))
                     z_arr.append(tile_pos[2])
                     id_arr.append(tile_id)
+                    del helix
+                    gc.collect()
 
 
             if i % 1000 == 0 and i != 0:

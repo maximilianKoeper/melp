@@ -97,7 +97,7 @@ class Helices ():
             temp_vec = mf.angle_between_phi(self.__Get_Primary_Tile_Hit_Vector()[0:2], norm_vec)
             return temp_vec
         elif angle == "theta":
-            norm_vec = np.array([0,0,1])
+            norm_vec = -np.array([0,0,1])
             temp_vec = mf.angle_between(self.__Get_Primary_Tile_Hit_Vector(), norm_vec)
             return temp_vec
         elif angle == "norm":

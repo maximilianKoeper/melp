@@ -37,7 +37,7 @@ def mt_hitAngleHelix(input_files, output_files, txt, npz, binned, angle, i):
     calls = melp.TileHitAngle(input_files[0][i], output_files[i])
     print("read file ", i+1)
     print("started thread ", i+1)
-    calls.hitAngleHelix()
+    calls.hitAngleHelix(angle=angle)
     if txt == True:
         calls.saveTxt()
     if npz == True:
@@ -50,7 +50,7 @@ def mt_hitAngleTruth(input_files, output_files, txt, npz, binned, angle, hit_typ
     calls = melp.TileHitAngle(input_files[0][i], output_files[i])
     print("read file ", i+1)
     print("started thread ", i+1)
-    calls.hitAngleTruth()
+    calls.hitAngleTruth(angle=angle, hit_type=hit_type, particle_type=particle_type)
     if txt == True:
         calls.saveTxt()
     if npz == True:
@@ -95,7 +95,7 @@ def run_mt(function_str, src, args):
     elif function_str == "mt_hitAngleHelix":
         func = partial(mt_hitAngleHelix, input_files, output_files, *args)
         pool.map(func, [i for i in range(len(input_files[0]))])
-    
+
     elif function_str == "mt_hitAngleTruth":
         func = partial(mt_hitAngleTruth, input_files, output_files, *args)
         pool.map(func, [i for i in range(len(input_files[0]))])
