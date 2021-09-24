@@ -8,12 +8,9 @@
 
 
 class Hit():
-    def __init__ (self, time=0, edep=0, timestamp=0, mc_i=0, mc_n=0, primary=0, angle=0):
-        self.time       = time
+    def __init__ (self, edep=0, angle=0, mc_i = 0, traj_id = -1):
         self.edep       = edep
-        self.timestamp  = timestamp
         self.mc_i       = mc_i
-        self.mc_n       = mc_n
-        self.primary    = primary
+        self.traj_id    = traj_id
 
         self.angle      = angle

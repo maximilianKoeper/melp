@@ -122,3 +122,10 @@ class Detector():
 
                 tilehit = Hit(edep = edep, mc_i = mc_i)
                 self.Tiles.addHit(tile, tilehit)
+
+    def calcImpactVec(self, filename):
+        file          = ROOT.TFile(filename)
+        ttree_mu3e    = file.Get("mu3e")
+        ttree_mu3e_mc = file.Get("mu3e_mchits")
+
+        self.Tiles.calcImpactVec(ttree_mu3e, ttree_mu3e_mc, self.Sensors)
