@@ -5,7 +5,7 @@
 ## Example:
 ```
 import matplotlib.pyplot as plt
-from melp.src.detecor import Detector
+from melp import Detector
 
 mu3e_detector = Detector.initFromROOT("run.root")
 
