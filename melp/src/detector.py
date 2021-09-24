@@ -94,31 +94,6 @@ class Detector():
     #  private functions
     #-----------------------------------------
 
-    def __Get_Sensor_Pos_from_Pixel_ID__ (self, pixelid):
-        pixel       = pixelid >> 16
-        pixel_index = self.sensor_id_index[pixel]
-        self.sensor.GetEntry(pixel_index)
-
-        row_param = pixelid & 0xFF
-        col_param = (pixelid >> 8) & 0xFF
-
-        sensor_pos_vxyz = []
-        sensor_pos_vxyz.append(self.sensor.vx)
-        sensor_pos_vxyz.append(self.sensor.vy)
-        sensor_pos_vxyz.append(self.sensor.vz)
-
-        sensor_pos_col = []
-        sensor_pos_col.append(self.sensor.colx)
-        sensor_pos_col.append(self.sensor.coly)
-        sensor_pos_col.append(self.sensor.colz)
-
-        sensor_pos_row = []
-        sensor_pos_row.append(self.sensor.rowx)
-        sensor_pos_row.append(self.sensor.rowy)
-        sensor_pos_row.append(self.sensor.rowz)
-
-        pos = np.array(sensor_pos_vxyz) + (col_param+0.5)*np.array(sensor_pos_col) + (row_param+0.5)*np.array(sensor_pos_row)
-        return pos
 
     #-----------------------------------------
     #  public functions
