@@ -205,10 +205,8 @@ class TileHitAngle():
 
         # loop over all Root frames
         for i in range(n):
-
             # loop over all tile hits in one Root frame
             for u in range(len(self.tilehit_tile_dic[i])):
-
                 ##################################
                 # HID CHECK
                 # only primary hit gets analyzed
@@ -223,7 +221,6 @@ class TileHitAngle():
                 sensor_ids_tmp, sensor_frame_mc_i_tmp = self.__Get_Sensor_IDs_from_Frame_ID(i)
 
                 tmp_distance_tile_to_pixel_layer2    = []
-                tmp_distance_tile_to_pixel_layer3    = []
                 tmp_distance_pixel_to_pixel          = []
 
                 tile_pos = self.tile_id_pos[tile_id]
@@ -241,15 +238,11 @@ class TileHitAngle():
                     tid_sensor_test = self.__Get_TID_from_MC_I(sensor_frame_mc_i_tmp[g])
                     if tid_sensor_test != tid_tile_test:
                         tid_discard += 1
-                        #tmp_distance_tile_to_pixel_layer2.append(10000)
-                        #tmp_distance_tile_to_pixel_layer3.append(10000)
                         continue
                     tid_ok += 1
                     sensor_id_tid.append(sensor_ids_tmp[g])
                     sensor_mc_i_tid.append(sensor_frame_mc_i_tmp[g])
 
-
-                #sensor_ids, sensor_frame_mc_i = self.__Get_Sensor_IDs_from_Frame_ID(i)
                 #split pixel ids into different pixel layers
                 pixel_ids = []
                 for l in sensor_id_tid:
@@ -261,17 +254,30 @@ class TileHitAngle():
                 sensor_frame_mc_i_layer3 = []
 
                 for k in pixel_ids:
-                    if (k >= 2000 and k < 3000) or (k >= 14000 and k < 15200):
-                        index_id = np.where(np.array(pixel_ids) == k)
-                        sensor_ids_layer2.append(sensor_id_tid[index_id[0][0]])
-                        sensor_frame_mc_i_layer2.append(sensor_mc_i_tid[index_id[0][0]])
+                    #if (k >= 2000 and k < 3000) or (k >= 14000 and k < 15200):
+                    if (k >= 10000 and k < 11500) or (k >= 14000 and k < 15200):
+                        index_id_2 = np.where(np.array(pixel_ids) == k)
+                        sensor_ids_layer2.append(sensor_id_tid[index_id_2[0][0]])
+                        sensor_frame_mc_i_layer2.append(sensor_mc_i_tid[index_id_2[0][0]])
 
+                    #elif (k >= 3000 and k < 4000) or (k >= 15200 and k < 16500):
+                    elif (k >= 11500 and k < 12500) or (k >= 15200 and k < 16500):
+                        index_id_3 = np.where(np.array(pixel_ids) == k)
+                        sensor_ids_layer3.append(sensor_id_tid[index_id_3[0][0]])
+                        sensor_frame_mc_i_layer3.append(sensor_mc_i_tid[index_id_3[0][0]])
 
-                    elif (k >= 3000 and k < 4000) or (k >= 15200 and k < 16500):
-                        index_id = np.where(np.array(pixel_ids) == k)
-                        sensor_ids_layer3.append(sensor_id_tid[index_id[0][0]])
-                        sensor_frame_mc_i_layer3.append(sensor_mc_i_tid[index_id[0][0]])
-
+                """
+                ################################
+                pixel_ids_2 = []
+                pixel_ids_3 = []
+                for x in sensor_ids_layer2:
+                    pixel_ids_2.append(x >> 16)
+                for y in sensor_ids_layer3:
+                    pixel_ids_3.append(y >> 16)
+                print("layer 2: ", pixel_ids_2)
+                print("layer 3: ", pixel_ids_3)
+                ################################
+                """
 
                 # loop over all pixel hits in one Root frame
                 pixel_pos_layer2 = []
@@ -288,10 +294,9 @@ class TileHitAngle():
                     ##################################
                     # tmp_distance_tile_to_pixel can be zero!
                 if len(tmp_distance_tile_to_pixel_layer2) != 0:
-                    index_2     = np.where(tmp_distance_tile_to_pixel_layer2 == min(tmp_distance_tile_to_pixel_layer2))[0][0]
+                    index_2     = np.where(tmp_distance_tile_to_pixel_layer2 == np.min(tmp_distance_tile_to_pixel_layer2))[0][0]
                     sensor_id_layer2 = sensor_ids_layer2[index_2]
                     pixel_pos_layer2 = self.__Get_Sensor_Pos_from_Pixel_ID(sensor_id_layer2)
-                    #np.concatenate((pixel_pos_layer2, self.__Get_Sensor_Pos_from_Pixel_ID(sensor_id_layer2)), axis=0)
 
                 else:
                     continue
@@ -308,46 +313,35 @@ class TileHitAngle():
                     ##################################
                     # tmp_distance_tile_to_pixel can be zero!
                 if len(tmp_distance_pixel_to_pixel) != 0:
-                    index_3     = np.where(tmp_distance_pixel_to_pixel == min(tmp_distance_pixel_to_pixel))[0][0]
+                    index_3     = np.where(tmp_distance_pixel_to_pixel == np.min(tmp_distance_pixel_to_pixel))[0][0]
                     sensor_id_layer3 = sensor_ids_layer3[index_3]
                     pixel_pos_layer3 = self.__Get_Sensor_Pos_from_Pixel_ID(sensor_id_layer3)
 
                 if np.array(pixel_pos_layer3).size == 0:
                     continue
-                if  pixel_pos_layer2[2] < 0:
-                    vector_sensor_layers = +np.array(pixel_pos_layer2) - np.array(pixel_pos_layer3)
-                else:
-                    vector_sensor_layers = -np.array(pixel_pos_layer2) + np.array(pixel_pos_layer3)
-                #vector_sensor_layers = pixel_pos_layer2 - pixel_pos_layer3
-                #print("sensors: ", vector_sensor_layers)
-                #print("tile: ", self.tile_id_dir[tile_id])
-
-                if np.linalg.norm(vector_sensor_layers) > 100:
-                    #continue
-                    pass
-
+                
+                vector_sensor_layers = np.array(pixel_pos_layer3) - np.array(pixel_pos_layer2)
+                
+                tile_norm = np.array(self.tile_id_dir[tile_id])
                 if angle == "norm":
-                    angle_sensor_tile.append(mf.angle_between(vector_sensor_layers, self.tile_id_dir[tile_id]))
+                    angle_sensor_tile.append(mf.angle_between(vector_sensor_layers, tile_norm))
                 elif angle == "theta":
                     angle_sensor_tile.append(mf.angle_between(vector_sensor_layers, np.array([0,0,1])))
                 elif angle == "phi":
-                    vector = np.array(self.tile_id_dir[tile_id])
-                    angle_sensor_tile.append(-mf.angle_between_phi(vector_sensor_layers[0:2], vector[0:2]))
+                    angle_sensor_tile.append(-mf.angle_between_phi(vector_sensor_layers[0:2], tile_norm[0:2]))
                 else:
                     raise ValueError('ERROR: angle != [norm, theta, phi]')
                 z_arr.append(tile_pos[2])
                 id_arr.append(tile_id)
 
             # Print progress
-            if i % 100 == 0 and i != 0:
+            if i % 1000 == 0 and i != 0:
                 print(round((i/n)*100,2), "%")
         print("100%")
 
         print("HID CHECK: ", hid_ok, " of " , hid_ok+ hid_discard, "ok")
         print("TID CHECK: ", tid_ok, " of " , tid_ok+ hid_discard, "ok")
         print("Total Events with matching Tile and Sensor Hit: ", len(z_arr), " of: ", hid_ok, " primary Tile hits")
-
-        #print(angle_sensor_tile)
 
         self.result_z     = np.array(z_arr)
         self.result_angle = np.array(angle_sensor_tile)
@@ -524,8 +518,6 @@ class TileHitAngle():
                     pixel_pos = self.__Get_Sensor_Pos_from_Pixel_ID(sensor_id)
 
                     vector_sensor_tile = np.array(pixel_pos) - np.array(tile_pos)
-                    print("sensor tile: ", vector_sensor_tile)
-                    print("tile: ", self.tile_id_dir[tile_id])
 
                     if angle == "norm":
                         angle_sensor_tile.append(mf.angle_between(vector_sensor_tile, self.tile_id_dir[tile_id]))
