@@ -45,7 +45,7 @@ class Sensor():
             self.section = 1
 
     @classmethod
-    def initRaw (self, pixelid_row_col, ttree_alignment_sensors):
+    def initRaw (cls, pixelid_row_col, ttree_alignment_sensors):
         pixel_id = pixelid_row_col >> 16
 
         sensor_id_to_index  = {}
@@ -78,7 +78,7 @@ class Sensor():
         return cls(pos, pixel_id)
 
     @classmethod
-    def initFromAlignment (self, pixel_id, alignment_sensors):
+    def initFromAlignment (cls, pixel_id, alignment_sensors):
         if pixel_id > 16500:
             pixel_id = pixel_id >> 16
 
