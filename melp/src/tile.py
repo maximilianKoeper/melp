@@ -65,7 +65,11 @@ class TileDetector():
         return self.tile[tileID].pos
 
     #-----------------------------------------
-    def calcImpactVec(self, ttree_mu3e, ttree_mu3e_mc, Sensors, type="truth"):
+    def calcTruthImpactVec(self, filename):
+
+        file          = ROOT.TFile(filename)
+        ttree_mu3e    = file.Get("mu3e")
+        ttree_mu3e_mc = file.Get("mu3e_mchits")
 
         for frame in range(ttree_mu3e.GetEntries()):
             ttree_mu3e.GetEntry(frame)

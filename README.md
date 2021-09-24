@@ -15,7 +15,7 @@ z_arr, hit_arr = mu3e_detector.Tiles.rateZ()
 plt.plot(z_arr,hit_arr)
 plt.show()
 
-mu3e_detector.calcImpactVec("sorted_truth.root")
+mu3e_detector.Tiles.calcTruthImpactVec("sorted_truth.root")
 
 mu3e_detector.Tiles.calcAngleTruth_byZ()
 
