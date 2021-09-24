@@ -1,7 +1,7 @@
 #---------------------------------------------------------------------
 #  SENSOR CLASS
 #       - pos (position)
-#       - id  (is automaticly shifted if bigger than 16500)
+#       - id
 #       - layer
 #       - section
 #---------------------------------------------------------------------
@@ -13,10 +13,12 @@ import ROOT
 import numpy as np
 
 class Sensor():
-    def __init__ (self, sensor_pos, sensor_id):
+    def __init__ (self, sensor_pos, sensor_row, sensor_col, sensor_id):
         if sensor_id > 16500:
             sensor_id = sensor_id >> 16
         self.pos    = sensor_pos
+        self.row    = sensor_row
+        self.col    = sensor_col
         self.id     = sensor_id
 
         if (sensor_id >= 0 and sensor_id < 1024):
@@ -44,44 +46,25 @@ class Sensor():
             self.layer   = 3
             self.section = 1
 
-    @classmethod
-    def initRaw (cls, pixelid_row_col, ttree_alignment_sensors):
+
+class SensorModul():
+    def __init__ (self, sensors):
+        self.sensor   = sensors
+
+    #-----------------------------------------
+    #  public functions
+    #-----------------------------------------
+
+    #-----------------------------------------
+    def getPixelPos (self, pixelid_row_col):
         pixel_id = pixelid_row_col >> 16
-
-        sensor_id_to_index  = {}
-        for i in range(ttree_alignment_sensors.GetEntries()):
-            ttree_alignment_sensors.GetEntry(i)
-            sensor_id_to_index[ttree_alignment_sensors.sensor] = i
-
-        pixel_index = sensor_id_to_index[pixel_id]
-        ttree_alignment_sensors.GetEntry(pixel_index)
 
         row_param = pixelid_row_col & 0xFF
         col_param = (pixelid_row_col >> 8) & 0xFF
 
-        sensor_pos_vxyz = []
-        sensor_pos_vxyz.append(ttree_alignment_sensors.vx)
-        sensor_pos_vxyz.append(ttree_alignment_sensors.vy)
-        sensor_pos_vxyz.append(ttree_alignment_sensors.vz)
-
-        sensor_pos_col = []
-        sensor_pos_col.append(ttree_alignment_sensors.colx)
-        sensor_pos_col.append(ttree_alignment_sensors.coly)
-        sensor_pos_col.append(ttree_alignment_sensors.colz)
-
-        sensor_pos_row = []
-        sensor_pos_row.append(ttree_alignment_sensors.rowx)
-        sensor_pos_row.append(ttree_alignment_sensors.rowy)
-        sensor_pos_row.append(ttree_alignment_sensors.rowz)
+        sensor_pos_vxyz = self.sensor[pixel_id].pos
+        sensor_pos_col  = self.sensor[pixel_id].col
+        sensor_pos_row  = self.sensor[pixel_id].row
 
         pos = np.array(sensor_pos_vxyz) + (col_param+0.5)*np.array(sensor_pos_col) + (row_param+0.5)*np.array(sensor_pos_row)
-        return cls(pos, pixel_id)
-
-    @classmethod
-    def initFromAlignment (cls, pixel_id, alignment_sensors):
-        if pixel_id > 16500:
-            pixel_id = pixel_id >> 16
-
-        pos = alignment_sensors[pixel_id]
-
-        return cls(pos, pixel_id)
+        return pos

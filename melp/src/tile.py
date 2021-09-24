@@ -12,21 +12,36 @@ class Tile():
         self.dir  = tile_dir
         self.id   = tile_id
 
-        self.hits = []
+        self.hits  = []
+        self.angle = []
 
 
-class TileDet():
+class TileDetector():
     def __init__ (self, tiles):
-        self.tile = tiles
+        self.tile   = tiles
 
-    def rate(self):
-        hit_rate = np.zeros(len(self.tile))
-        index = 0
+    def rateId(self):
+        hit_rate = {}
         for tileID in self.tile:
+            hit_rate[tileID] = 0
             for hit in self.tile[tileID].hits:
-                hit_rate[index] += 1
-            index += 1
+                hit_rate[tileID] += 1
         return hit_rate
+
+    def rateZ(self):
+        dict_rate = self.rateId()
+
+        z_arr   = []
+        hit_arr = []
+
+        for tileID in dict_rate:
+            z_arr.append(self.tile[tileID].pos[2])
+            hit_arr.append(dict_rate[tileID])
+
+        return z_arr, hit_arr
 
     def addHit(self, tile, hit):
         self.tile[tile].hits.append(hit)
+
+    def getPos(self, tileID):
+        return self.tile[tileID].pos
