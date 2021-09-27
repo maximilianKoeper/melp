@@ -18,8 +18,15 @@ from melp.src.hit import Hit
 class Detector():
     def __init__ (self, tiles, sensors, hits = {}):
         #self.Tiles   = tiles
-        self.Sensors = SensorModul(sensors)
-        self.Tiles = TileDetector(tiles)
+        self.SensorsModules = sensors
+        self.TileDetector = tiles
+
+        print("------------------------------")
+        print("Detector geometry loaded\n")
+        print("Stats:")
+        print("  - Tiles: ", len(self.TileDetector.tile))
+        print("  - Pixel Modules: ", len(self.SensorsModules.sensor))
+        print("------------------------------")
 
     #-----------------------------------------
     #  Load Detector geometry from Root File
@@ -66,15 +73,7 @@ class Detector():
             Sensors[ttree_sensor.sensor] = Sensor(sensor_pos, sensor_row, sensor_col,ttree_sensor.sensor)
             pass
 
-
-        print("------------------------------")
-        print("Created Detector geometry\n")
-        print("Stats:")
-        print("  - Tiles: ", len(Tiles))
-        print("  - Pixel Modules: ", len(Sensors))
-        print("------------------------------")
-
-        return cls(Tiles, Sensors)
+        return cls(TileDetector(Tiles), SensorModul(Sensors))
 
     #-----------------------------------------
     #  Load Detector geometry from Save File
@@ -85,9 +84,6 @@ class Detector():
         with open(filename, "rb") as f:
             for i in pickle.load(f):
                 data.append(i)
-        print("------------------------------")
-        print("Loaded Detector geometry")
-        print("------------------------------")
 
         return cls(data[0],data[1])
     #-----------------------------------------
@@ -102,7 +98,7 @@ class Detector():
     #-----------------------------------------
 
     def save(self, filename):
-        data = [self.Tiles, self.Sensors]
+        data = [self.TileDetector, self.SensorsModules]
 
         with open(filename, "wb") as f:
             pickle.dump(data, f)
@@ -121,4 +117,4 @@ class Detector():
 
 
                 tilehit = Hit(edep = edep, mc_i = mc_i)
-                self.Tiles.addHit(tile, tilehit)
+                self.TileDetector.addHit(tile, tilehit)

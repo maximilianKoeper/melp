@@ -6,3 +6,4 @@
 #from melp.libs.helices import *
 
 from melp.detector import *
+from melp.analyzer import *
