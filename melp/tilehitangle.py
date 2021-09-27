@@ -266,18 +266,6 @@ class TileHitAngle():
                         sensor_ids_layer3.append(sensor_id_tid[index_id_3[0][0]])
                         sensor_frame_mc_i_layer3.append(sensor_mc_i_tid[index_id_3[0][0]])
 
-                """
-                ################################
-                pixel_ids_2 = []
-                pixel_ids_3 = []
-                for x in sensor_ids_layer2:
-                    pixel_ids_2.append(x >> 16)
-                for y in sensor_ids_layer3:
-                    pixel_ids_3.append(y >> 16)
-                print("layer 2: ", pixel_ids_2)
-                print("layer 3: ", pixel_ids_3)
-                ################################
-                """
 
                 # loop over all pixel hits in one Root frame
                 pixel_pos_layer2 = []
