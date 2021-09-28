@@ -16,16 +16,18 @@ from melp.src.tile import TileDetector
 from melp.src.hit import Hit
 
 class Detector():
-    def __init__ (self, tiles, sensors, hits = {}):
+    def __init__ (self, tiles, sensors, runs = []):
         #self.Tiles   = tiles
         self.SensorsModules = sensors
-        self.TileDetector = tiles
+        self.TileDetector   = tiles
+        self.AddedRuns      = runs
 
         print("------------------------------")
         print("Detector geometry loaded\n")
         print("Stats:")
         print("  - Tiles: ", len(self.TileDetector.tile))
         print("  - Pixel Modules: ", len(self.SensorsModules.sensor))
+        print("  - Loaded Runs: ", self.AddedRuns)
         print("------------------------------")
 
     #-----------------------------------------
@@ -85,7 +87,7 @@ class Detector():
             for i in pickle.load(f):
                 data.append(i)
 
-        return cls(data[0],data[1])
+        return cls(data[0], data[1], data[2])
     #-----------------------------------------
     #  private functions
     #-----------------------------------------
@@ -97,8 +99,17 @@ class Detector():
 
     #-----------------------------------------
 
+    def info(self):
+        print("------------------------------")
+        print("Detector information\n")
+        print("Stats:")
+        print("  - Tiles: ", len(self.TileDetector.tile))
+        print("  - Pixel Modules: ", len(self.SensorsModules.sensor))
+        print("  - Loaded Runs: ", self.AddedRuns)
+        print("------------------------------")
+
     def save(self, filename):
-        data = [self.TileDetector, self.SensorsModules]
+        data = [self.TileDetector, self.SensorsModules, self.AddedRuns]
 
         with open(filename, "wb") as f:
             pickle.dump(data, f)
