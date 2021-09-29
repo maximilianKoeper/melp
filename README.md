@@ -80,6 +80,11 @@ Note: The _digi.json_ file for the mu3eSim need to be modified. Set both ```trut
 hitAngleTruth(n=0, angle = ["norm", "theta", "phi"], hit_type = ["primary", "secondary", "all"], particle_type = ["electron", "positron", "all"])
 ```
 
+Using linear path between the 2 pixel layers:
+```
+hitAnglePixelRec(n = 0, angle = ["norm", "theta", "phi"])
+```
+
 Where n is the number of frames. When left blank it uses all frames.
 
 For ```angle``` one of the following can be chosen:
