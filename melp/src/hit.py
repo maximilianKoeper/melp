@@ -8,7 +8,7 @@
 
 
 class Hit():
-    def __init__ (self, edep=0, angle=0, mc_i = 0, traj_id = -1, run_id = -1, hid=0):
+    def __init__ (self, edep=0, angle=0, mc_i = 0, traj_id = -1, run_id = -1, hid=0, impact_vec = None):
         self.edep       = edep
         self.mc_i       = mc_i
         self.traj_id    = traj_id
@@ -18,3 +18,4 @@ class Hit():
         self.hid        = hid
 
         self.angle      = angle
+        self.impact_vec = impact_vec

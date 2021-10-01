@@ -1,15 +1,23 @@
 import ROOT
 
+import numpy as np
+
 from melp.src.hit import Hit
+
+from melp.libs import mathfunctions as mf
 
 #---------------------------------------------------------------------
 #  HIT RATE
 #---------------------------------------------------------------------
 
-class HitRate ():
+class TileAnalyzer ():
     def __init__ (self, detecor, *args):
         self.Detecor = detecor
 
+
+    #---------------------------------------------------------------------
+    #  addTileHits
+    #---------------------------------------------------------------------
     def addTileHits(self, filename):
         file          = ROOT.TFile(filename)
         ttree_mu3e    = file.Get("mu3e")
@@ -31,10 +39,31 @@ class HitRate ():
                 ttree_mu3e_mc.GetEntry(mc_i)
                 hid  = ttree_mu3e_mc.hid
 
-                tilehit = Hit(edep = edep, mc_i = mc_i, hid = hid)
+                # p_in_xyz is not always in Root file
+                #try:
+                px   = ttree_mu3e_mc.p_in_x
+                py   = ttree_mu3e_mc.p_in_y
+                pz   = ttree_mu3e_mc.p_in_z
+
+                p_xyz    = [0,0,0]
+                p_xyz[0] = px
+                p_xyz[1] = py
+                p_xyz[2] = pz
+
+                tilehit = Hit(edep = edep, mc_i = mc_i, hid = hid, impact_vec = p_xyz)
+                #except:
+                #    print("error")
+                #    tilehit = Hit(edep = edep, mc_i = mc_i, hid = hid)
+
+                #tilehit = Hit(edep = edep, mc_i = mc_i, hid = hid, impact_vec = p_xyz)
                 self.Detecor.TileDetector.addHit(tile, tilehit)
 
-    # hitrate (z_pos, total_hits, primary_hits, secondary_hits, tertiary_hits, edep)
+    #---------------------------------------------------------------------
+    #  addTileHits
+    #
+    # returns: (z_pos, total_hits, primary_hits, secondary_hits, tertiary_hits, edep)
+    #
+    #---------------------------------------------------------------------
     def getHitRate(self, tileID = -1):
         hitrate = [[0],[0],[0],[0],[0],[0]]
         if tileID == -1:
@@ -60,8 +89,6 @@ class HitRate ():
                     elif abs(hid) == 3:
                         hitrate[4][-1] += 1 # add tertiary hit
 
-            return hitrate
-
 
         else:
             hitrate[0][0] = self.Detecor.TileDetector.tile[tileID].pos[2] # z position
@@ -80,9 +107,52 @@ class HitRate ():
                 elif abs(hid) == 3:
                     hitrate[4][0] += 1 # add tertiary hit
 
-            return hitrate
+        self.Detecor.TileDetector.addRateResult(hitrate)
+        return hitrate
+
+    #---------------------------------------------------------------------
+    #  HIT ANGLE
+    #
+    # TODO:
+    #   - PDG Check
+    #---------------------------------------------------------------------
+    def getHitAngle(self, tileID = -1, rec_type="Truth", hit_type="primary", angle="phi"):
+
+        hitangle = [[0],[0],rec_type,hit_type,angle]
+
+        for tileID in self.Detecor.TileDetector.tile:
+            for hit in self.Detecor.TileDetector.tile[tileID].hits:
+
+                #############
+                # HID CHECK #
+                #############
+                if hit_type == "primary":
+                    # only primary hit gets analyzed
+                    if hit.hid != 1:
+                        continue
+                elif hit_type == "secondary":
+                    if hit.hid != 1:
+                        continue
+                elif hit_type == "all":
+                    pass
+                else:
+                    raise ValueError("hit_type: not supported")
 
 
-class HitAngle ():
-    def __init__ (self, detecor, *args):
-        pass
+                ##############
+                # CALC ANGLE #
+                ##############
+                if  angle == "norm":
+                    hitangle[1].append(mf.angle_between(hit.impact_vec, self.Detecor.TileDetector.tile[tileID].dir))
+                elif angle == "theta":
+                    hitangle[1].append(mf.angle_between(hit.impact_vec, np.array([0,0,-1])))
+                elif angle == "phi":
+                    vector = -np.array(self.Detecor.TileDetector.tile[tileID].dir)
+                    hitangle[1].append(-mf.angle_between_phi(hit.impact_vec[0:2], vector[0:2]))
+                else:
+                    raise ValueError('ERROR: angle != [norm, theta, phi]')
+
+                hitangle[0].append(self.Detecor.TileDetector.tile[tileID].pos[2])
+
+        self.Detecor.TileDetector.addAngleResult(hitangle)
+        return hitangle

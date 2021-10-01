@@ -13,7 +13,6 @@ from melp.src.sensor import Sensor
 from melp.src.sensor import SensorModul
 from melp.src.tile import Tile
 from melp.src.tile import TileDetector
-from melp.src.hit import Hit
 
 class Detector():
     def __init__ (self, tiles, sensors, runs = []):
@@ -97,8 +96,6 @@ class Detector():
     #  public functions
     #-----------------------------------------
 
-    #-----------------------------------------
-
     def info(self):
         print("------------------------------")
         print("Detector information\n")
@@ -108,24 +105,10 @@ class Detector():
         print("  - Loaded Runs: ", self.AddedRuns)
         print("------------------------------")
 
+    #-----------------------------------------
+
     def save(self, filename):
         data = [self.TileDetector, self.SensorsModules, self.AddedRuns]
 
         with open(filename, "wb") as f:
             pickle.dump(data, f)
-
-
-    def addTileHits(self, filename):
-        file          = ROOT.TFile(filename)
-        ttree_mu3e    = file.Get("mu3e")
-        #ttree_mu3e_mc = self.file.Get("mu3e_mchits")
-        for frame in range(ttree_mu3e.GetEntries()):
-            ttree_mu3e.GetEntry(frame)
-            for i in range(len(ttree_mu3e.tilehit_tile)):
-                tile = ttree_mu3e.tilehit_tile[i]
-                edep = ttree_mu3e.tilehit_edep[i]
-                mc_i = ttree_mu3e.tilehit_mc_i[i]
-
-
-                tilehit = Hit(edep = edep, mc_i = mc_i)
-                self.TileDetector.addHit(tile, tilehit)
