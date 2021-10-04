@@ -1,9 +1,9 @@
-#---------------------------------------------------------------------
+# ---------------------------------------------------------------------
 #  DETECTOR CLASS
-#       - creates a detecor with tiles and pixel sensors
+#       - creates a detector with tiles and pixel sensors
 #  TODO:
-#       - add fibre / mmpcs to detecor
-#---------------------------------------------------------------------
+#       - add fibre / mmpcs to detector
+# ---------------------------------------------------------------------
 import ROOT
 
 import pickle
@@ -14,12 +14,13 @@ from melp.src.sensor import SensorModul
 from melp.src.tile import Tile
 from melp.src.tile import TileDetector
 
-class Detector():
-    def __init__ (self, tiles, sensors, runs = []):
-        #self.Tiles   = tiles
+
+class Detector:
+    def __init__(self, tiles, sensors, runs=[]):
+        # self.Tiles   = tiles
         self.SensorsModules = sensors
-        self.TileDetector   = tiles
-        self.AddedRuns      = runs
+        self.TileDetector = tiles
+        self.AddedRuns = runs
 
         print("------------------------------")
         print("Detector geometry loaded\n")
@@ -29,72 +30,66 @@ class Detector():
         print("  - Loaded Runs: ", self.AddedRuns)
         print("------------------------------")
 
-    #-----------------------------------------
+    # -----------------------------------------
     #  Load Detector geometry from Root File
-    #-----------------------------------------
+    # -----------------------------------------
     @classmethod
-    def initFromROOT (cls, filename):
-        file            = ROOT.TFile(filename)
-        ttree_sensor    = file.Get("alignment/sensors")
-        ttree_tiles     = file.Get("alignment/tiles")
+    def initFromROOT(cls, filename):
+        file = ROOT.TFile(filename)
+        ttree_sensor = file.Get("alignment/sensors")
+        ttree_tiles = file.Get("alignment/tiles")
 
         # TILES
-        tile_id_pos      = {}
-        tile_id_dir      = {}
+        tile_id_pos = {}
+        tile_id_dir = {}
 
         for i in range(ttree_tiles.GetEntries()):
             ttree_tiles.GetEntry(i)
             # direction
-            xyz = []
-            xyz.append(ttree_tiles.dirx)
-            xyz.append(ttree_tiles.diry)
-            xyz.append(ttree_tiles.dirz)
+            xyz = [ttree_tiles.dirx, ttree_tiles.diry, ttree_tiles.dirz]
 
             tile_id_dir[ttree_tiles.sensor] = xyz
 
             # position
-            tile_xyz = []
-            tile_xyz.append(ttree_tiles.posx)
-            tile_xyz.append(ttree_tiles.posy)
-            tile_xyz.append(ttree_tiles.posz)
+            tile_xyz = [ttree_tiles.posx, ttree_tiles.posy, ttree_tiles.posz]
             tile_id_pos[ttree_tiles.sensor] = tile_xyz
 
         Tiles = {}
-        for id in tile_id_pos:
-            Tiles[id] = Tile(tile_id_pos[id], tile_id_dir[id], id)
+        for tileID in tile_id_pos:
+            Tiles[tileID] = Tile(tile_id_pos[tileID], tile_id_dir[tileID], tileID)
 
         # PIXEL
         Sensors = {}
 
         for i in range(ttree_sensor.GetEntries()):
             ttree_sensor.GetEntry(i)
-            sensor_pos = np.array([ttree_sensor.vx,ttree_sensor.vy,ttree_sensor.vz])
-            sensor_row = np.array([ttree_sensor.rowx,ttree_sensor.rowy,ttree_sensor.rowz])
-            sensor_col = np.array([ttree_sensor.colx,ttree_sensor.coly,ttree_sensor.colz])
-            Sensors[ttree_sensor.sensor] = Sensor(sensor_pos, sensor_row, sensor_col,ttree_sensor.sensor)
+            sensor_pos = np.array([ttree_sensor.vx, ttree_sensor.vy, ttree_sensor.vz])
+            sensor_row = np.array([ttree_sensor.rowx, ttree_sensor.rowy, ttree_sensor.rowz])
+            sensor_col = np.array([ttree_sensor.colx, ttree_sensor.coly, ttree_sensor.colz])
+            Sensors[ttree_sensor.sensor] = Sensor(sensor_pos, sensor_row, sensor_col, ttree_sensor.sensor)
             pass
 
         return cls(TileDetector(Tiles), SensorModul(Sensors))
 
-    #-----------------------------------------
+    # -----------------------------------------
     #  Load Detector geometry from Save File
-    #-----------------------------------------
+    # -----------------------------------------
     @classmethod
-    def initFromSave (cls, filename):
+    def initFromSave(cls, filename):
         data = []
         with open(filename, "rb") as f:
             for i in pickle.load(f):
                 data.append(i)
 
         return cls(data[0], data[1], data[2])
-    #-----------------------------------------
+
+    # -----------------------------------------
     #  private functions
-    #-----------------------------------------
+    # -----------------------------------------
 
-
-    #-----------------------------------------
+    # -----------------------------------------
     #  public functions
-    #-----------------------------------------
+    # -----------------------------------------
 
     def info(self):
         print("------------------------------")
@@ -105,7 +100,7 @@ class Detector():
         print("  - Loaded Runs: ", self.AddedRuns)
         print("------------------------------")
 
-    #-----------------------------------------
+    # -----------------------------------------
 
     def save(self, filename):
         data = [self.TileDetector, self.SensorsModules, self.AddedRuns]
