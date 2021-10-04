@@ -3,18 +3,19 @@ import ROOT
 import numpy as np
 
 from melp.src.hit import Hit
+from melp.src.trajectory import Trajectory
 
 from melp.libs import mathfunctions as mf
-from melp import detector as dt
+import melp
 
 # ---------------------------------------------------------------------
 #  Define global variables and functions to select Detector
 # ---------------------------------------------------------------------
 
-__detector__: dt.Detector = None
+__detector__: melp.Detector = None
 
 
-def select(selection: dt.Detector):
+def select(selection: melp.Detector):
     global __detector__
     __detector__ = selection
 
@@ -25,9 +26,9 @@ def info():
 
 
 # ---------------------------------------------------------------------
-#  addTileHits
+#  addTileHit information
 # ---------------------------------------------------------------------
-def addTileHits(filename):
+def addTileHits(filename, traj=True, truth=True):
     global __detector__
     if __detector__ is None:
         print("Error: Detector not selected!")
@@ -47,26 +48,59 @@ def addTileHits(filename):
     for frame in range(ttree_mu3e.GetEntries()):
         ttree_mu3e.GetEntry(frame)
         for i in range(len(ttree_mu3e.tilehit_tile)):
+            kwargs = {}
             tile = ttree_mu3e.tilehit_tile[i]
             edep = ttree_mu3e.tilehit_edep[i]
             mc_i = ttree_mu3e.tilehit_mc_i[i]
             ttree_mu3e_mc.GetEntry(mc_i)
             hid = ttree_mu3e_mc.hid
+            tid = ttree_mu3e_mc.tid
 
-            # p_in_xyz is not always in Root file
-            # try:
-            px = ttree_mu3e_mc.p_in_x
-            py = ttree_mu3e_mc.p_in_y
-            pz = ttree_mu3e_mc.p_in_z
-            p_xyz = [px, py, pz]
+            kwargs["edep"] = edep
+            kwargs["mc_i"] = mc_i
+            kwargs["hid"] = hid
 
-            tilehit = Hit(edep=edep, mc_i=mc_i, hid=hid, impact_vec=p_xyz)
-            # except:
-            #    print("error")
-            #    tilehit = Hit(edep = edep, mc_i = mc_i, hid = hid)
+            # ---------------------
+            # Add Truth information
+            # ---------------------
+            if truth:
+                px = ttree_mu3e_mc.p_in_x
+                py = ttree_mu3e_mc.p_in_y
+                pz = ttree_mu3e_mc.p_in_z
+                p_xyz = [px, py, pz]
+                kwargs["impact_vec"] = p_xyz
 
-            # tilehit = Hit(edep = edep, mc_i = mc_i, hid = hid, impact_vec = p_xyz)
+            # ---------------------
+            # Add Traj information
+            # ---------------------
+            if traj:
+                traj_ids = np.array(ttree_mu3e.traj_ID)
+                index = traj_ids[traj_ids == tid]
+
+                try:
+                    index = int(index[0])
+
+                    vx = ttree_mu3e.traj_vx[index]
+                    vy = ttree_mu3e.traj_vy[index]
+                    vz = ttree_mu3e.traj_vz[index]
+                    px = ttree_mu3e.traj_px[index]
+                    py = ttree_mu3e.traj_py[index]
+                    pz = ttree_mu3e.traj_pz[index]
+                    # type = ttree_mu3e.traj_type[index]
+
+                    v_xyz = [vx, vy, vz]
+                    p_xyz = [px, py, pz]
+
+                    trajectory = Trajectory(tid, v_xyz, p_xyz)
+
+                    kwargs["trajectory"] = trajectory
+                except:
+                    pass
+
+            tilehit = Hit(**kwargs)
             __detector__.TileDetector.addHit(tile, tilehit)
+        if frame % 10 == 0:
+            print(frame)
 
 
 # ---------------------------------------------------------------------
@@ -133,14 +167,13 @@ def getHitRate(tileID=-1):
 # TODO:
 #   - PDG Check
 # ---------------------------------------------------------------------
-def getHitAngle(tileID=-1, rec_type="Truth", hit_type="primary", angle="phi"):
+def getHitAngle(tileID=-1, rec_type="Truth", hit_type="primary", angle="phi", particle_type="all"):
     global __detector__
     if __detector__ is None:
         print("Error: Detector not selected!")
         return
 
-
-    hitangle = [[0], [0], rec_type, hit_type, angle]
+    hitangle = [[0.], [0.], rec_type, hit_type, angle, particle_type]
 
     for tileID in __detector__.TileDetector.tile:
         for hit in __detector__.TileDetector.tile[tileID].hits:
@@ -163,17 +196,32 @@ def getHitAngle(tileID=-1, rec_type="Truth", hit_type="primary", angle="phi"):
             ##############
             # CALC ANGLE #
             ##############
-            if angle == "norm":
-                hitangle[1].append(mf.angle_between(hit.impact_vec, __detector__.TileDetector.tile[tileID].dir))
-            elif angle == "theta":
-                hitangle[1].append(mf.angle_between(hit.impact_vec, np.array([0, 0, -1])))
-            elif angle == "phi":
-                vector = -np.array(__detector__.TileDetector.tile[tileID].dir)
-                hitangle[1].append(-mf.angle_between_phi(hit.impact_vec[0:2], vector[0:2]))
+            if rec_type == "Truth":
+                hitangle[1].append(__truth_angle__(angle, hit, tileID))
             else:
-                raise ValueError('ERROR: angle != [norm, theta, phi]')
+                raise ValueError("hit_type: not supported")
 
             hitangle[0].append(__detector__.TileDetector.tile[tileID].pos[2])
 
     __detector__.TileDetector.addAngleResult(hitangle)
     return hitangle
+
+
+def __truth_angle__(angle: str, hit, tileID: int):
+    result: float
+
+    if angle == "norm":
+        result = mf.angle_between(hit.impact_vec, __detector__.TileDetector.tile[tileID].dir)
+    elif angle == "theta":
+        result = mf.angle_between(hit.impact_vec, np.array([0, 0, -1]))
+    elif angle == "phi":
+        vector = -np.array(__detector__.TileDetector.tile[tileID].dir)
+        result = -mf.angle_between_phi(hit.impact_vec[0:2], vector[0:2])
+    else:
+        raise ValueError('ERROR: angle != [norm, theta, phi]')
+
+    return result
+
+
+def __helix_angle__(angle: str, hit, tileID: int):
+    pass

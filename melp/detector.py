@@ -34,7 +34,7 @@ class Detector:
     #  Load Detector geometry from Root File
     # -----------------------------------------
     @classmethod
-    def initFromROOT(cls, filename):
+    def initFromROOT(cls, filename: str):
         file = ROOT.TFile(filename)
         ttree_sensor = file.Get("alignment/sensors")
         ttree_tiles = file.Get("alignment/tiles")
@@ -75,7 +75,7 @@ class Detector:
     #  Load Detector geometry from Save File
     # -----------------------------------------
     @classmethod
-    def initFromSave(cls, filename):
+    def initFromSave(cls, filename: str):
         data = []
         with open(filename, "rb") as f:
             for i in pickle.load(f):
@@ -102,7 +102,7 @@ class Detector:
 
     # -----------------------------------------
 
-    def save(self, filename):
+    def save(self, filename: str):
         data = [self.TileDetector, self.SensorsModules, self.AddedRuns]
 
         with open(filename, "wb") as f:
