@@ -4,15 +4,16 @@
 #       - dir (normal vector to tile surface)
 #       - id
 # ---------------------------------------------------------------------
+import dataclasses
 
+
+@dataclasses.dataclass
 class Tile:
-    def __init__(self, tile_pos, tile_dir, tile_id):
-        self.pos = tile_pos
-        self.dir = tile_dir
-        self.id = tile_id
+    id: int
+    pos: list
+    dir: list
 
-        self.hits = []
-        # self.impact_vec = []
+    hits: list = dataclasses.field(default_factory=list)
 
 
 class TileDetector:

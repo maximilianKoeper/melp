@@ -10,17 +10,20 @@ import pickle
 import numpy as np
 
 from melp.src.sensor import Sensor
-from melp.src.sensor import SensorModul
+from melp.src.sensor import SensorModule
 from melp.src.tile import Tile
 from melp.src.tile import TileDetector
 
 
 class Detector:
-    def __init__(self, tiles, sensors, runs=[]):
+    def __init__(self, tiles, sensors, runs=None):
         # self.Tiles   = tiles
         self.SensorsModules = sensors
         self.TileDetector = tiles
-        self.AddedRuns = runs
+        if runs is not None:
+            self.AddedRuns = runs
+        else:
+            self.AddedRuns = []
 
         print("------------------------------")
         print("Detector geometry loaded\n")
@@ -56,7 +59,7 @@ class Detector:
 
         Tiles = {}
         for tileID in tile_id_pos:
-            Tiles[tileID] = Tile(tile_id_pos[tileID], tile_id_dir[tileID], tileID)
+            Tiles[tileID] = Tile(id=tileID, pos=tile_id_pos[tileID], dir=tile_id_dir[tileID])
 
         # PIXEL
         Sensors = {}
@@ -69,7 +72,7 @@ class Detector:
             Sensors[ttree_sensor.sensor] = Sensor(sensor_pos, sensor_row, sensor_col, ttree_sensor.sensor)
             pass
 
-        return cls(TileDetector(Tiles), SensorModul(Sensors))
+        return cls(TileDetector(Tiles), SensorModule(Sensors))
 
     # -----------------------------------------
     #  Load Detector geometry from Save File

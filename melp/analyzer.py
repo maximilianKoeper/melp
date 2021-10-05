@@ -6,6 +6,7 @@ from melp.src.hit import Hit
 from melp.src.trajectory import Trajectory
 
 from melp.libs import mathfunctions as mf
+from melp.libs.misc import *
 import melp
 
 # ---------------------------------------------------------------------
@@ -74,11 +75,11 @@ def addTileHits(filename, traj=True, truth=True):
             # Add Traj information
             # ---------------------
             if traj:
-                traj_ids = np.array(ttree_mu3e.traj_ID)
-                index = traj_ids[traj_ids == tid]
-
+                traj_ids = list(ttree_mu3e.traj_ID)
+                # index = traj_ids[traj_ids == tid]
+                index = index_finder(traj_ids, tid)
                 try:
-                    index = int(index[0])
+                    index = int(*index)
 
                     vx = ttree_mu3e.traj_vx[index]
                     vy = ttree_mu3e.traj_vy[index]
@@ -99,8 +100,6 @@ def addTileHits(filename, traj=True, truth=True):
 
             tilehit = Hit(**kwargs)
             __detector__.TileDetector.addHit(tile, tilehit)
-        if frame % 10 == 0:
-            print(frame)
 
 
 # ---------------------------------------------------------------------

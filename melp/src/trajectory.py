@@ -2,9 +2,11 @@
 #  TRAJECTORY CLASS
 # ---------------------------------------------------------------------
 
-class Trajectory:
-    def __init__(self, traj_id: int, v_pos, v_dir):
-        self.id = traj_id
+import dataclasses
 
-        self.v_pos = v_pos
-        self.v_dir = v_dir
+
+@dataclasses.dataclass
+class Trajectory:
+    id: int
+    v_pos: list
+    v_dir: list
