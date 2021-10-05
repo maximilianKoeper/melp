@@ -20,17 +20,14 @@ class Detector:
         # self.Tiles   = tiles
         self.SensorsModules = sensors
         self.TileDetector = tiles
-        if runs is not None:
-            self.AddedRuns = runs
-        else:
-            self.AddedRuns = []
 
         print("------------------------------")
         print("Detector geometry loaded\n")
         print("Stats:")
         print("  - Tiles: ", len(self.TileDetector.tile))
         print("  - Pixel Modules: ", len(self.SensorsModules.sensor))
-        print("  - Loaded Runs: ", self.AddedRuns)
+        print("  - Loaded Runs (Tiles): ", self.TileDetector.AddedRuns)
+        print("  - Loaded Runs (Pixel): ", self.SensorsModules.AddedRuns)
         print("------------------------------")
 
     # -----------------------------------------
@@ -75,7 +72,7 @@ class Detector:
         return cls(TileDetector(Tiles), SensorModule(Sensors))
 
     def __str__(self):
-        return f'Detector(TileDetector={self.TileDetector}, SensorModules={self.SensorsModules}, AddedRuns={self.AddedRuns}))'
+        return f'Detector(TileDetector={self.TileDetector}, SensorModules={self.SensorsModules}))'
 
     # -----------------------------------------
     #  Load Detector geometry from Save File
@@ -87,7 +84,7 @@ class Detector:
             for i in pickle.load(f):
                 data.append(i)
 
-        return cls(data[0], data[1], data[2])
+        return cls(data[0], data[1])
 
     # -----------------------------------------
     #  private functions
@@ -103,13 +100,14 @@ class Detector:
         print("Stats:")
         print("  - Tiles: ", len(self.TileDetector.tile))
         print("  - Pixel Modules: ", len(self.SensorsModules.sensor))
-        print("  - Loaded Runs: ", self.AddedRuns)
+        print("  - Loaded Runs (Tiles): ", self.TileDetector.AddedRuns)
+        print("  - Loaded Runs (Pixel): ", self.SensorsModules.AddedRuns)
         print("------------------------------")
 
     # -----------------------------------------
 
     def save(self, filename: str):
-        data = [self.TileDetector, self.SensorsModules, self.AddedRuns]
+        data = [self.TileDetector, self.SensorsModules]
 
         with open(filename, "wb") as f:
             pickle.dump(data, f)

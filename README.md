@@ -1,8 +1,18 @@
 # Mu3eHelper for tile analysis (for python) aka melp  
-
+___
 # MELP V2
 
 # IN DEVELOPMENT: UNSTABLE API
+
+___
+
+## Improvements to V1:
+
+- detector class can handle everything concerning the geometry of tiles and pixels.
+- the detector class can be saved and loaded with all imported run data.
+- helix reconstruction is a lot faster and need less memory.
+- modular structure makes changes easy
+- usage of dataclasses makes it easy to debug functions
 
 ## Example:
 ```
@@ -18,6 +28,10 @@ melp.select(mu3e_detector)
 melp.info()
 
 melp.addTileHits("run.root", truth=True, traj=True)
+melp.addSensorHits("sorted_truth.root", traj=True)
+
+mu3e_detector.info()
+mu3e_detector.save("detector_savefile")
 
 hitangle = melp.getHitAngle(rec_type="Helix")
 ```

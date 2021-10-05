@@ -19,6 +19,7 @@ class Tile:
 class TileDetector:
     def __init__(self, tiles: dict):
         self.tile = tiles
+        self.AddedRuns = []
 
     # -----------------------------------------
     #  public functions

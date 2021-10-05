@@ -30,7 +30,7 @@ def info():
 # ---------------------------------------------------------------------
 #  addTileHit information
 # ---------------------------------------------------------------------
-def addTileHits(filename, traj=True, truth=True):
+def addTileHits(filename, traj=True, truth=False):
     global __detector__
     if __detector__ is None:
         print("Error: Detector not selected!")
@@ -40,11 +40,11 @@ def addTileHits(filename, traj=True, truth=True):
     ttree_mu3e = file.Get("mu3e")
     ttree_mu3e_mc = file.Get("mu3e_mchits")
     ttree_mu3e.GetEntry(0)
-    if ttree_mu3e.run in __detector__.AddedRuns:
+    if ttree_mu3e.run in __detector__.TileDetector.AddedRuns:
         print("ERROR: RUN ", ttree_mu3e.run, " already loaded into Detector")
         return
     else:
-        __detector__.AddedRuns.append(ttree_mu3e.run)
+        __detector__.TileDetector.AddedRuns.append(ttree_mu3e.run)
         pass
 
     for frame in range(ttree_mu3e.GetEntries()):
@@ -56,11 +56,12 @@ def addTileHits(filename, traj=True, truth=True):
             mc_i = ttree_mu3e.tilehit_mc_i[i]
             ttree_mu3e_mc.GetEntry(mc_i)
             hid = ttree_mu3e_mc.hid
-            tid = ttree_mu3e_mc.tid
+            frame_id = frame
 
             kwargs["edep"] = edep
             kwargs["mc_i"] = mc_i
             kwargs["hid"] = hid
+            kwargs["frame_id"] = frame_id
 
             # ---------------------
             # Add Truth information
@@ -76,6 +77,7 @@ def addTileHits(filename, traj=True, truth=True):
             # Add Traj information
             # ---------------------
             if traj:
+                tid = ttree_mu3e_mc.tid
                 traj_ids = list(ttree_mu3e.traj_ID)
                 index = index_finder(traj_ids, tid)
                 try:
@@ -103,12 +105,58 @@ def addTileHits(filename, traj=True, truth=True):
 
 
 # ---------------------------------------------------------------------
+#  addSensorHit information
+# ---------------------------------------------------------------------
+def addSensorHits(filename, traj=True):
+    global __detector__
+    if __detector__ is None:
+        print("Error: Detector not selected!")
+        return
+
+    file = ROOT.TFile(filename)
+    ttree_mu3e = file.Get("mu3e")
+    ttree_mu3e_mc = file.Get("mu3e_mchits")
+    ttree_mu3e.GetEntry(0)
+    if ttree_mu3e.run in __detector__.SensorsModules.AddedRuns:
+        print("ERROR: RUN ", ttree_mu3e.run, " already loaded into Detector")
+        return
+    else:
+        __detector__.SensorsModules.AddedRuns.append(ttree_mu3e.run)
+        pass
+
+    for frame in range(ttree_mu3e.GetEntries()):
+        ttree_mu3e.GetEntry(frame)
+        for i in range(ttree_mu3e.Nhit):
+            kwargs = {}
+            frame_id = frame
+
+            sensorid = ttree_mu3e.hit_pixelid[i]
+            mc_i = ttree_mu3e.hit_mc_i[i]
+            ttree_mu3e_mc.GetEntry(mc_i)
+
+            pos = __detector__.SensorsModules.getPixelPos(sensorid)
+
+            kwargs["pos"] = pos
+            kwargs["frame_id"] = frame_id
+            # ---------------------
+            # Add Traj information
+            # ---------------------
+
+            if traj:
+                tid = ttree_mu3e_mc.tid
+                kwargs["tid"] = tid
+
+            sensorHit = Hit(**kwargs)
+            __detector__.SensorsModules.addHit(sensorid, sensorHit)
+
+
+# ---------------------------------------------------------------------
 # getHitRate
 #
 # returns: (z_pos, total_hits, primary_hits, secondary_hits, tertiary_hits, edep)
 #
 # ---------------------------------------------------------------------
-def getHitRate(tileID=-1):
+def getHitRate(tileID=-1) -> list:
     global __detector__
     if __detector__ is None:
         print("Error: Detector not selected!")
@@ -166,7 +214,7 @@ def getHitRate(tileID=-1):
 # TODO:
 #   - PDG Check
 # ---------------------------------------------------------------------
-def getHitAngle(tileID=-1, rec_type="Truth", hit_type="primary", angle="phi", particle_type="all"):
+def getHitAngle(tileID=-1, rec_type="Truth", hit_type="primary", angle="phi", particle_type="all") -> list:
     global __detector__
     if __detector__ is None:
         print("Error: Detector not selected!")
@@ -203,6 +251,11 @@ def getHitAngle(tileID=-1, rec_type="Truth", hit_type="primary", angle="phi", pa
                 if tmp_angle is not None:
                     hitangle[1].append(tmp_angle)
                     hitangle[0].append(__detector__.TileDetector.tile[tileID].pos[2])
+            if rec_type == "TilePixel":
+                tmp_angle = __tile_pixel_rec__(angle, hit, tileID)
+                if tmp_angle is not None:
+                    hitangle[1].append(tmp_angle)
+                    hitangle[0].append(__detector__.TileDetector.tile[tileID].pos[2])
             else:
                 raise ValueError("hit_type: not supported")
 
@@ -210,7 +263,8 @@ def getHitAngle(tileID=-1, rec_type="Truth", hit_type="primary", angle="phi", pa
     return hitangle
 
 
-def __truth_angle__(angle: str, hit, tileID: int):
+# ---------------------------------------------------------------------
+def __truth_angle__(angle: str, hit, tileID: int) -> float:
     result: float
 
     if angle == "norm":
@@ -226,16 +280,25 @@ def __truth_angle__(angle: str, hit, tileID: int):
     return result
 
 
-def __helix_angle__(angle: str, hit, tileID: int):
+# ---------------------------------------------------------------------
+def __helix_angle__(angle: str, hit, tileID: int) -> float:
     result: float = 0
     if hit.trajectory is not None:
         type_1 = abs(int(repr(hit.trajectory.traj_type)[-1]))
         if type_1 == 1 or type_1 == 2:
             v_xyz = hit.trajectory.v_pos
             p_xyz = hit.trajectory.v_dir
-            helix = hl.Helices(v_xyz[0], v_xyz[1], v_xyz[2], p_xyz[0], p_xyz[1], p_xyz[2], type_1, __detector__.TileDetector.tile[tileID].pos)
+            helix = hl.Helices(v_xyz[0], v_xyz[1], v_xyz[2], p_xyz[0], p_xyz[1], p_xyz[2], type_1,
+                               __detector__.TileDetector.tile[tileID].pos)
             result = helix.hitAngle(__detector__.TileDetector.tile[tileID].dir, angle)
             del helix
         else:
             return None
+    return result
+
+
+# ---------------------------------------------------------------------
+def __tile_pixel_rec__(angle: str, hit, tileID: int) -> float:
+    result: float = 0
+
     return result

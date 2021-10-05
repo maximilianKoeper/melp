@@ -18,6 +18,7 @@ class Sensor:
         self.row = sensor_row
         self.col = sensor_col
         self.id = sensor_id
+        self.hit = []
 
         if 0 <= sensor_id < 1024:
             self.layer = 0
@@ -48,6 +49,7 @@ class Sensor:
 class SensorModule:
     def __init__(self, sensors):
         self.sensor = sensors
+        self.AddedRuns = []
 
     # -----------------------------------------
     #  public functions
@@ -67,3 +69,7 @@ class SensorModule:
         pos = np.array(sensor_pos_vxyz) + (col_param + 0.5) * np.array(sensor_pos_col) + (row_param + 0.5) * np.array(
             sensor_pos_row)
         return pos
+
+    # -----------------------------------------
+    def addHit(self, sensorid, hit):
+        self.sensor[sensorid >> 16].hit.append(hit)
