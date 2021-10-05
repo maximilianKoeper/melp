@@ -99,7 +99,7 @@ class Helices:
             temp_vec = mf.angle_between(self.__Get_Primary_Tile_Hit_Vector(), norm_vec)
             return temp_vec
         elif angle == "norm":
-            norm_vec == tile_norm_vec
+            norm_vec = tile_norm_vec
             temp_vec = mf.angle_between(self.__Get_Primary_Tile_Hit_Vector(), norm_vec)
             return temp_vec
         else:

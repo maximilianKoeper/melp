@@ -74,6 +74,9 @@ class Detector:
 
         return cls(TileDetector(Tiles), SensorModule(Sensors))
 
+    def __str__(self):
+        return f'Detector(TileDetector={self.TileDetector}, SensorModules={self.SensorsModules}, AddedRuns={self.AddedRuns}))'
+
     # -----------------------------------------
     #  Load Detector geometry from Save File
     # -----------------------------------------

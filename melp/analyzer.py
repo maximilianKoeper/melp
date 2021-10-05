@@ -6,6 +6,7 @@ from melp.src.hit import Hit
 from melp.src.trajectory import Trajectory
 
 from melp.libs import mathfunctions as mf
+from melp.libs import helices as hl
 from melp.libs.misc import *
 import melp
 
@@ -76,7 +77,6 @@ def addTileHits(filename, traj=True, truth=True):
             # ---------------------
             if traj:
                 traj_ids = list(ttree_mu3e.traj_ID)
-                # index = traj_ids[traj_ids == tid]
                 index = index_finder(traj_ids, tid)
                 try:
                     index = int(*index)
@@ -87,12 +87,12 @@ def addTileHits(filename, traj=True, truth=True):
                     px = ttree_mu3e.traj_px[index]
                     py = ttree_mu3e.traj_py[index]
                     pz = ttree_mu3e.traj_pz[index]
-                    # type = ttree_mu3e.traj_type[index]
+                    traj_type = ttree_mu3e.traj_type[index]
 
                     v_xyz = [vx, vy, vz]
                     p_xyz = [px, py, pz]
 
-                    trajectory = Trajectory(tid, v_xyz, p_xyz)
+                    trajectory = Trajectory(id=tid, v_pos=v_xyz, v_dir=p_xyz, traj_type=traj_type)
 
                     kwargs["trajectory"] = trajectory
                 except:
@@ -197,10 +197,14 @@ def getHitAngle(tileID=-1, rec_type="Truth", hit_type="primary", angle="phi", pa
             ##############
             if rec_type == "Truth":
                 hitangle[1].append(__truth_angle__(angle, hit, tileID))
+                hitangle[0].append(__detector__.TileDetector.tile[tileID].pos[2])
+            if rec_type == "Helix":
+                tmp_angle = __helix_angle__(angle, hit, tileID)
+                if tmp_angle is not None:
+                    hitangle[1].append(tmp_angle)
+                    hitangle[0].append(__detector__.TileDetector.tile[tileID].pos[2])
             else:
                 raise ValueError("hit_type: not supported")
-
-            hitangle[0].append(__detector__.TileDetector.tile[tileID].pos[2])
 
     __detector__.TileDetector.addAngleResult(hitangle)
     return hitangle
@@ -223,4 +227,15 @@ def __truth_angle__(angle: str, hit, tileID: int):
 
 
 def __helix_angle__(angle: str, hit, tileID: int):
-    pass
+    result: float = 0
+    if hit.trajectory is not None:
+        type_1 = abs(int(repr(hit.trajectory.traj_type)[-1]))
+        if type_1 == 1 or type_1 == 2:
+            v_xyz = hit.trajectory.v_pos
+            p_xyz = hit.trajectory.v_dir
+            helix = hl.Helices(v_xyz[0], v_xyz[1], v_xyz[2], p_xyz[0], p_xyz[1], p_xyz[2], type_1, __detector__.TileDetector.tile[tileID].pos)
+            result = helix.hitAngle(__detector__.TileDetector.tile[tileID].dir, angle)
+            del helix
+        else:
+            return None
+    return result
