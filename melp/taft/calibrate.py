@@ -37,9 +37,11 @@ def calibrate(filename: str, **kwargs):
     histogram = fill_dt_histos(ttree_mu3e)
 
     # calculate residuals to truth
+    # and dt between tiles
 
     # z dir:
     resid_z = []
+    dt_z = {}
     for entry in histogram:
         prob = np.array([0.5])
         q = np.array([0.])
@@ -47,11 +49,45 @@ def calibrate(filename: str, **kwargs):
             print("WARNING: INTEGRAL = 0")
             continue
         histogram[entry][0].GetQuantiles(1, q, prob)
-        resid_dt_z = q - (__detector__.TileDetector.tile[entry + 56].dt - __detector__.TileDetector.tile[entry].dt)
-        resid_z.append(resid_dt_z)
+        dt_z[entry] = q
+        resid_dt = q - (__detector__.TileDetector.tile[entry + 56].dt - __detector__.TileDetector.tile[entry].dt)
+        resid_z.append(resid_dt)
 
-    return resid_z
+    # phi dir:
+    resid_phi = []
+    dt_phi = {}
+    for entry in histogram:
+        prob = np.array([0.5])
+        q = np.array([0.])
+        if histogram[entry][1].ComputeIntegral() == 0:
+            print("WARNING: INTEGRAL = 0")
+            continue
+        histogram[entry][1].GetQuantiles(1, q, prob)
+        dt_phi[entry] = q
+        resid_dt = q - (__detector__.TileDetector.tile[entry + 1].dt - __detector__.TileDetector.tile[entry].dt)
+        resid_phi.append(resid_dt)
 
+    # calibrating along z and return difference from truth
+    cal = {}
+    for phi_row in range(56):
+        dt_cal = [0]
+        dt_truth = [0]
+        for tile in range(0, 51):
+            try:
+                dt_tmp = dt_z[(200000 + phi_row + tile * 56)]
+            except:
+                dt_tmp = 0
+                print("WARNING: Not enough data for calibration")
+
+            dt_cal.append(dt_cal[-1] + dt_tmp)
+
+            dt_tmp = (__detector__.TileDetector.tile[200000 + phi_row + tile * 56].dt -
+                       __detector__.TileDetector.tile[200000 + phi_row + (tile+1) * 56].dt)
+            dt_truth.append(dt_truth[-1] + dt_tmp)
+
+        cal[phi_row] = np.array(dt_cal) + np.array(dt_truth)
+
+    return resid_z, resid_phi, cal
 
 
 # ---------------------------------------
