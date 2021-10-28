@@ -47,6 +47,7 @@ class Detector:
             kwargs["pos"] = [ttree_tiles.posx, ttree_tiles.posy, ttree_tiles.posz]
             kwargs["dir"] = [ttree_tiles.dirx, ttree_tiles.diry, ttree_tiles.dirz]
             if tilemisal:
+                ttree_tiles_misal.GetEntry(i)
                 kwargs["dt"] = ttree_tiles_misal.dt
 
             Tiles[ttree_tiles.sensor] = Tile(**kwargs)
