@@ -21,14 +21,7 @@ class Detector:
         self.SensorsModules = sensors
         self.TileDetector = tiles
 
-        print("------------------------------")
-        print("Detector geometry loaded\n")
-        print("Stats:")
-        print("  - Tiles: ", len(self.TileDetector.tile))
-        print("  - Pixel Modules: ", len(self.SensorsModules.sensor))
-        print("  - Loaded Runs (Tiles): ", self.TileDetector.AddedRuns)
-        print("  - Loaded Runs (Pixel): ", self.SensorsModules.AddedRuns)
-        print("------------------------------")
+        self.info()
 
     # -----------------------------------------
     #  Load Detector geometry from Root File
@@ -38,26 +31,27 @@ class Detector:
         file = ROOT.TFile(filename)
         ttree_sensor = file.Get("alignment/sensors")
         ttree_tiles = file.Get("alignment/tiles")
+        tilemisal = False
+        if file.Get("alignment/tiles_mis"):
+            ttree_tiles_misal = file.Get("alignment/tiles_mis")
+            tilemisal = True
 
+        # ---------------
         # TILES
-        tile_id_pos = {}
-        tile_id_dir = {}
-
-        for i in range(ttree_tiles.GetEntries()):
-            ttree_tiles.GetEntry(i)
-            # direction
-            xyz = [ttree_tiles.dirx, ttree_tiles.diry, ttree_tiles.dirz]
-
-            tile_id_dir[ttree_tiles.sensor] = xyz
-
-            # position
-            tile_xyz = [ttree_tiles.posx, ttree_tiles.posy, ttree_tiles.posz]
-            tile_id_pos[ttree_tiles.sensor] = tile_xyz
-
         Tiles = {}
-        for tileID in tile_id_pos:
-            Tiles[tileID] = Tile(id=tileID, pos=tile_id_pos[tileID], dir=tile_id_dir[tileID])
+        for i in range(ttree_tiles.GetEntries()):
+            kwargs = {}
+            ttree_tiles.GetEntry(i)
 
+            kwargs["id"] = ttree_tiles.sensor
+            kwargs["pos"] = [ttree_tiles.posx, ttree_tiles.posy, ttree_tiles.posz]
+            kwargs["dir"] = [ttree_tiles.dirx, ttree_tiles.diry, ttree_tiles.dirz]
+            if tilemisal:
+                kwargs["dt"] = ttree_tiles_misal.dt
+
+            Tiles[ttree_tiles.sensor] = Tile(**kwargs)
+
+        # ---------------
         # PIXEL
         Sensors = {}
 
@@ -69,7 +63,7 @@ class Detector:
             Sensors[ttree_sensor.sensor] = Sensor(sensor_pos, sensor_row, sensor_col, ttree_sensor.sensor)
             pass
 
-        return cls(TileDetector(Tiles), SensorModule(Sensors))
+        return cls(TileDetector(Tiles, tilemisal), SensorModule(Sensors))
 
     def __str__(self):
         return f'Detector(TileDetector={self.TileDetector}, SensorModules={self.SensorsModules}))'
@@ -99,6 +93,7 @@ class Detector:
         print("Detector information\n")
         print("Stats:")
         print("  - Tiles: ", len(self.TileDetector.tile))
+        print("    -> misal: ", self.TileDetector.tilemisal)
         print("  - Pixel Modules: ", len(self.SensorsModules.sensor))
         print("  - Loaded Runs (Tiles): ", self.TileDetector.AddedRuns)
         print("  - Loaded Runs (Pixel): ", self.SensorsModules.AddedRuns)
