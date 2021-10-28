@@ -1,11 +1,10 @@
 # Mu3eHelper for tile analysis (for python) aka melp  
 ___
 # MELP V2
-
-# IN DEVELOPMENT: UNSTABLE API
-
+- TAFT - Tile alignment for tiles
 ___
-
+# IN DEVELOPMENT: UNSTABLE API
+___
 ## Improvements to V1:
 
 - detector class can handle everything concerning the geometry of tiles and pixels.
