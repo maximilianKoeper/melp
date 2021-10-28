@@ -19,11 +19,19 @@ ___
 import matplotlib.pyplot as plt
 from melp import Detector
 import melp
+import melp.taft as taft
 ```
 
 ```
 mu3e_detector = Detector.initFromROOT("run.root")
+```
+```
+taft.selct(mu3e_detector)
 
+taft.calibrate("time_misal.root")
+# Not ready to use!
+```
+```
 melp.select(mu3e_detector)
 melp.info()
 
