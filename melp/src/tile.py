@@ -12,6 +12,7 @@ class Tile:
     id: int
     pos: list
     dir: list
+    dt: float
 
     hits: list = dataclasses.field(default_factory=list)
 
@@ -20,6 +21,8 @@ class TileDetector:
     def __init__(self, tiles: dict):
         self.tile = tiles
         self.AddedRuns = []
+        self.hitrate = []
+        self.hitangle = []
 
     # -----------------------------------------
     #  public functions
@@ -35,11 +38,14 @@ class TileDetector:
 
     # -----------------------------------------
 
-    def addRateResult(self, hitrate):
-        self.hitrate = hitrate
+    def addRateResult(self, hitrate_tmp):
+        self.hitrate.append(hitrate_tmp)
 
     # -----------------------------------------
 
     def addAngleResult(self, hitangle):
-        self.hitangle = hitangle
+        self.hitangle.append(hitangle)
     # -----------------------------------------
+
+    def addDT(self, tile: int ,dt: float):
+        self.tile[tile].dt = dt

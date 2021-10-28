@@ -246,12 +246,12 @@ def getHitAngle(tileID=-1, rec_type="Truth", hit_type="primary", angle="phi", pa
             if rec_type == "Truth":
                 hitangle[1].append(__truth_angle__(angle, hit, tileID))
                 hitangle[0].append(__detector__.TileDetector.tile[tileID].pos[2])
-            if rec_type == "Helix":
+            elif rec_type == "Helix":
                 tmp_angle = __helix_angle__(angle, hit, tileID)
                 if tmp_angle is not None:
                     hitangle[1].append(tmp_angle)
                     hitangle[0].append(__detector__.TileDetector.tile[tileID].pos[2])
-            if rec_type == "TilePixel":
+            elif rec_type == "TilePixel":
                 tmp_angle = __tile_pixel_rec__(angle, hit, tileID)
                 if tmp_angle is not None:
                     hitangle[1].append(tmp_angle)
