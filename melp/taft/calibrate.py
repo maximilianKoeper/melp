@@ -115,7 +115,11 @@ def fill_dt_histos(ttree_mu3e) -> dict:
             if (hit_tile + 56) in ttree_mu3e.tilehit_tile:
                 # find associated tile hit
                 hit_tile_assoc = index_finder(list(ttree_mu3e.tilehit_tile), (hit_tile + 56))
-                hit_tile_assoc = int(*hit_tile_assoc)
+
+                try:
+                    hit_tile_assoc = int(*hit_tile_assoc)
+                except:
+                    continue
 
                 # calculate dt
                 # TODO: TOF has to be added
@@ -133,7 +137,11 @@ def fill_dt_histos(ttree_mu3e) -> dict:
                 hit_tile = ttree_mu3e.tilehit_tile[hit_tile_index]
                 # find associated tile hit
                 hit_tile_assoc = index_finder(list(ttree_mu3e.tilehit_tile), (hit_tile + 56))
-                hit_tile_assoc = int(*hit_tile_assoc)
+
+                try:
+                    hit_tile_assoc = int(*hit_tile_assoc)
+                except:
+                    continue
 
                 # calculate dt
                 # TODO: TOF has to be added
