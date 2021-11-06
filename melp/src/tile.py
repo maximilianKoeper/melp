@@ -64,3 +64,67 @@ class TileDetector:
 
     def addDT(self, tile: int, dt: float):
         self.tile[tile].dt = dt
+
+    # -----------------------------------------
+    # returns neighbour id for given tile
+    # return False if it doesnt exist
+    #
+    # left: -56
+    # right: +56
+    # up: +1 (exception: end of ring)
+    # down: -1 (exception beginning of ring)
+    #
+    def getNeighbour(self, tileid: int, position: str):
+
+        # left
+        if position == "l" or position == "left":
+            neighbour_id = tileid - 56
+            if neighbour_id not in self.tile.keys():
+                return False
+            else:
+                return neighbour_id
+
+        # right
+        elif position == "r" or position == "right":
+            neighbour_id = tileid + 56
+            if neighbour_id not in self.tile.keys():
+                return False
+            else:
+                return neighbour_id
+
+        # down
+        elif position == "d" or position == "down":
+            # -----------------
+            # checking for 56th tile (56 +1)th tile is not in the same ring anymore !!!
+            tmp_hittile = tileid - 200000
+            if tmp_hittile >= 100000:
+                tmp_hittile -= 100000
+            if tmp_hittile % 56 == 0 or tmp_hittile == 0:
+                neighbour_id = tileid + 55
+            else:
+                neighbour_id = tileid - 1
+            # -----------------
+            if neighbour_id not in self.tile.keys():
+                return False
+
+            return neighbour_id
+
+        # up
+        elif position == "u" or position == "up":
+            # -----------------
+            # checking for 56th tile (56 +1)th tile is not in the same ring anymore !!!
+            tmp_hittile = tileid - 200000
+            if tmp_hittile >= 100000:
+                tmp_hittile -= 100000
+            if (tmp_hittile + 1) % 56 == 0:
+                neighbour_id = tileid - 55
+            else:
+                neighbour_id = tileid + 1
+            # -----------------
+            if neighbour_id not in self.tile.keys():
+                return False
+
+            return neighbour_id
+
+        else:
+            raise ValueError(f"getNeighbour(tileid, position=(l,r,d,u)) expected, got: {position}")

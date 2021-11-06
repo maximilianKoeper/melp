@@ -79,7 +79,8 @@ def get_median_from_hist(histogram: dict, resid=False):
     resid_z = []
     dt_z = {}
     for tile_entry in histogram:
-        if (tile_entry + 56) not in __detector__.TileDetector.tile.keys():
+        neighbour_z_id = __detector__.TileDetector.getNeighbour(tile_entry, "right")
+        if neighbour_z_id is False:
             continue
         # setting prob to 0.5 for median
         prob = np.array([0.5])
@@ -91,7 +92,8 @@ def get_median_from_hist(histogram: dict, resid=False):
         histogram[tile_entry][0].GetQuantiles(1, q, prob)
         dt_z[tile_entry] = q
         if resid:
-            resid_dt = q - (__detector__.TileDetector.tile[tile_entry + 56].dt - __detector__.TileDetector.tile[tile_entry].dt)
+            resid_dt = q - (__detector__.TileDetector.tile[neighbour_z_id].dt - __detector__.TileDetector.tile[
+                tile_entry].dt)
             resid_z.append(resid_dt)
 
     # phi dir:
@@ -99,17 +101,7 @@ def get_median_from_hist(histogram: dict, resid=False):
     dt_phi = {}
     for tile_entry in histogram:
 
-        # -----------------
-        # checking for 56th tile (56 +1)th tile is not in the same ring anymore !!!
-        next_tile_phi = 0
-        tmp_hittile = tile_entry - 200000
-        if tmp_hittile >= 100000:
-            tmp_hittile -= 100000
-        if (tmp_hittile + 1) % 56 == 0:
-            next_tile_phi = tile_entry - 55
-        else:
-            next_tile_phi = tile_entry + 1
-        # -----------------
+        neighbour_phi_id = __detector__.TileDetector.getNeighbour(tile_entry, "up")
 
         # setting prob to 0.5 for median
         prob = np.array([0.5])
@@ -121,7 +113,8 @@ def get_median_from_hist(histogram: dict, resid=False):
         histogram[tile_entry][1].GetQuantiles(1, q, prob)
         dt_phi[tile_entry] = q
         if resid:
-            resid_dt = q - (__detector__.TileDetector.tile[next_tile_phi].dt - __detector__.TileDetector.tile[tile_entry].dt)
+            resid_dt = q - (__detector__.TileDetector.tile[neighbour_phi_id].dt - __detector__.TileDetector.tile[
+                tile_entry].dt)
             resid_phi.append(resid_dt)
 
     return dt_z, dt_phi, resid_z, resid_phi
@@ -129,7 +122,7 @@ def get_median_from_hist(histogram: dict, resid=False):
 
 # ---------------------------------------
 #
-# Generates dictionary with ROOT TH1 Histogramms
+# Generates dictionary with ROOT TH1D Histogramms
 #   -> dict[tileid] = [hist_z, hist_pih]
 #
 
@@ -141,7 +134,7 @@ def fill_dt_histos(ttree_mu3e) -> dict:
         histo_name_z = str(tile) + "_z"
         histo_name_phi = str(tile) + "_phi"
         hist_dict[tile] = [ROOT.TH1D(histo_name_z, 'my hist', nbins, lo, hi),
-                      ROOT.TH1D(histo_name_phi, 'my hist', nbins, lo, hi)]
+                           ROOT.TH1D(histo_name_phi, 'my hist', nbins, lo, hi)]
 
     for frame in range(ttree_mu3e.GetEntries()):
         ttree_mu3e.GetEntry(frame)
@@ -152,11 +145,14 @@ def fill_dt_histos(ttree_mu3e) -> dict:
         for hit_tile_index in range(len(ttree_mu3e.tilehit_tile)):
             hit_tile = ttree_mu3e.tilehit_tile[hit_tile_index]
 
+            # -----------------------------
             # Look for clusters in z-dir
-            if (hit_tile + 56) in ttree_mu3e.tilehit_tile:
+            neighbour_z_id = __detector__.TileDetector.getNeighbour(hit_tile, "right")
+            if neighbour_z_id in ttree_mu3e.tilehit_tile and neighbour_z_id is not False:
                 # find associated tile hit
-                hit_tile_assoc = index_finder(list(ttree_mu3e.tilehit_tile), (hit_tile + 56))
+                hit_tile_assoc = index_finder(list(ttree_mu3e.tilehit_tile), neighbour_z_id)
 
+                # workaround for multiple hits in the same tile
                 try:
                     hit_tile_assoc = int(*hit_tile_assoc)
                 except:
@@ -165,33 +161,21 @@ def fill_dt_histos(ttree_mu3e) -> dict:
                 # calculate dt
                 # TODO: TOF has to be added
                 hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] + __detector__.TileDetector.tile[hit_tile].dt
-                hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + __detector__.TileDetector.tile[hit_tile + 56].dt
+                hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + __detector__.TileDetector.tile[neighbour_z_id].dt
                 dt = hit_time_2 - hit_time_1
 
                 # Fill histogram
                 hist_dict[hit_tile][0].Fill(dt)
 
-            # TODO: index_finder cant handle multiple events on one tile in one frame!!!
-            #
+            # -----------------------------
             # Look for clusters in phi-dir
-
-            # -----------------
-            # checking for 56th tile (56 +1)th tile is not in the same ring anymore !!!
-            next_tile_phi = 0
-            tmp_hittile = hit_tile - 200000
-            if tmp_hittile >= 100000:
-                tmp_hittile -= 100000
-            if (tmp_hittile+1) % 56 == 0:
-                next_tile_phi = hit_tile - 55
-            else:
-                next_tile_phi = hit_tile + 1
-            # -----------------
-
-            if next_tile_phi in ttree_mu3e.tilehit_tile:
+            neighbour_phi_id = __detector__.TileDetector.getNeighbour(hit_tile, "up")
+            if neighbour_phi_id in ttree_mu3e.tilehit_tile and neighbour_phi_id is not False:
                 hit_tile = ttree_mu3e.tilehit_tile[hit_tile_index]
                 # find associated tile hit
-                hit_tile_assoc = index_finder(list(ttree_mu3e.tilehit_tile), next_tile_phi)
+                hit_tile_assoc = index_finder(list(ttree_mu3e.tilehit_tile), neighbour_phi_id)
 
+                # workaround for multiple hits in the same tile
                 try:
                     hit_tile_assoc = int(*hit_tile_assoc)
                 except:
@@ -200,7 +184,7 @@ def fill_dt_histos(ttree_mu3e) -> dict:
                 # calculate dt
                 # TODO: TOF has to be added
                 hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] + __detector__.TileDetector.tile[hit_tile].dt
-                hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + __detector__.TileDetector.tile[next_tile_phi].dt
+                hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + __detector__.TileDetector.tile[neighbour_phi_id].dt
                 dt = hit_time_2 - hit_time_1
 
                 # Fill histogram
