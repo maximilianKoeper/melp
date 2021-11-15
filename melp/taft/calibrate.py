@@ -23,6 +23,9 @@ def info():
 
 
 # ---------------------------------------------------------------------
+# calibrate function is the only function the user should call
+# -> options for calibrating should be passed with **kwargs
+# ---------------------------------------------------------------------
 
 def calibrate(filename: str, **kwargs):
     global __detector__
@@ -40,40 +43,191 @@ def calibrate(filename: str, **kwargs):
     # and dt between tiles (median of the histogram)
     dt_z, dt_phi, resid_z, resid_phi = get_median_from_hist(histogram, resid=True)
 
-    # calibrating along z and return difference from truth
-    cal = check_cal_z(dt_z)
+    # prealign in z direction
+    cal_station_1_z, cal_station_2_z = pre_align_z(dt_z)
 
-    return resid_z, resid_phi, cal
+    # correction for time of flight
+    tof_correction_z_simple(cal_station_1_z, 1)
+    tof_correction_z_simple(cal_station_2_z, 2)
+
+    # prealign in phi direction
+    cal_station_1_phi, cal_station_2_phi = pre_align_phi(dt_phi)
+
+    # correction for phi loop (going around the loop should result in sum dt = 0)
+    loop_correction_phi_simple(cal_station_1_phi)
+    loop_correction_phi_simple(cal_station_2_phi)
+
+    # return difference from truth
+    cal = None
+    if "station" in kwargs.keys():
+        if kwargs["station"] == 1:
+            cal = check_cal_z(cal_station_1_z, 1)
+        elif kwargs["station"] == 2:
+            cal = check_cal_z(cal_station_2_z, 2)
+
+    cal_phi = None
+    if "station" in kwargs.keys():
+        if kwargs["station"] == 1:
+            cal_phi = check_cal_phi(cal_station_1_phi, 1)
+        elif kwargs["station"] == 2:
+            cal_phi = check_cal_phi(cal_station_2_phi, 2)
+
+    return resid_z, resid_phi, cal, cal_phi
+
+
+# ---------------------------------------
+def loop_correction_phi_simple(cal_station: dict) -> bool:
+    for z_column in cal_station:
+        time_diff = cal_station[z_column][-1] - cal_station[z_column][0]
+        time_diff /= len(cal_station[z_column])
+
+        tmp_arr = cal_station[z_column]
+        for entry in range(len(tmp_arr)):
+            tmp_arr[entry] -= time_diff[0]*entry
+        cal_station[z_column] = tmp_arr
+
+    return True
+
+
+# ---------------------------------------
+# correcting for 8ps in z direction
+#
+
+def tof_correction_z_simple(cal_station: dict, station: int) -> bool:
+    vz = 1.
+    if station == 1:
+        vz = -1.
+
+    tof_correction_arr = [0]
+    for i in range(1, 52):
+        tof_correction_arr.append(i * 0.008 * vz)
+
+    for phi in cal_station:
+        arr_tmp = np.array(cal_station[phi] - tof_correction_arr)
+        cal_station[phi] = arr_tmp
+
+    return True
 
 
 # ---------------------------------------
 
+def pre_align_phi(dt_phi):
+    cal_station_1 = {}
+    cal_station_2 = {}
+    station_offset_arr = [200000, 300000]
 
-def check_cal_z(dt_z):
+    # calibration station 1 and 2
+    for station_offset in station_offset_arr:
+        for z_column in range(52):
+            dt_tiles_cal = [0]
+            for tile in range(0, 56):
+                try:
+                    dt_tmp = dt_phi[(station_offset + z_column * 56 + tile)]
+                except:
+                    dt_tmp = 0
+                    print("WARNING: Not enough data for phi calibration", tile)
+
+                dt_tiles_cal.append(dt_tiles_cal[-1] + dt_tmp)
+
+            if station_offset == 200000:
+                cal_station_1[z_column] = np.array(dt_tiles_cal)
+            elif station_offset == 300000:
+                cal_station_2[z_column] = np.array(dt_tiles_cal)
+
+    return cal_station_1, cal_station_2
+
+
+# ---------------------------------------
+
+def check_cal_phi(cal_data, station):
     cal = {}
-    for phi_row in range(55):
-        dt_cal = [0]
+
+    if station == 1:
+        station_offset = 200000
+    elif station == 2:
+        station_offset = 300000
+    else:
+        raise ValueError(f"expected station=1 or 2, got station = {station}")
+
+    for z_column in range(52):
         dt_truth = [0]
-        for tile in range(0, 51):
-            try:
-                dt_tmp = dt_z[(200000 + phi_row + tile * 56)]
-            except:
-                dt_tmp = 0
-                print("WARNING: Not enough data for calibration", tile)
-
-            dt_cal.append(dt_cal[-1] + dt_tmp)
-
-            dt_tmp = (__detector__.TileDetector.tile[200000 + phi_row + tile * 56].dt -
-                      __detector__.TileDetector.tile[200000 + phi_row + (tile + 1) * 56].dt)
+        for tile in range(0, 56):
+            tile_id = station_offset + z_column * 56 + tile
+            dt_tmp = (__detector__.TileDetector.tile[tile_id].dt -
+                      __detector__.TileDetector.tile[__detector__.TileDetector.getNeighbour(tile_id, "up")].dt)
             dt_truth.append(dt_truth[-1] + dt_tmp)
 
-        cal[phi_row] = np.array(dt_cal) + np.array(dt_truth)
+        cal[z_column] = np.array(cal_data[z_column]) + np.array(dt_truth)
 
     return cal
 
 
 # ---------------------------------------
+# - returns the absolute timing offset of the tile to the tile nearest to the target
+#
+# -> returned dictionaries:
+# --> cal_station_1:
+#           - keys: row of tiles (0 corresponds to row starting with tile 200000)
+#                                (1 corresponds to row starting with tile 200001)
+#           - entries: np.array with offsets (starting with nearest tile muon gun)
+# --> cal_station_2:
+#           - same as 1 but for second station
+#
 
+def pre_align_z(dt_z):
+    cal_station_1 = {}
+    cal_station_2 = {}
+    station_offset_arr = [200000, 300000]
+
+    # calibration station 1 and 2
+    for station_offset in station_offset_arr:
+        for phi_row in range(55):
+            dt_tiles_cal = [0]
+            for tile in range(0, 51):
+                try:
+                    dt_tmp = dt_z[(station_offset + phi_row + tile * 56)]
+                except:
+                    dt_tmp = 0
+                    print("WARNING: Not enough data for z calibration", tile)
+
+                dt_tiles_cal.append(dt_tiles_cal[-1] + dt_tmp)
+
+            if station_offset == 200000:
+                cal_station_1[phi_row] = np.array(dt_tiles_cal)
+            elif station_offset == 300000:
+                cal_station_2[phi_row] = np.array(dt_tiles_cal)
+
+    return cal_station_1, cal_station_2
+
+
+# ---------------------------------------
+
+def check_cal_z(cal_data, station):
+    cal = {}
+
+    if station == 1:
+        station_offset = 200000
+    elif station == 2:
+        station_offset = 300000
+    else:
+        raise ValueError(f"expected station=1 or 2, got station = {station}")
+
+    for phi_row in range(55):
+        dt_truth = [0]
+        for tile in range(0, 51):
+            tile_id = station_offset + phi_row + tile * 56
+            dt_tmp = (__detector__.TileDetector.tile[tile_id].dt -
+                      __detector__.TileDetector.tile[__detector__.TileDetector.getNeighbour(tile_id, "right")].dt)
+            dt_truth.append(dt_truth[-1] + dt_tmp)
+
+        cal[phi_row] = np.array(cal_data[phi_row]) + np.array(dt_truth)
+
+    return cal
+
+
+# ---------------------------------------
+# calculates the median from the histogram dict returned by fill_dt_histogram()
+# returns residuals to true dt if resid=True
 
 def get_median_from_hist(histogram: dict, resid=False):
     resid_z = []
@@ -159,7 +313,7 @@ def fill_dt_histos(ttree_mu3e) -> dict:
                     continue
 
                 # calculate dt
-                # TODO: TOF has to be added
+                # TODO: TOF maybe with edep ?
                 hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] + __detector__.TileDetector.tile[hit_tile].dt
                 hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + __detector__.TileDetector.tile[neighbour_z_id].dt
                 dt = hit_time_2 - hit_time_1
@@ -182,9 +336,10 @@ def fill_dt_histos(ttree_mu3e) -> dict:
                     continue
 
                 # calculate dt
-                # TODO: TOF has to be added
+                # TODO: TOF maybe with edep ?
                 hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] + __detector__.TileDetector.tile[hit_tile].dt
-                hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + __detector__.TileDetector.tile[neighbour_phi_id].dt
+                hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + __detector__.TileDetector.tile[
+                    neighbour_phi_id].dt
                 dt = hit_time_2 - hit_time_1
 
                 # Fill histogram
