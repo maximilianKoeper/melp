@@ -83,7 +83,7 @@ def loop_correction_phi_simple(cal_station: dict) -> bool:
 
         tmp_arr = cal_station[z_column]
         for entry in range(len(tmp_arr)):
-            tmp_arr[entry] -= time_diff[0]*entry
+            tmp_arr[int(entry)] -= time_diff*entry
         cal_station[z_column] = tmp_arr
 
     return True
@@ -119,7 +119,7 @@ def pre_align_phi(dt_phi):
     # calibration station 1 and 2
     for station_offset in station_offset_arr:
         for z_column in range(52):
-            dt_tiles_cal = [0]
+            dt_tiles_cal = [0.]
             for tile in range(0, 56):
                 try:
                     dt_tmp = dt_phi[(station_offset + z_column * 56 + tile)]
@@ -127,12 +127,12 @@ def pre_align_phi(dt_phi):
                     dt_tmp = 0
                     print("WARNING: Not enough data for phi calibration", tile)
 
-                dt_tiles_cal.append(dt_tiles_cal[-1] + dt_tmp)
+                dt_tiles_cal.append(float(dt_tiles_cal[-1] + dt_tmp))
 
             if station_offset == 200000:
-                cal_station_1[z_column] = np.array(dt_tiles_cal)
+                cal_station_1[z_column] = np.asarray(dt_tiles_cal)
             elif station_offset == 300000:
-                cal_station_2[z_column] = np.array(dt_tiles_cal)
+                cal_station_2[z_column] = np.asarray(dt_tiles_cal)
 
     return cal_station_1, cal_station_2
 
@@ -182,7 +182,7 @@ def pre_align_z(dt_z):
     # calibration station 1 and 2
     for station_offset in station_offset_arr:
         for phi_row in range(55):
-            dt_tiles_cal = [0]
+            dt_tiles_cal = [0.]
             for tile in range(0, 51):
                 try:
                     dt_tmp = dt_z[(station_offset + phi_row + tile * 56)]
@@ -190,12 +190,12 @@ def pre_align_z(dt_z):
                     dt_tmp = 0
                     print("WARNING: Not enough data for z calibration", tile)
 
-                dt_tiles_cal.append(dt_tiles_cal[-1] + dt_tmp)
+                dt_tiles_cal.append(float(dt_tiles_cal[-1] + dt_tmp))
 
             if station_offset == 200000:
-                cal_station_1[phi_row] = np.array(dt_tiles_cal)
+                cal_station_1[phi_row] = np.asarray(dt_tiles_cal)
             elif station_offset == 300000:
-                cal_station_2[phi_row] = np.array(dt_tiles_cal)
+                cal_station_2[phi_row] = np.asarray(dt_tiles_cal)
 
     return cal_station_1, cal_station_2
 
@@ -282,7 +282,7 @@ def get_median_from_hist(histogram: dict, resid=False):
 
 def fill_dt_histos(ttree_mu3e) -> dict:
     hist_dict = {}
-    nbins, lo, hi = 1000, -100, 100
+    nbins, lo, hi = 10000, -64, 64
     # Generating empty histos:
     for tile in __detector__.TileDetector.tile:
         histo_name_z = str(tile) + "_z"
@@ -294,7 +294,7 @@ def fill_dt_histos(ttree_mu3e) -> dict:
         ttree_mu3e.GetEntry(frame)
 
         # TODO: index_finder cant handle multiple events on one tile in one frame!!!
-        #
+        #       --> skipping frame (looses some data)
         # Analyzing frame
         for hit_tile_index in range(len(ttree_mu3e.tilehit_tile)):
             hit_tile = ttree_mu3e.tilehit_tile[hit_tile_index]
