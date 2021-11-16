@@ -6,7 +6,7 @@ import array
 
 
 # ---------------------------------------------------------------------
-#  searching index in arrays
+#  searching index in arrays (fast)
 # ---------------------------------------------------------------------
 def index_finder(lst, item):
     """A generator function, if you might not need all the indices"""
