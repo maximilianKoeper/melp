@@ -4,6 +4,7 @@ import numpy as np
 import warnings
 
 from melp.libs.misc import *
+from .misc import *
 import melp
 
 # ---------------------------------------------------------------------
@@ -16,11 +17,6 @@ __detector__ = None
 def select(selection: melp.Detector):
     global __detector__
     __detector__ = selection
-
-
-def info():
-    global __detector__
-    print(__detector__)
 
 
 # ---------------------------------------------------------------------
@@ -47,17 +43,23 @@ def calibrate(filename: str, **kwargs):
 
     # correction for phi loop (going around the loop should result in sum dt = 0)
     loop_correction_phi(dt_phi_rel, 200000)
+    loop_correction_phi(dt_phi_rel, 300000)
 
-    # prealign in z direction
-    if "tof" in kwargs.keys():
-        cal_station_1_z, cal_station_2_z = pre_align_z(dt_z_rel, tof_mode=kwargs["tof"])
-    else:
-        cal_station_1_z, cal_station_2_z = pre_align_z(dt_z_rel)
+    tof_correction_z(dt_z_rel, 200000, kwargs["tof"])
+    tof_correction_z(dt_z_rel, 300000, kwargs["tof"])
 
-    # pre align in phi direction
-    cal_station_1_phi, cal_station_2_phi = pre_align_phi(dt_phi_rel)
+    align_timings()
 
     # TODO: combine phi and z information
+
+    # ------------------------------------------------------
+    # Only for testing below here:
+
+    # pre align in z direction
+    cal_station_1_z, cal_station_2_z = pre_align_z(dt_z_rel.copy())
+
+    # pre align in phi direction
+    cal_station_1_phi, cal_station_2_phi = pre_align_phi(dt_phi_rel.copy())
 
     # return difference from truth
     cal = None
@@ -73,13 +75,20 @@ def calibrate(filename: str, **kwargs):
             cal_phi = check_cal_phi(cal_station_1_phi, 1)
         elif kwargs["station"] == 2:
             cal_phi = check_cal_phi(cal_station_2_phi, 2)
+    # ------------------------------------------------------
 
     return resid_z, resid_phi, cal, cal_phi
 
 
 # ---------------------------------------
+# TODO
+def align_timings():
+    pass
+
+
+# ---------------------------------------
 def loop_correction_phi(dt_phi_rel: dict, station: int):
-    for z in range(52):
+    for z in range(len(__detector__.TileDetector.row_ids(0, station))):
         tile_ids = __detector__.TileDetector.column_ids(z, station)
 
         sum_dt_row = 0.
@@ -103,32 +112,40 @@ def loop_correction_phi(dt_phi_rel: dict, station: int):
 
 
 # ---------------------------------------
-# using angle distribution to correct for TOF
-# Equation from Christian Graf
-# --> 7.1 in Bachelor Thesis
+def tof_correction_z(dt_z_rel: dict, station_offset: int, tof_mode: str):
+    for phi in range(len(__detector__.TileDetector.column_ids(0, station_offset))):
+        tile_ids = __detector__.TileDetector.row_ids(phi, station_offset)
 
-def alpha_from_z(z: float) -> float:
-    # TODO: This is only approximated!
-    return (((20 / 328.8) * z) / 180) * np.pi
+        for id_index in tile_ids:
+            try:
+                dt_tmp = dt_z_rel[id_index]
+            except KeyError:
+                continue
 
+            # TOF correction advanced
+            # TODO: check tof_modes
+            if tof_mode == "advanced":
+                tof_time = tof_z(__detector__.TileDetector.tile[id_index].pos)
+                if station_offset == 200000:
+                    dt_tmp += tof_time
+                else:
+                    dt_tmp -= tof_time
+            elif tof_mode == "simple":
+                tof_time = 0.009
+                if station_offset == 200000:
+                    dt_tmp += tof_time
+                else:
+                    dt_tmp -= tof_time
+            else:
+                warnings.warn("No TOF correction applied")
 
-def tof(z: list) -> float:
-    # TODO: check equation (seems a bit off)
-    l = 5. * (10 ** (-3))  # m
-    c = 299792458  # m/s
-    beta = (19 / 180) * np.pi  # deg
-    alpha = alpha_from_z(z[2])
-
-    # offset = 0.003
-    offset = 0.
-
-    time = (l / (2 * c)) * (1 + np.tan(alpha) ** 2 + np.tan(beta) ** 2)
-    return time * (10 ** 9) - offset
+    return dt_z_rel
 
 
 # ---------------------------------------
 
 def pre_align_phi(dt_phi):
+    warnings.warn("Warning: deprecated")
     cal_station_1 = {}
     cal_station_2 = {}
     station_offset_arr = [200000, 300000]
@@ -142,7 +159,7 @@ def pre_align_phi(dt_phi):
                     dt_tmp = dt_phi[(station_offset + z_column * 56 + tile)]
                 except KeyError:
                     dt_tmp = 0
-                    warnings.warn(f"Not enough data for phi calibration")
+                    warnings.warn("Not enough data for phi calibration")
 
                 dt_tiles_cal.append(float(dt_tiles_cal[-1] + dt_tmp))
 
@@ -191,7 +208,8 @@ def check_cal_phi(cal_data, station):
 #           - same as 1 but for second station
 #
 
-def pre_align_z(dt_z, tof_mode: str = "None"):
+def pre_align_z(dt_z):
+    warnings.warn("Warning: deprecated")
     cal_station_1 = {}
     cal_station_2 = {}
     station_offset_arr = [200000, 300000]
@@ -207,23 +225,6 @@ def pre_align_z(dt_z, tof_mode: str = "None"):
                 except KeyError:
                     dt_tmp = 0
                     warnings.warn(f"Not enough data for z calibration")
-
-                # TOF correction advanced
-                # TODO: check tof_modes
-                if tof_mode == "advanced":
-                    tof_time = tof(__detector__.TileDetector.tile[(station_offset + phi_row + tile * 56)].pos)
-                    if station_offset == 200000:
-                        dt_tmp += tof_time
-                    else:
-                        dt_tmp -= tof_time
-                elif tof_mode == "simple":
-                    tof_time = 0.009
-                    if station_offset == 200000:
-                        dt_tmp += tof_time
-                    else:
-                        dt_tmp -= tof_time
-                else:
-                    warnings.warn("No TOF correction applied")
 
                 dt_tiles_cal.append(float(dt_tiles_cal[-1] + dt_tmp))
 

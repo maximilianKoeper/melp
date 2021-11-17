@@ -14,6 +14,7 @@ class Tile:
     pos: list
     dir: list
     dt: float = 0.
+    dt_cal: float = 0.
 
     hits: list = dataclasses.field(default_factory=list)
 
