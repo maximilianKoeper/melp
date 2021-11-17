@@ -5,6 +5,7 @@
 #       - id
 # ---------------------------------------------------------------------
 import dataclasses
+import warnings
 
 
 @dataclasses.dataclass
@@ -60,6 +61,7 @@ class TileDetector:
 
     def addAngleResult(self, hitangle):
         self.hitangle.append(hitangle)
+
     # -----------------------------------------
 
     def addDT(self, tile: int, dt: float):
@@ -128,3 +130,35 @@ class TileDetector:
 
         else:
             raise ValueError(f"getNeighbour(tileid, position=(l,r,d,u)) expected, got: {position}")
+
+    # -----------------------------------------
+    # z - direction
+    def row_ids(self, phi: int, station_offset: int) -> list:
+        if 0 <= phi <= 55:
+            tile_ids = []
+            for tile in range(0, 52):
+                tile_id = station_offset + phi + tile * 56
+                tile_ids.append(tile_id)
+
+            if set(tile_ids).issubset(set(self.tile.keys())) is not True:
+                warnings.warn("Tile IDs do not match loaded geometry")
+
+            return tile_ids
+        else:
+            raise ValueError("Row must be between 0-55")
+
+    # -----------------------------------------
+    # phi - direction
+    def column_ids(self, z: int, station_offset: int) -> list:
+        if 0 <= z <= 51:
+            tile_ids = []
+            for tile in range(0, 56):
+                tile_id = station_offset + tile + z * 56
+                tile_ids.append(tile_id)
+
+            if set(tile_ids).issubset(set(self.tile.keys())) is not True:
+                warnings.warn("Tile IDs do not match loaded geometry")
+
+            return tile_ids
+        else:
+            raise ValueError("Column must be between 0-51")
