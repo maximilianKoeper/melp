@@ -89,3 +89,30 @@ def get_tid_frame(filename, frame):
     return tid
 
 #-----------------------------------------------
+def get_mc_primary_for_hit_frame(filename, frame):
+    file = ROOT.TFile(filename)
+    ttree_mu3e = file.Get("mu3e")
+    #ttree_mu3e_mc = file.Get("mu3e_mchits")
+    tilehit_primary = {}
+    ttree_mu3e.GetEntry(frame)
+    for i in range(len(ttree_mu3e.tilehit_tile)):
+        tile = ttree_mu3e.tilehit_tile[i]
+        primary = ttree_mu3e.tilehit_primary[i]
+        
+        tilehit_primary[tile] = primary
+
+    return tilehit_primary
+
+#----------------------------------------------
+def frame_as_cluster(filename, frame):
+    file = ROOT.TFile(filename)
+    ttree_mu3e = file.Get("mu3e")
+    hit_tiles = {}
+    ttree_mu3e.GetEntry(frame)
+    for i in range(len(ttree_mu3e.tilehit_tile)):
+        tile = ttree_mu3e.tilehit_tile[i]
+        primary = ttree_mu3e.tilehit_primary[0] #take first primary for all hits in frame
+        
+        hit_tiles[tile] = primary
+
+    return hit_tiles
