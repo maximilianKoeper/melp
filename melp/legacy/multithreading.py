@@ -1,5 +1,5 @@
 # import modules
-import melp
+import melp.legacy as melp
 import multiprocessing as mp
 import subprocess
 from glob import glob
@@ -58,6 +58,17 @@ def mt_hitAngleTruth(input_files, output_files, txt, npz, binned, angle, hit_typ
     if binned == True:
         calls.saveBinned()
 
+def mt_hitAnglePixelRec(input_files, output_files, txt, npz, binned, angle, i):
+    calls = melp.TileHitAngle(input_files[0][i], output_files[i])
+    print("read file ", i+1)
+    print("started thread ", i+1)
+    calls.hitAnglePixelRec(angle=angle)
+    if txt == True:
+        calls.saveTxt()
+    if npz == True:
+        calls.saveNpz()
+    if binned == True:
+        calls.saveBinned()
 
 
 
@@ -98,6 +109,10 @@ def run_mt(function_str, src, args):
 
     elif function_str == "mt_hitAngleTruth":
         func = partial(mt_hitAngleTruth, input_files, output_files, *args)
+        pool.map(func, [i for i in range(len(input_files[0]))])
+
+    elif function_str == "mt_hitAnglePixelRec":
+        func = partial(mt_hitAnglePixelRec, input_files, output_files, *args)
         pool.map(func, [i for i in range(len(input_files[0]))])
 
     else:
