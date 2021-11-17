@@ -43,20 +43,19 @@ def calibrate(filename: str, **kwargs):
 
     # calculate residuals to truth
     # and dt between tiles (median of the histogram)
-    dt_z, dt_phi, resid_z, resid_phi = get_median_from_hist(histogram, resid=True)
+    dt_z_rel, dt_phi_rel, resid_z, resid_phi = get_median_from_hist(histogram, resid=True)
+
+    # correction for phi loop (going around the loop should result in sum dt = 0)
+    loop_correction_phi(dt_phi_rel, 200000)
 
     # prealign in z direction
     if "tof" in kwargs.keys():
-        cal_station_1_z, cal_station_2_z = pre_align_z(dt_z, tof_mode=kwargs["tof"])
+        cal_station_1_z, cal_station_2_z = pre_align_z(dt_z_rel, tof_mode=kwargs["tof"])
     else:
-        cal_station_1_z, cal_station_2_z = pre_align_z(dt_z)
+        cal_station_1_z, cal_station_2_z = pre_align_z(dt_z_rel)
 
-    # prealign in phi direction
-    cal_station_1_phi, cal_station_2_phi = pre_align_phi(dt_phi)
-
-    # correction for phi loop (going around the loop should result in sum dt = 0)
-    loop_correction_phi_simple(cal_station_1_phi)
-    loop_correction_phi_simple(cal_station_2_phi)
+    # pre align in phi direction
+    cal_station_1_phi, cal_station_2_phi = pre_align_phi(dt_phi_rel)
 
     # TODO: combine phi and z information
 
@@ -79,17 +78,28 @@ def calibrate(filename: str, **kwargs):
 
 
 # ---------------------------------------
-def loop_correction_phi_simple(cal_station: dict) -> bool:
-    for z_column in cal_station:
-        time_diff = cal_station[z_column][-1] - cal_station[z_column][0]
-        time_diff /= len(cal_station[z_column])
+def loop_correction_phi(dt_phi_rel: dict, station: int):
+    for z in range(52):
+        tile_ids = __detector__.TileDetector.column_ids(z, station)
 
-        tmp_arr = cal_station[z_column]
-        for entry in range(len(tmp_arr)):
-            tmp_arr[int(entry)] -= time_diff * entry
-        cal_station[z_column] = tmp_arr
+        sum_dt_row = 0.
+        number_unfilled_dt = 0
+        for id_index in tile_ids:
+            try:
+                sum_dt_row += dt_phi_rel[id_index]
+            except KeyError:
+                number_unfilled_dt += 1
+                continue
 
-    return True
+        sum_dt_row /= (len(tile_ids) - number_unfilled_dt)
+
+        for id_index in tile_ids:
+            try:
+                dt_phi_rel[id_index] -= sum_dt_row
+            except KeyError:
+                continue
+
+    return dt_phi_rel
 
 
 # ---------------------------------------
