@@ -188,7 +188,8 @@ def pre_align_z(dt_z, tof_mode: str = "None"):
 
     # calibration station 1 and 2
     for station_offset in station_offset_arr:
-        for phi_row in range(55):
+        for phi_row in range(56):
+            # dt_tiles_cal[0] has to be deleted at the end
             dt_tiles_cal = [0.]
             for tile in range(0, 51):
                 try:
@@ -217,9 +218,9 @@ def pre_align_z(dt_z, tof_mode: str = "None"):
                 dt_tiles_cal.append(float(dt_tiles_cal[-1] + dt_tmp))
 
             if station_offset == 200000:
-                cal_station_1[phi_row] = np.asarray(dt_tiles_cal)
+                cal_station_1[phi_row] = np.asarray(dt_tiles_cal[1:])
             elif station_offset == 300000:
-                cal_station_2[phi_row] = np.asarray(dt_tiles_cal)
+                cal_station_2[phi_row] = np.asarray(dt_tiles_cal[1:])
 
     return cal_station_1, cal_station_2
 
@@ -236,15 +237,18 @@ def check_cal_z(cal_data, station):
     else:
         raise ValueError(f"expected station=1 or 2, got station = {station}")
 
-    for phi_row in range(55):
+    for phi_row in range(56):
+        # dt_truth[0] has to be deleted at the end
         dt_truth = [0]
         for tile in range(0, 51):
             tile_id = station_offset + phi_row + tile * 56
+            tile_id_neighbour = __detector__.TileDetector.getNeighbour(tile_id, "right")
+
             dt_tmp = (__detector__.TileDetector.tile[tile_id].dt -
-                      __detector__.TileDetector.tile[__detector__.TileDetector.getNeighbour(tile_id, "right")].dt)
+                      __detector__.TileDetector.tile[tile_id_neighbour].dt)
             dt_truth.append(dt_truth[-1] + dt_tmp)
 
-        cal[phi_row] = np.array(cal_data[phi_row]) + np.array(dt_truth)
+        cal[phi_row] = np.array(cal_data[phi_row]) + np.array(dt_truth[1:])
 
     return cal
 
