@@ -1,3 +1,5 @@
+[![CodeQL](https://github.com/maximilianKoeper/melp/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/maximilianKoeper/melp/actions/workflows/codeql-analysis.yml)
+
 # Mu3eHelper for tile analysis (for python) aka melp  
 ___
 # MELP V2
