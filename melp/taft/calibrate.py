@@ -1,6 +1,7 @@
 import ROOT
 
 import numpy as np
+from scipy.optimize import minimize
 import warnings
 
 from melp.libs.misc import *
@@ -11,7 +12,7 @@ import melp
 #  Define global variables and functions to select Detector
 # ---------------------------------------------------------------------
 
-__detector__ = None
+__detector__: melp.Detector = None
 
 
 def select(selection: melp.Detector):
@@ -45,10 +46,10 @@ def calibrate(filename: str, **kwargs):
     loop_correction_phi(dt_phi_rel, 200000)
     loop_correction_phi(dt_phi_rel, 300000)
 
-    tof_correction_z(dt_z_rel, 200000, kwargs["tof"])
-    tof_correction_z(dt_z_rel, 300000, kwargs["tof"])
+    dt_z_rel = tof_correction_z(dt_z_rel, 200000, kwargs["tof"])
+    dt_z_rel = tof_correction_z(dt_z_rel, 300000, kwargs["tof"])
 
-    align_timings()
+    align_timings(dt_phi_rel, dt_z_rel, 200000)
 
     # TODO: combine phi and z information
 
@@ -81,9 +82,69 @@ def calibrate(filename: str, **kwargs):
 
 
 # ---------------------------------------
+def minimize_function_z(offset: float, dt_phi_rel: list, dt_z_rel: list, dt_phi_plus_one: list) -> float:
+    tmp = 0.
+    tmp += abs(offset - dt_z_rel[0])
+
+    tmp_1 = 0.
+    for i in range(len(dt_phi_rel) - 1):
+        for j in range(i):
+            tmp_1 += dt_phi_rel[j] - dt_phi_plus_one[j]
+
+        tmp_1 += - offset + dt_z_rel[i + 1]
+
+        tmp += abs(tmp_1)
+
+    return tmp
+
 # TODO
-def align_timings():
-    pass
+def align_timings(dt_phi_rel: dict, dt_z_rel: dict, station_offset: int):
+    result = {}
+    for z_column in range(len(__detector__.TileDetector.row_ids(0, station_offset)) - 1):
+        # generating empty temporary arrays
+        dt_phi_arr_tmp = []
+        dt_phi_plus_one_arr_tmp = []
+        dt_z_arr_tmp = []
+
+        # generating row ids
+        row_ids = __detector__.TileDetector.column_ids(z_column, station_offset)
+        row_plus_one_ids = __detector__.TileDetector.column_ids(z_column + 1, station_offset)
+
+        # filling arrays with relative dt information
+        for tile_id in row_ids:
+            dt_phi_arr_tmp.append(dt_phi_rel[tile_id] if tile_id in dt_phi_rel.keys() else 0)
+            dt_z_arr_tmp.append(dt_z_rel[tile_id] if tile_id in dt_z_rel.keys() else 0)
+
+        for tile_id in row_plus_one_ids:
+            dt_phi_plus_one_arr_tmp.append(dt_phi_rel[tile_id] if tile_id in dt_phi_rel.keys() else 0)
+
+        # optimizing z-direction
+        res = minimize(minimize_function_z, x0=0., args=(dt_phi_arr_tmp, dt_z_arr_tmp, dt_phi_plus_one_arr_tmp),
+                       tol=1e-6)
+
+        print(res.x[0])
+        result[z_column] = res.x[0]
+
+    # first row
+    absolute_timing_offset = 0.
+    for phi_id in __detector__.TileDetector.column_ids(0, station_offset):
+        __detector__.TileDetector.tile[phi_id].dt_cal = absolute_timing_offset
+        absolute_timing_offset += dt_phi_rel[phi_id if phi_id in dt_phi_rel.keys() else station_offset]
+
+    # all other rows
+    for z_column in range(1, len(__detector__.TileDetector.row_ids(0, station_offset))):
+        last_master_id = int(__detector__.TileDetector.row_ids(0, station_offset)[z_column - 1])
+        master_offset = __detector__.TileDetector.tile[last_master_id].dt_cal
+        # tmp_id = __detector__.TileDetector.column_ids (0, station_offset)[z_column]
+        master_offset += result[z_column - 1]
+
+        absolute_timing_offset = master_offset
+        for phi_id in __detector__.TileDetector.column_ids(z_column, station_offset):
+            # print(phi_id, dt_phi_rel[phi_id])
+            __detector__.TileDetector.tile[phi_id].dt_cal = absolute_timing_offset
+            absolute_timing_offset += dt_phi_rel[phi_id if phi_id in dt_phi_rel.keys() else station_offset]
+
+    return
 
 
 # ---------------------------------------
@@ -138,6 +199,8 @@ def tof_correction_z(dt_z_rel: dict, station_offset: int, tof_mode: str):
                     dt_tmp -= tof_time
             else:
                 warnings.warn("No TOF correction applied")
+
+            dt_z_rel[id_index] = dt_tmp
 
     return dt_z_rel
 
@@ -283,7 +346,7 @@ def get_median_from_hist(histogram: dict, resid=False):
             # warnings.warn(f"WARNING: INTEGRAL = 0, tile: {tile_entry}")
             continue
         histogram[tile_entry][0].GetQuantiles(1, q, prob)
-        dt_z[tile_entry] = q
+        dt_z[tile_entry] = q[0]
         if resid:
             resid_dt = q - (__detector__.TileDetector.tile[neighbour_z_id].dt - __detector__.TileDetector.tile[
                 tile_entry].dt)
@@ -304,7 +367,7 @@ def get_median_from_hist(histogram: dict, resid=False):
             # print("WARNING: INTEGRAL = 0", tile_entry)
             continue
         histogram[tile_entry][1].GetQuantiles(1, q, prob)
-        dt_phi[tile_entry] = q
+        dt_phi[tile_entry] = q[0]
         if resid:
             resid_dt = q - (__detector__.TileDetector.tile[neighbour_phi_id].dt - __detector__.TileDetector.tile[
                 tile_entry].dt)
