@@ -4,18 +4,24 @@ import numpy as np
 from scipy.optimize import minimize
 import warnings
 
-from melp.libs.misc import *
-from .misc import *
-import melp
+from melp import Detector
+
+# fast index lookup
+from melp.libs.misc import index_finder
+
+# different functions for calibration
+from melp.taft.tof_corrections import tof_correction_z
+from melp.taft.misc_corrections import loop_correction_phi
+
 
 # ---------------------------------------------------------------------
 #  Define global variables and functions to select Detector
 # ---------------------------------------------------------------------
 
-__detector__: melp.Detector = None
+__detector__: Detector = None
 
 
-def select(selection: melp.Detector):
+def select(selection: Detector):
     global __detector__
     __detector__ = selection
 
@@ -43,15 +49,13 @@ def calibrate(filename: str, **kwargs):
     dt_z_rel, dt_phi_rel, resid_z, resid_phi = get_median_from_hist(histogram, resid=True)
 
     # correction for phi loop (going around the loop should result in sum dt = 0)
-    loop_correction_phi(dt_phi_rel, 200000)
-    loop_correction_phi(dt_phi_rel, 300000)
+    loop_correction_phi(__detector__, dt_phi_rel, 200000)
+    loop_correction_phi(__detector__, dt_phi_rel, 300000)
 
-    dt_z_rel = tof_correction_z(dt_z_rel, 200000, kwargs["tof"])
-    dt_z_rel = tof_correction_z(dt_z_rel, 300000, kwargs["tof"])
+    dt_z_rel = tof_correction_z(__detector__, dt_z_rel, 200000, kwargs["tof"])
+    dt_z_rel = tof_correction_z(__detector__, dt_z_rel, 300000, kwargs["tof"])
 
     align_timings(dt_phi_rel, dt_z_rel, 200000)
-
-    # TODO: combine phi and z information
 
     # ------------------------------------------------------
     # Only for testing below here:
@@ -96,6 +100,7 @@ def minimize_function_z(offset: float, dt_phi_rel: list, dt_z_rel: list, dt_phi_
         tmp += abs(tmp_1)
 
     return tmp
+
 
 # TODO
 def align_timings(dt_phi_rel: dict, dt_z_rel: dict, station_offset: int):
@@ -145,64 +150,6 @@ def align_timings(dt_phi_rel: dict, dt_z_rel: dict, station_offset: int):
             absolute_timing_offset += dt_phi_rel[phi_id if phi_id in dt_phi_rel.keys() else station_offset]
 
     return
-
-
-# ---------------------------------------
-def loop_correction_phi(dt_phi_rel: dict, station: int):
-    for z in range(len(__detector__.TileDetector.row_ids(0, station))):
-        tile_ids = __detector__.TileDetector.column_ids(z, station)
-
-        sum_dt_row = 0.
-        number_unfilled_dt = 0
-        for id_index in tile_ids:
-            try:
-                sum_dt_row += dt_phi_rel[id_index]
-            except KeyError:
-                number_unfilled_dt += 1
-                continue
-
-        sum_dt_row /= (len(tile_ids) - number_unfilled_dt)
-
-        for id_index in tile_ids:
-            try:
-                dt_phi_rel[id_index] -= sum_dt_row
-            except KeyError:
-                continue
-
-    return dt_phi_rel
-
-
-# ---------------------------------------
-def tof_correction_z(dt_z_rel: dict, station_offset: int, tof_mode: str):
-    for phi in range(len(__detector__.TileDetector.column_ids(0, station_offset))):
-        tile_ids = __detector__.TileDetector.row_ids(phi, station_offset)
-
-        for id_index in tile_ids:
-            try:
-                dt_tmp = dt_z_rel[id_index]
-            except KeyError:
-                continue
-
-            # TOF correction advanced
-            # TODO: check tof_modes
-            if tof_mode == "advanced":
-                tof_time = tof_z(__detector__.TileDetector.tile[id_index].pos)
-                if station_offset == 200000:
-                    dt_tmp += tof_time
-                else:
-                    dt_tmp -= tof_time
-            elif tof_mode == "simple":
-                tof_time = 0.009
-                if station_offset == 200000:
-                    dt_tmp += tof_time
-                else:
-                    dt_tmp -= tof_time
-            else:
-                warnings.warn("No TOF correction applied")
-
-            dt_z_rel[id_index] = dt_tmp
-
-    return dt_z_rel
 
 
 # ---------------------------------------
