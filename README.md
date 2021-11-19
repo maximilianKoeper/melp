@@ -3,7 +3,8 @@
 # Mu3eHelper for tile analysis (for python) aka melp  
 ___
 # MELP V2
-- TAFT - Tile alignment for tiles
+- TAFT - Time alignment for tiles
+- CLUMP - Clustering MELP
 ___
 # IN DEVELOPMENT: UNSTABLE API
 ___
@@ -16,6 +17,7 @@ ___
 - usage of dataclasses makes it easy to debug functions
 
 ## Example:
+### more examples are in the jupyter notebooks
 ```
 import matplotlib.pyplot as plt
 from melp import Detector
@@ -30,7 +32,7 @@ mu3e_detector = Detector.initFromROOT("run.root")
 taft.selct(mu3e_detector)
 
 taft.calibrate("time_misal.root")
-# Not ready to use!
+# WIP
 ```
 ```
 melp.select(mu3e_detector)
