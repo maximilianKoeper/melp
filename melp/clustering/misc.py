@@ -116,3 +116,7 @@ def frame_as_cluster(filename, frame):
         hit_tiles[tile] = primary
 
     return hit_tiles
+
+#---------------------------------------------
+
+
