@@ -267,3 +267,49 @@ def build_mask_around_cluster_primary(filename, frame, mu3e_detector: melp.Detec
             mask[tile_centre] = mask_tmp
 
     return mask    
+
+#----------------------------------------------------
+def build_clusters_in_masks(filename, frame, mu3e_detector: melp.Detector, mask_type):
+    primary_masks = build_mask_around_cluster_primary(filename, frame, mu3e_detector, mask_type)
+
+    clusters = {}
+
+    keys = []
+    values = []
+    for key in primary_masks.keys():
+        keys.append(key)
+        values.append(primary_masks[key])
+
+    file = ROOT.TFile(filename)
+    ttree_mu3e = file.Get("mu3e")
+    ttree_mu3e.GetEntry(frame)
+
+    for tile_id in mu3e_detector.TileDetector.tile:
+        if tile_id < 300000:
+            tile = mu3e_detector.TileDetector.tile[tile_id]
+            cluster_tmp = []
+            cluster_primary_tmp = 0
+            for hits in tile.hits:
+                if hits.frame_id == frame:
+                    if tile.id not in primary_masks.keys(): #if not primary
+                        
+                        for i in range(len(values)):
+                            
+                            
+                            #cluster_primary_tmp.append(keys[i])
+                            if tile.id in values[i]:
+                                cluster_tmp.append(tile.id)
+                                cluster_primary_tmp = keys[i]
+
+            if cluster_primary_tmp != 0:
+                if cluster_primary_tmp not in clusters.keys() and len(cluster_tmp) > 0:              
+                    clusters[cluster_primary_tmp] = cluster_tmp
+                elif len(cluster_tmp) > 0:
+                    clusters[cluster_primary_tmp].append(cluster_tmp[0])
+
+    for i in keys:
+        if i not in clusters.keys():
+            clusters[i] = []
+
+    return clusters
+
