@@ -6,6 +6,7 @@
 # ---------------------------------------------------------------------
 import dataclasses
 import warnings
+import math
 
 
 @dataclasses.dataclass
@@ -31,6 +32,28 @@ class Tile:
         print("  - Total Hits: ", len(self.hits))
         print("  - Truth Time Misal: ", self.dt)
         print("------------------------------")
+
+    def row(self) -> int:
+        tmp_id = self.id - 200000
+        if self.station() == 2:
+            tmp_id -= 100000
+
+        row_tmp = math.floor(tmp_id / 56)
+        return row_tmp
+
+    def column(self) -> int:
+        tmp_id = self.id - 200000
+        if self.station() == 2:
+            tmp_id -= 100000
+
+        column_tmp = tmp_id % 56
+        return column_tmp
+
+    def station(self) -> int:
+        if self.id >= 300000:
+            return 2
+        elif self.id < 300000:
+            return 1
 
 
 class TileDetector:
