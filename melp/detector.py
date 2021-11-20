@@ -17,7 +17,6 @@ from melp.src.tile import TileDetector
 
 class Detector:
     def __init__(self, tiles, sensors, runs=None):
-        # self.Tiles   = tiles
         self.SensorsModules = sensors
         self.TileDetector = tiles
 
@@ -48,7 +47,7 @@ class Detector:
             kwargs["dir"] = [ttree_tiles.dirx, ttree_tiles.diry, ttree_tiles.dirz]
             if tilemisal:
                 ttree_tiles_misal.GetEntry(i)
-                kwargs["dt"] = ttree_tiles_misal.dt
+                kwargs["dt_truth"] = ttree_tiles_misal.dt
 
             Tiles[ttree_tiles.sensor] = Tile(**kwargs)
 

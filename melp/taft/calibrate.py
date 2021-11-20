@@ -14,7 +14,6 @@ from melp.libs.misc import index_finder
 from melp.taft.tof_corrections import tof_correction_z
 from melp.taft.misc_corrections import loop_correction_phi
 
-
 # ---------------------------------------------------------------------
 #  Define global variables and functions to select Detector
 # ---------------------------------------------------------------------
@@ -35,9 +34,17 @@ def select(selection: Detector):
 def calibrate(filename: str, **kwargs):
     # TODO: tidy up and streamline options
     global __detector__
+
     if __detector__ is None:
-        print("ERROR: Detector not selected")
+        warnings.warn("ERROR: Detector not selected")
         return
+
+    if __detector__.TileDetector.calibrated is True:
+        if kwargs.get("overwrite"):
+            warnings.warn("Warning: Overwriting old calibration data")
+        else:
+            warnings.warn("Warning: detector has already calibration data")
+            return
 
     t = Timer()
     t.start()
@@ -61,17 +68,21 @@ def calibrate(filename: str, **kwargs):
 
     align_timings(dt_phi_rel, dt_z_rel, 200000)
 
+    # set calibrated Flag in detector
+    __detector__.TileDetector.calibrated = True
+
     print("Calibration finished")
     t.print()
+
     # ------------------------------------------------------
     # Only for testing below here:
-
+    #
     # pre align in z direction
     cal_station_1_z, cal_station_2_z = pre_align_z(dt_z_rel.copy())
-
+    #
     # pre align in phi direction
     cal_station_1_phi, cal_station_2_phi = pre_align_phi(dt_phi_rel.copy())
-
+    #
     # return difference from truth
     cal = None
     if "station" in kwargs.keys():
@@ -79,7 +90,7 @@ def calibrate(filename: str, **kwargs):
             cal = check_cal_z(cal_station_1_z, 1)
         elif kwargs["station"] == 2:
             cal = check_cal_z(cal_station_2_z, 2)
-
+    #
     cal_phi = None
     if "station" in kwargs.keys():
         if kwargs["station"] == 1:
@@ -209,8 +220,8 @@ def check_cal_phi(cal_data, station):
         dt_truth = [0]
         for tile in range(0, 56):
             tile_id = station_offset + z_column * 56 + tile
-            dt_tmp = (__detector__.TileDetector.tile[tile_id].dt -
-                      __detector__.TileDetector.tile[__detector__.TileDetector.getNeighbour(tile_id, "up")].dt)
+            dt_tmp = (__detector__.TileDetector.tile[tile_id].dt_truth -
+                      __detector__.TileDetector.tile[__detector__.TileDetector.getNeighbour(tile_id, "up")].dt_truth)
             dt_truth.append(dt_truth[-1] + dt_tmp)
 
         cal[z_column] = np.array(cal_data[z_column]) + np.array(dt_truth)
@@ -277,8 +288,8 @@ def check_cal_z(cal_data, station):
             tile_id = station_offset + phi_row + tile * 56
             tile_id_neighbour = __detector__.TileDetector.getNeighbour(tile_id, "right")
 
-            dt_tmp = (__detector__.TileDetector.tile[tile_id].dt -
-                      __detector__.TileDetector.tile[tile_id_neighbour].dt)
+            dt_tmp = (__detector__.TileDetector.tile[tile_id].dt_truth -
+                      __detector__.TileDetector.tile[tile_id_neighbour].dt_truth)
             dt_truth.append(dt_truth[-1] + dt_tmp)
 
         cal[phi_row] = np.array(cal_data[phi_row]) + np.array(dt_truth[1:])
@@ -307,8 +318,8 @@ def get_median_from_hist(histogram: dict, resid=False):
         histogram[tile_entry][0].GetQuantiles(1, q, prob)
         dt_z[tile_entry] = q[0]
         if resid:
-            resid_dt = q - (__detector__.TileDetector.tile[neighbour_z_id].dt - __detector__.TileDetector.tile[
-                tile_entry].dt)
+            resid_dt = q - (__detector__.TileDetector.tile[neighbour_z_id].dt_truth - __detector__.TileDetector.tile[
+                tile_entry].dt_truth)
             resid_z.append(resid_dt)
 
     # phi dir:
@@ -328,8 +339,8 @@ def get_median_from_hist(histogram: dict, resid=False):
         histogram[tile_entry][1].GetQuantiles(1, q, prob)
         dt_phi[tile_entry] = q[0]
         if resid:
-            resid_dt = q - (__detector__.TileDetector.tile[neighbour_phi_id].dt - __detector__.TileDetector.tile[
-                tile_entry].dt)
+            resid_dt = q - (__detector__.TileDetector.tile[neighbour_phi_id].dt_truth - __detector__.TileDetector.tile[
+                tile_entry].dt_truth)
             resid_phi.append(resid_dt)
 
     return dt_z, dt_phi, resid_z, resid_phi
@@ -382,8 +393,8 @@ def fill_dt_histos(ttree_mu3e) -> dict:
 
                 # calculate dt
                 # TODO: TOF maybe with edep ?
-                hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] + __detector__.TileDetector.tile[hit_tile].dt
-                hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + __detector__.TileDetector.tile[neighbour_z_id].dt
+                hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] + __detector__.TileDetector.tile[hit_tile].dt_truth
+                hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + __detector__.TileDetector.tile[neighbour_z_id].dt_truth
                 dt = hit_time_2 - hit_time_1
 
                 # Fill histogram
@@ -406,9 +417,9 @@ def fill_dt_histos(ttree_mu3e) -> dict:
 
                 # calculate dt
                 # TODO: TOF maybe with edep ?
-                hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] + __detector__.TileDetector.tile[hit_tile].dt
+                hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] + __detector__.TileDetector.tile[hit_tile].dt_truth
                 hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + __detector__.TileDetector.tile[
-                    neighbour_phi_id].dt
+                    neighbour_phi_id].dt_truth
                 dt = hit_time_2 - hit_time_1
 
                 # Fill histogram
