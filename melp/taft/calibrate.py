@@ -5,6 +5,7 @@ from scipy.optimize import minimize
 import warnings
 
 from melp import Detector
+from melp.libs.timer import Timer
 
 # fast index lookup
 from melp.libs.misc import index_finder
@@ -38,6 +39,9 @@ def calibrate(filename: str, **kwargs):
         print("ERROR: Detector not selected")
         return
 
+    t = Timer()
+    t.start()
+
     file = ROOT.TFile(filename)
     ttree_mu3e = file.Get("mu3e")
 
@@ -57,6 +61,8 @@ def calibrate(filename: str, **kwargs):
 
     align_timings(dt_phi_rel, dt_z_rel, 200000)
 
+    print("Calibration finished")
+    t.print()
     # ------------------------------------------------------
     # Only for testing below here:
 
@@ -104,47 +110,53 @@ def minimize_function_z(offset: float, dt_phi_rel: list, dt_z_rel: list, dt_phi_
 
 # TODO
 def align_timings(dt_phi_rel: dict, dt_z_rel: dict, station_offset: int):
+    print("Calculating absolute timing offsets to master tile.")
+
     result = {}
-    for z_column in range(len(__detector__.TileDetector.row_ids(0, station_offset)) - 1):
+    for z_position in range(len(__detector__.TileDetector.row_ids(0, station_offset)) - 1):
         # generating empty temporary arrays
         dt_phi_arr_tmp = []
         dt_phi_plus_one_arr_tmp = []
         dt_z_arr_tmp = []
 
-        # generating row ids
-        row_ids = __detector__.TileDetector.column_ids(z_column, station_offset)
-        row_plus_one_ids = __detector__.TileDetector.column_ids(z_column + 1, station_offset)
+        # generating column ids
+        column_ids_for_current_z = __detector__.TileDetector.column_ids(z_position, station_offset)
+        column_ids_for_current_z_plus_one = __detector__.TileDetector.column_ids(z_position + 1, station_offset)
 
         # filling arrays with relative dt information
-        for tile_id in row_ids:
+        for tile_id in column_ids_for_current_z:
             dt_phi_arr_tmp.append(dt_phi_rel[tile_id] if tile_id in dt_phi_rel.keys() else 0)
             dt_z_arr_tmp.append(dt_z_rel[tile_id] if tile_id in dt_z_rel.keys() else 0)
 
-        for tile_id in row_plus_one_ids:
+        for tile_id in column_ids_for_current_z_plus_one:
             dt_phi_plus_one_arr_tmp.append(dt_phi_rel[tile_id] if tile_id in dt_phi_rel.keys() else 0)
 
+        dt_phi_arr_tmp = np.asarray(dt_phi_arr_tmp)
+        dt_phi_plus_one_arr_tmp = np.asarray(dt_phi_plus_one_arr_tmp)
+        dt_z_arr_tmp = np.asarray(dt_z_arr_tmp)
         # optimizing z-direction
         res = minimize(minimize_function_z, x0=0., args=(dt_phi_arr_tmp, dt_z_arr_tmp, dt_phi_plus_one_arr_tmp),
                        tol=1e-6)
 
-        print(res.x[0])
-        result[z_column] = res.x[0]
+        # print(res.x[0])
+        result[z_position] = res.x[0]
 
     # first row
+    # we have to set the first tile as the master tile with offset = 0
     absolute_timing_offset = 0.
     for phi_id in __detector__.TileDetector.column_ids(0, station_offset):
         __detector__.TileDetector.tile[phi_id].dt_cal = absolute_timing_offset
         absolute_timing_offset += dt_phi_rel[phi_id if phi_id in dt_phi_rel.keys() else station_offset]
 
     # all other rows
-    for z_column in range(1, len(__detector__.TileDetector.row_ids(0, station_offset))):
-        last_master_id = int(__detector__.TileDetector.row_ids(0, station_offset)[z_column - 1])
-        master_offset = __detector__.TileDetector.tile[last_master_id].dt_cal
-        # tmp_id = __detector__.TileDetector.column_ids (0, station_offset)[z_column]
-        master_offset += result[z_column - 1]
+    for z_position in range(1, len(__detector__.TileDetector.row_ids(0, station_offset))):
+        last_master_id = int(__detector__.TileDetector.row_ids(0, station_offset)[z_position - 1])
+        last_master_offset = __detector__.TileDetector.tile[last_master_id].dt_cal
+        # tmp_id = __detector__.TileDetector.column_ids (0, station_offset)[z_position]
+        current_master_offset = last_master_offset + result[z_position - 1]
 
-        absolute_timing_offset = master_offset
-        for phi_id in __detector__.TileDetector.column_ids(z_column, station_offset):
+        absolute_timing_offset = current_master_offset
+        for phi_id in __detector__.TileDetector.column_ids(z_position, station_offset):
             # print(phi_id, dt_phi_rel[phi_id])
             __detector__.TileDetector.tile[phi_id].dt_cal = absolute_timing_offset
             absolute_timing_offset += dt_phi_rel[phi_id if phi_id in dt_phi_rel.keys() else station_offset]
