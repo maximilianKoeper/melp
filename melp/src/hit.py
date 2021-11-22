@@ -16,3 +16,6 @@ class Hit:
     impact_vec: list = None
     trajectory: object = None
     pos: list = None
+
+    def __eq__(self, other):
+        return self.mc_i == other.mc_i

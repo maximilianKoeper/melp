@@ -52,12 +52,15 @@ def calibrate(filename: str, **kwargs):
     file = ROOT.TFile(filename)
     ttree_mu3e = file.Get("mu3e")
 
-    # Get dict with histogramms with dt data
-    histogram = fill_dt_histos(ttree_mu3e)
-
+    resid_z, resid_phi = (None, None)
     # calculate residuals to truth
     # and dt between tiles (median of the histogram)
-    dt_z_rel, dt_phi_rel, resid_z, resid_phi = get_median_from_hist(histogram, resid=True)
+    if kwargs["dt_mode"] == "median":
+        # Get dict with histogramms with dt data
+        histogram = fill_dt_histos(ttree_mu3e)
+        dt_z_rel, dt_phi_rel, resid_z, resid_phi = get_median_from_hist(histogram, resid=True)
+    elif kwargs["dt_mode"] == "mean":
+        dt_z_rel, dt_phi_rel = get_mean_from_ttree(ttree_mu3e)
 
     # correction for phi loop (going around the loop should result in sum dt = 0)
     loop_correction_phi(__detector__, dt_phi_rel, 200000)
@@ -298,6 +301,93 @@ def check_cal_z(cal_data, station):
 
 
 # ---------------------------------------
+
+def get_mean_from_ttree(ttree_mu3e) -> (dict, dict):
+    dt_z = {}
+    dt_phi = {}
+    dt_z_n = {}
+    dt_phi_n = {}
+
+    cluster_counter = 0
+
+    for frame in range(ttree_mu3e.GetEntries()):
+        ttree_mu3e.GetEntry(frame)
+
+        # Printing status info
+        if frame % 10000 == 0:
+            print("Searching clusters. Progress: ", np.round(frame / ttree_mu3e.GetEntries() * 100), " % , Found: ",
+                  cluster_counter, end='\r')
+        ttree_mu3e.GetEntry(frame)
+
+        for hit_tile_index in range(len(ttree_mu3e.tilehit_tile)):
+            hit_tile = ttree_mu3e.tilehit_tile[hit_tile_index]
+
+            # -----------------------------
+            # Look for clusters in z-dir
+            neighbour_z_id = __detector__.TileDetector.getNeighbour(hit_tile, "right")
+            if neighbour_z_id in ttree_mu3e.tilehit_tile and neighbour_z_id is not False:
+                # find associated tile hit
+                hit_tile_assoc = index_finder(list(ttree_mu3e.tilehit_tile), neighbour_z_id)
+
+                # workaround for multiple hits in the same tile
+                try:
+                    hit_tile_assoc = int(*hit_tile_assoc)
+                except (TypeError, ValueError):
+                    continue
+
+                # calculate dt
+                # TODO: TOF maybe with edep ?
+                hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] + __detector__.TileDetector.tile[hit_tile].dt_truth
+                hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + __detector__.TileDetector.tile[
+                    neighbour_z_id].dt_truth
+                dt = hit_time_2 - hit_time_1
+
+                if abs(dt) <= 1:
+                    # Add to mean
+                    if dt_z.get(hit_tile):
+                        dt_z[hit_tile] = (dt_z[hit_tile] * dt_z_n[hit_tile] + dt) / (dt_z_n[hit_tile] + 1)
+                        dt_z_n[hit_tile] += 1
+                    else:
+                        dt_z[hit_tile] = dt
+                        dt_z_n[hit_tile] = 1
+
+                    cluster_counter += 1
+
+            # -----------------------------
+            # Look for clusters in phi-dir
+            neighbour_z_id = __detector__.TileDetector.getNeighbour(hit_tile, "up")
+            if neighbour_z_id in ttree_mu3e.tilehit_tile and neighbour_z_id is not False:
+                # find associated tile hit
+                hit_tile_assoc = index_finder(list(ttree_mu3e.tilehit_tile), neighbour_z_id)
+
+                # workaround for multiple hits in the same tile
+                try:
+                    hit_tile_assoc = int(*hit_tile_assoc)
+                except (TypeError, ValueError):
+                    continue
+
+                # calculate dt
+                # TODO: TOF maybe with edep ?
+                hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] + __detector__.TileDetector.tile[
+                    hit_tile].dt_truth
+                hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + __detector__.TileDetector.tile[
+                    neighbour_z_id].dt_truth
+                dt = hit_time_2 - hit_time_1
+
+                if abs(dt) <= 1:
+                    # Add to mean
+                    if dt_phi.get(hit_tile):
+                        dt_phi[hit_tile] = (dt + dt_phi[hit_tile] * dt_phi_n[hit_tile]) / (dt_phi_n[hit_tile] + 1)
+                        dt_phi_n[hit_tile] += 1
+                    else:
+                        dt_phi[hit_tile] = dt
+                        dt_phi_n[hit_tile] = 1
+                    cluster_counter += 1
+
+    return dt_z, dt_phi
+
+
+# ---------------------------------------
 # calculates the median from the histogram dict returned by fill_dt_histogram()
 # returns residuals to true dt if resid=True
 
@@ -394,7 +484,8 @@ def fill_dt_histos(ttree_mu3e) -> dict:
                 # calculate dt
                 # TODO: TOF maybe with edep ?
                 hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] + __detector__.TileDetector.tile[hit_tile].dt_truth
-                hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + __detector__.TileDetector.tile[neighbour_z_id].dt_truth
+                hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + __detector__.TileDetector.tile[
+                    neighbour_z_id].dt_truth
                 dt = hit_time_2 - hit_time_1
 
                 # Fill histogram

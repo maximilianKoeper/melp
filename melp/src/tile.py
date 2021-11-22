@@ -61,6 +61,9 @@ class Tile:
         elif self.id < 300000:
             return 1
 
+    def __eq__(self, other):
+        return self.id == other.id
+
 
 # ---------------------------------------------------------------------
 #  TILE Detector CLASS
