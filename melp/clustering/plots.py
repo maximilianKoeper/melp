@@ -9,7 +9,6 @@ import melp.clustering.spatial_cluster as sclump
 
 #-------------------------------------------------
 def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.Detector, mask_type):
-    #comparing to primary
     frac_corr_frame = []
     frac_uncorr_frame = []
     total_hits = []
@@ -55,6 +54,53 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.Detector, 
                             uncorr_counter += 1
                 #else:
                     #primary_not_found_counter += 1
+
+        if corr_counter != 0:
+            frac_corr_frame.append(corr_counter/tot_hits_frame)  
+
+        if uncorr_counter != 0:
+            frac_uncorr_frame.append(uncorr_counter/tot_hits_frame)
+
+        total_hits.append(tot_hits_frame)
+        
+    return frac_corr_frame, frac_uncorr_frame
+
+#----------------------------------------------------
+def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.Detector, mask_type):
+    frac_corr_frame = []
+    frac_uncorr_frame = []
+    total_hits = []
+
+    for frame in range(ttree_mu3e.GetEntries()):
+        ttree_mu3e.GetEntry(frame)
+        
+        tot_hits_frame = len(ttree_mu3e.tilehit_tile)
+        corr_counter = 0
+        uncorr_counter = 0
+        
+        #get primaries
+        tids_frame = get_tid_frame(ttree_mu3e, ttree_mu3e_mc)
+        tids_frame_arr = []
+        for key in tids_frame.keys():
+            tids_frame_arr.append([key,tids_frame[key]]) #[hit tile, tid for tile hit]
+
+        #get clusters
+        clusters_with_tids = sclump.build_cluster_with_truth_tid(ttree_mu3e, ttree_mu3e_mc, mu3e_detector, mask_type)
+        cluster_tids_arr = []
+        cluster_arr = []
+        for key in clusters_with_tids.keys():
+            cluster_tids_arr.append(key)
+            cluster_arr.append(clusters_with_tids[key])
+
+        #comparison
+        for i in range(len(tids_frame_arr)):
+            for j in range(len(cluster_tids_arr)):
+                if cluster_tids_arr[j] == tids_frame_arr[i][1]:
+                    for k in range(len(cluster_arr[j])):
+                        if cluster_arr[j][k] == tids_frame_arr[i][0]:
+                            corr_counter += 1
+                        else:
+                            uncorr_counter += 1
 
         if corr_counter != 0:
             frac_corr_frame.append(corr_counter/tot_hits_frame)  

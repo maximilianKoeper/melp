@@ -327,3 +327,22 @@ def build_cluster_with_truth_primary(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: m
             clusters_with_primaries[j] = whole_clusters_tmp
     
     return clusters_with_primaries
+
+#-------------------------------------------------
+def build_cluster_with_truth_tid(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.Detector, mask_type):
+    #get tids
+    tilehit_tid = get_tid_frame(ttree_mu3e, ttree_mu3e_mc)
+    #get clusters
+    clusters_frame = build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, mu3e_detector, mask_type)
+    whole_clusters = []
+    clusters_with_tid = {} #returned: keys:tid of "master"-tile; values:whole
+    for key in clusters_frame.keys():
+        whole_clusters_tmp = []
+        whole_clusters_tmp.append(key)
+        for i in clusters_frame[key]:
+            whole_clusters_tmp.append(i)
+        whole_clusters.append(np.array(whole_clusters_tmp))
+
+        clusters_with_tid[tilehit_tid[key]] = whole_clusters_tmp
+    
+    return clusters_with_tid
