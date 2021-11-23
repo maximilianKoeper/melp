@@ -192,14 +192,29 @@ def get_cluster_primary_truth_frame(filename, frame):
 
     ttree_mu3e.GetEntry(frame)
     for i in range(len(ttree_mu3e.tilehit_tile)):
-        tile = ttree_mu3e.tilehit_tile[i]
+        #tile = ttree_mu3e.tilehit_tile[i]
+        #mc_i = ttree_mu3e.tilehit_mc_i[i]
+        #ttree_mu3e_mc.GetEntry(mc_i)
         mc_i = ttree_mu3e.tilehit_mc_i[i]
         ttree_mu3e_mc.GetEntry(mc_i)
         hid = ttree_mu3e_mc.hid
 
-        if abs(hid) == 1:
+        if np.abs(hid) == 1:
+            tile = ttree_mu3e.tilehit_tile[i]
             cluster_primary.append(tile)
 
     return cluster_primary
 
+#------------------------------------------
+def hit_tiles_in_frame(filename, frame):
+    hit_tiles = []
+    file = ROOT.TFile(filename)
+    ttree_mu3e = file.Get("mu3e")
+    
+    ttree_mu3e.GetEntry(frame)
+
+    for hit_tile_index in range(len(ttree_mu3e.tilehit_tile)):
+        hit_tiles.append(ttree_mu3e.tilehit_tile[hit_tile_index])
+
+    return hit_tiles
 

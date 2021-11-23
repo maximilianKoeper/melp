@@ -5,6 +5,7 @@ from melp import Detector
 
 from melp.clustering.misc import*
 
+
 """
 def spatial_truth_clusters_frame(filename,frame,threshold):
     clusters = {}
@@ -169,17 +170,14 @@ def build_mask_around_cluster_primary(filename, frame, mu3e_detector: melp.Detec
     ttree_mu3e.GetEntry(frame)
     if mask_type == "small":
         for i in range(len(primaries)):
-            mask_tmp = []
             tile_centre = primaries[i]
             tile_centre_top = mu3e_detector.TileDetector.getNeighbour(tile_centre, "up")
             tile_centre_bottom = mu3e_detector.TileDetector.getNeighbour(tile_centre, "down")
             tile_left_centre = mu3e_detector.TileDetector.getNeighbour(tile_centre, "left")
             tile_right_centre = mu3e_detector.TileDetector.getNeighbour(tile_centre, "right")
-            mask_tmp.append(tile_centre)
-            mask_tmp.append(tile_centre_top)
-            mask_tmp.append(tile_centre_bottom)
-            mask_tmp.append(tile_left_centre)
-            mask_tmp.append(tile_right_centre)
+
+            mask_tmp = np.array([tile_centre, tile_centre_top, tile_centre_bottom, 
+                                tile_left_centre, tile_right_centre])
 
             if False in mask_tmp:
                 mask_tmp = [x for x in mask_tmp if x != False]
@@ -188,7 +186,6 @@ def build_mask_around_cluster_primary(filename, frame, mu3e_detector: melp.Detec
 
     if mask_type == "medium":
         for i in range(len(primaries)):
-            mask_tmp = []
             tile_centre = primaries[i]
             tile_centre_top = mu3e_detector.TileDetector.getNeighbour(tile_centre, "up")
             tile_centre_bottom = mu3e_detector.TileDetector.getNeighbour(tile_centre, "down")
@@ -198,15 +195,10 @@ def build_mask_around_cluster_primary(filename, frame, mu3e_detector: melp.Detec
             tile_right_centre = mu3e_detector.TileDetector.getNeighbour(tile_centre, "right")
             tile_right_top = mu3e_detector.TileDetector.getNeighbour(tile_right_centre, "up")
             tile_right_bootom = mu3e_detector.TileDetector.getNeighbour(tile_right_centre, "down")
-            mask_tmp.append(tile_centre)
-            mask_tmp.append(tile_centre_top)
-            mask_tmp.append(tile_centre_bottom)
-            mask_tmp.append(tile_left_top)
-            mask_tmp.append(tile_left_centre)
-            mask_tmp.append(tile_left_bottom)
-            mask_tmp.append(tile_right_top)
-            mask_tmp.append(tile_right_centre)
-            mask_tmp.append(tile_right_bootom)
+
+            mask_tmp = np.array([tile_centre, tile_centre_top, tile_centre_bottom, tile_left_top, 
+                                tile_left_centre, tile_left_bottom, tile_right_top, tile_right_centre, 
+                                tile_right_bootom])
 
             if False in mask_tmp:
                 mask_tmp = [x for x in mask_tmp if x != False]
@@ -215,7 +207,6 @@ def build_mask_around_cluster_primary(filename, frame, mu3e_detector: melp.Detec
 
     if mask_type == "big":
         for i in range(len(primaries)):
-            mask_tmp = []
             tile_centre = primaries[i]
             tile_centre_top = mu3e_detector.TileDetector.getNeighbour(tile_centre, "up")
             tile_centre_bottom = mu3e_detector.TileDetector.getNeighbour(tile_centre, "down")
@@ -240,36 +231,18 @@ def build_mask_around_cluster_primary(filename, frame, mu3e_detector: melp.Detec
             tile_far_right_top = mu3e_detector.TileDetector.getNeighbour(tile_right_top, "right")
             tile_far_right_bottom = mu3e_detector.TileDetector.getNeighbour(tile_right_bottom, "right")
 
-            mask_tmp.append(tile_centre)
-            mask_tmp.append(tile_centre_top)
-            mask_tmp.append(tile_centre_bottom)
-            mask_tmp.append(tile_left_top)
-            mask_tmp.append(tile_left_centre)
-            mask_tmp.append(tile_left_bottom)
-            mask_tmp.append(tile_right_top)
-            mask_tmp.append(tile_right_centre)
-            mask_tmp.append(tile_right_bottom)
-
-            mask_tmp.append(tile_centre_far_top)
-            mask_tmp.append(tile_centre_far_bottom)
-            mask_tmp.append(tile_left_far_centre)
-            mask_tmp.append(tile_left_far_top)
-            mask_tmp.append(tile_left_far_bottom)
-            mask_tmp.append(tile_right_far_centre)
-            mask_tmp.append(tile_right_far_top)
-            mask_tmp.append(tile_right_far_bottom)
-
-            mask_tmp.append(tile_far_left_top)
-            mask_tmp.append(tile_far_left_bottom)
-            mask_tmp.append(tile_far_right_top)
-            mask_tmp.append(tile_far_right_bottom)
+            mask_tmp = np.array([tile_centre, tile_centre_top, tile_centre_bottom, tile_left_top, tile_left_centre, tile_left_bottom,
+                                   tile_right_top, tile_right_centre, tile_right_bottom, tile_centre_far_top, tile_centre_far_bottom, 
+                                   tile_left_far_centre, tile_left_far_top, tile_left_far_top, tile_left_far_bottom, tile_right_far_centre, 
+                                   tile_right_far_top, tile_right_far_bottom, tile_far_left_top, tile_far_left_bottom, tile_far_right_top, 
+                                   tile_far_right_bottom])
 
             if False in mask_tmp:
                 mask_tmp = [x for x in mask_tmp if x != False]
 
             mask[tile_centre] = mask_tmp
 
-    return mask    
+    return mask 
 
 #----------------------------------------------------
 #builds clusters in the masks around hit with hid=1,-1 according to primaries.
@@ -288,18 +261,22 @@ def build_clusters_in_masks(filename, frame, mu3e_detector: melp.Detector, mask_
     ttree_mu3e = file.Get("mu3e")
     ttree_mu3e.GetEntry(frame)
 
-    for tile_id in mu3e_detector.TileDetector.tile:
+    hit_tiles = []
+    for hit_tile_index in range(len(ttree_mu3e.tilehit_tile)):
+        hit_tiles.append(ttree_mu3e.tilehit_tile[hit_tile_index])
+
+
+    for tile_id in hit_tiles:
         if tile_id < 300000:
-            tile = mu3e_detector.TileDetector.tile[tile_id]
             cluster_tmp = []
             cluster_primary_tmp = 0
-            for hits in tile.hits:
-                if hits.frame_id == frame:
-                    if tile.id not in primary_masks.keys(): #if not primary
-                        for i in range(len(values)):
-                            if tile.id in values[i]:
-                                cluster_tmp.append(tile.id)
-                                cluster_primary_tmp = keys[i]
+            if tile_id not in primary_masks.keys(): #if not primary
+                for i in range(len(values)):
+                    if tile_id in values[i]:
+                        cluster_tmp.append(tile_id)
+                        cluster_primary_tmp = keys[i]
+
+
 
             if cluster_primary_tmp != 0:
                 if cluster_primary_tmp not in clusters.keys() and len(cluster_tmp) > 0:              
@@ -330,9 +307,15 @@ def build_cluster_with_truth_primary(filename, frame, mu3e_detector: melp.Detect
         for i in clusters_frame[key]:
             whole_clusters_tmp.append(i)
         whole_clusters.append(np.array(whole_clusters_tmp))
-        cluster_centre_primary = get_mc_primary_for_hit_array(filename, frame, cluster_tiles = [key])
 
-        for key2 in cluster_centre_primary.keys():
-            clusters_with_primaries[cluster_centre_primary[key2]] = whole_clusters_tmp
+        tilehit_primary = []
+        for i in range(len(ttree_mu3e.tilehit_tile)):
+            tile = ttree_mu3e.tilehit_tile[i]
+            if tile == key:
+                primary = ttree_mu3e.tilehit_primary[i]
+                tilehit_primary.append(primary)
+
+        for j in tilehit_primary:
+            clusters_with_primaries[j] = whole_clusters_tmp
     
     return clusters_with_primaries
