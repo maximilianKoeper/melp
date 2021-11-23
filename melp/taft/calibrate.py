@@ -39,6 +39,7 @@ def calibrate(filename: str, **kwargs):
         warnings.warn("ERROR: Detector not selected")
         return
 
+    # check detector calibrated Flag
     if __detector__.TileDetector.calibrated is True:
         if kwargs.get("overwrite"):
             warnings.warn("Warning: Overwriting old calibration data")
@@ -46,20 +47,24 @@ def calibrate(filename: str, **kwargs):
             warnings.warn("Warning: detector has already calibration data")
             return
 
+    # Start timers
     t = Timer()
     t.start()
 
     file = ROOT.TFile(filename)
     ttree_mu3e = file.Get("mu3e")
 
+    # TODO: workaround
     resid_z, resid_phi = (None, None)
-    # calculate residuals to truth
-    # and dt between tiles (median of the histogram)
+
     if kwargs["dt_mode"] == "median":
         # Get dict with histogramms with dt data
         histogram = fill_dt_histos(ttree_mu3e)
+        # calculate residuals to truth
+        # and dt between tiles (median of the histogram)
         dt_z_rel, dt_phi_rel, resid_z, resid_phi = get_median_from_hist(histogram, resid=True)
     elif kwargs["dt_mode"] == "mean":
+        # calculate dt between tiles (mean)
         dt_z_rel, dt_phi_rel = get_mean_from_ttree(ttree_mu3e)
 
     # correction for phi loop (going around the loop should result in sum dt = 0)

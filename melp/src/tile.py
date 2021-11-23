@@ -44,16 +44,16 @@ class Tile:
         if self.station() == 2:
             tmp_id -= 100000
 
-        row_tmp = math.floor(tmp_id / 56)
-        return row_tmp
+        res = tmp_id % 56
+        return res
 
     def column(self) -> int:
         tmp_id = self.id - 200000
         if self.station() == 2:
             tmp_id -= 100000
 
-        column_tmp = tmp_id % 56
-        return column_tmp
+        tmp = math.floor(tmp_id / 56)
+        return tmp
 
     def station(self) -> int:
         if self.id >= 300000:
@@ -199,3 +199,13 @@ class TileDetector:
             return tile_ids
         else:
             raise ValueError("Column must be between 0-51")
+
+    # -----------------------------------------
+    # get tile id from row and column
+    def id_from_row_col(self, row: int, column: int, station_offset: int) -> int:
+        tile_id = station_offset + row + column * 56
+
+        if tile_id not in self.tile.keys():
+            raise ValueError("No tile at given coordinates")
+
+        return tile_id

@@ -14,8 +14,9 @@ def plot_station_calibration(mu3e_detector):
         tile = mu3e_detector.TileDetector.tile[tile_id]
         if tile.id > 300000:
             continue
-        x = tile.row()
-        y = tile.column()
+        y = tile.row()
+        x = tile.column()
+        # print(tile_id, x, y)
 
         grid_relative[x][y] = float(tile.dt_truth - tile.dt_cal - mu3e_detector.TileDetector.tile[200000].dt_truth)
         grid_truth[x][y] = tile.dt_truth
