@@ -206,6 +206,9 @@ class TileDetector:
         tile_id = station_offset + row + column * 56
 
         if tile_id not in self.tile.keys():
-            raise ValueError("No tile at given coordinates")
+            raise ValueError(f"No tile at given coordinates {row}, {column}")
+
+        if row > 55 or column > 51:
+            raise ValueError("expected row < 56 and column < 52")
 
         return tile_id
