@@ -18,11 +18,12 @@ def spatial_truth_clusters_frame(filename,frame,threshold):
 
 #------------------------------------------
 #build mask around every hit in frame using tile ids (outdated)
-def build_mask(filename, frame, mask_type = "medium"): 
-    file = ROOT.TFile(filename)
-    ttree_mu3e = file.Get("mu3e")
+def build_mask(ttree_mu3e, mask_type = "medium"): 
+#def build_mask(filename, frame, mask_type = "medium"): 
+    #file = ROOT.TFile(filename)
+    #ttree_mu3e = file.Get("mu3e")
     mask = {}
-    ttree_mu3e.GetEntry(frame)
+    #ttree_mu3e.GetEntry(frame)
     if mask_type == "medium":
         for i in range(len(ttree_mu3e.tilehit_tile)):
             mask_tmp = []
@@ -50,11 +51,12 @@ def build_mask(filename, frame, mask_type = "medium"):
 
 #-----------------------------------------------
 #builds masks around every hit in frame using the get neighbour function, which works if hit is at the edge of the detector.
-def build_mask_detector_class(filename, frame, mu3e_detector: melp.Detector, mask_type):
-    file = ROOT.TFile(filename)
-    ttree_mu3e = file.Get("mu3e")
+def build_mask_detector_class(ttree_mu3e, mu3e_detector: melp.Detector, mask_type):
+#def build_mask_detector_class(filename, frame, mu3e_detector: melp.Detector, mask_type):
+    #file = ROOT.TFile(filename)
+    #ttree_mu3e = file.Get("mu3e")
     mask = {}
-    ttree_mu3e.GetEntry(frame)
+    #ttree_mu3e.GetEntry(frame)
     if mask_type == "small":
         for i in range(len(ttree_mu3e.tilehit_tile)):
             mask_tmp = []
@@ -161,13 +163,15 @@ def build_mask_detector_class(filename, frame, mu3e_detector: melp.Detector, mas
 
 #------------------------------------------------
 #builds masks around every hit in frame with hid=1,-1 using the get neighbour function, which works if hit is at the edge of the detector.
-def build_mask_around_cluster_primary(filename, frame, mu3e_detector: melp.Detector, mask_type):
-    primaries = get_cluster_primary_truth_frame(filename, frame)
+def build_mask_around_cluster_primary(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.Detector, mask_type):
+#def build_mask_around_cluster_primary(filename, frame, mu3e_detector: melp.Detector, mask_type):
+    #primaries = get_cluster_primary_truth_frame(filename, frame)
+    primaries = get_cluster_primary_truth_frame(ttree_mu3e, ttree_mu3e_mc)
 
-    file = ROOT.TFile(filename)
-    ttree_mu3e = file.Get("mu3e")
+    #file = ROOT.TFile(filename)
+    #ttree_mu3e = file.Get("mu3e")
     mask = {}
-    ttree_mu3e.GetEntry(frame)
+    #ttree_mu3e.GetEntry(frame)
     if mask_type == "small":
         for i in range(len(primaries)):
             tile_centre = primaries[i]
@@ -246,8 +250,10 @@ def build_mask_around_cluster_primary(filename, frame, mu3e_detector: melp.Detec
 
 #----------------------------------------------------
 #builds clusters in the masks around hit with hid=1,-1 according to primaries.
-def build_clusters_in_masks(filename, frame, mu3e_detector: melp.Detector, mask_type):
-    primary_masks = build_mask_around_cluster_primary(filename, frame, mu3e_detector, mask_type)
+def build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.Detector, mask_type):
+#def build_clusters_in_masks(filename, frame, mu3e_detector: melp.Detector, mask_type):
+    primary_masks = build_mask_around_cluster_primary(ttree_mu3e, ttree_mu3e_mc, mu3e_detector, mask_type)
+    #primary_masks = build_mask_around_cluster_primary(filename, frame, mu3e_detector, mask_type)
 
     clusters = {} #keys: "master"-tile; values: rest of cluster
 
@@ -257,9 +263,9 @@ def build_clusters_in_masks(filename, frame, mu3e_detector: melp.Detector, mask_
         keys.append(key)
         values.append(primary_masks[key])
 
-    file = ROOT.TFile(filename)
-    ttree_mu3e = file.Get("mu3e")
-    ttree_mu3e.GetEntry(frame)
+    #file = ROOT.TFile(filename)
+    #ttree_mu3e = file.Get("mu3e")
+    #ttree_mu3e.GetEntry(frame)
 
     hit_tiles = []
     for hit_tile_index in range(len(ttree_mu3e.tilehit_tile)):
@@ -292,13 +298,15 @@ def build_clusters_in_masks(filename, frame, mu3e_detector: melp.Detector, mask_
 
 #-----------------------------------------------------
 #builds clusters where dict-key is the primary of "master"-tile and not "master" tile and value is the whole cluster
-def build_cluster_with_truth_primary(filename, frame, mu3e_detector: melp.Detector, mask_type):
-    file = ROOT.TFile(filename)
-    ttree_mu3e = file.Get("mu3e")
-    ttree_mu3e.GetEntry(frame)
+def build_cluster_with_truth_primary(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.Detector, mask_type):
+#def build_cluster_with_truth_primary(filename, frame, mu3e_detector: melp.Detector, mask_type):
+    #file = ROOT.TFile(filename)
+    #ttree_mu3e = file.Get("mu3e")
+    #ttree_mu3e.GetEntry(frame)
 
     #get clusters
-    clusters_frame = build_clusters_in_masks(filename, frame, mu3e_detector, mask_type)
+    clusters_frame = build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, mu3e_detector, mask_type)
+    #clusters_frame = build_clusters_in_masks(filename, frame, mu3e_detector, mask_type)
     whole_clusters = []
     clusters_with_primaries = {} #returned: keys:primary of "master"-tile; values:whole
     for key in clusters_frame.keys():
