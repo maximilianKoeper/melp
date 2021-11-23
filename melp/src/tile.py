@@ -1,20 +1,25 @@
 # ---------------------------------------------------------------------
-#  TILE CLASS
-#       - pos (position)
-#       - dir (normal vector to tile surface)
-#       - id
+#  TILES and TILE DETECTOR
 # ---------------------------------------------------------------------
 import dataclasses
 import warnings
 import math
 
 
+# ---------------------------------------------------------------------
+#  TILE CLASS
+#       - pos (position)
+#       - dir (normal vector to tile surface)
+#       - id
+#       - dt (time misal truth)
+#       - dt_cal
+# ---------------------------------------------------------------------
 @dataclasses.dataclass
 class Tile:
     id: int
     pos: list
     dir: list
-    dt: float = 0.
+    dt_truth: float = 0.
     dt_cal: float = 0.
 
     hits: list = dataclasses.field(default_factory=list)
@@ -30,7 +35,8 @@ class Tile:
         print("  - Position: ", self.pos)
         print("  - Direction: ", self.dir)
         print("  - Total Hits: ", len(self.hits))
-        print("  - Truth Time Misal: ", self.dt)
+        print("  - Truth Time Misal: ", self.dt_truth)
+        print("  - Calibrated Time Misal: ", self.dt_cal)
         print("------------------------------")
 
     def row(self) -> int:
@@ -55,7 +61,13 @@ class Tile:
         elif self.id < 300000:
             return 1
 
+    def __eq__(self, other):
+        return self.id == other.id
 
+
+# ---------------------------------------------------------------------
+#  TILE Detector CLASS
+# ---------------------------------------------------------------------
 class TileDetector:
     def __init__(self, tiles: dict, misal=False):
         self.tile = tiles
@@ -63,6 +75,7 @@ class TileDetector:
         self.hitrate = []
         self.hitangle = []
         self.tilemisal = misal
+        self.calibrated = False
 
     # -----------------------------------------
     #  public functions
@@ -89,7 +102,7 @@ class TileDetector:
     # -----------------------------------------
 
     def addDT(self, tile: int, dt: float):
-        self.tile[tile].dt = dt
+        self.tile[tile].dt_truth = dt
 
     # -----------------------------------------
     # returns neighbour id for given tile
@@ -100,7 +113,7 @@ class TileDetector:
     # up: +1 (exception: end of ring)
     # down: -1 (exception beginning of ring)
     #
-    def getNeighbour(self, tileid: int, position: str):
+    def getNeighbour(self, tileid: int, position: str) -> int or bool:
 
         # left
         if position == "l" or position == "left":

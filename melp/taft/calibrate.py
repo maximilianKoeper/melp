@@ -1,20 +1,27 @@
 import ROOT
 
 import numpy as np
+from scipy.optimize import minimize
 import warnings
 
-from melp.libs.misc import *
-from .misc import *
-import melp
+from melp import Detector
+from melp.libs.timer import Timer
+
+# fast index lookup
+from melp.libs.misc import index_finder
+
+# different functions for calibration
+from melp.taft.tof_corrections import tof_correction_z
+from melp.taft.misc_corrections import loop_correction_phi
 
 # ---------------------------------------------------------------------
 #  Define global variables and functions to select Detector
 # ---------------------------------------------------------------------
 
-__detector__ = None
+__detector__: Detector = None
 
 
-def select(selection: melp.Detector):
+def select(selection: Detector):
     global __detector__
     __detector__ = selection
 
@@ -27,40 +34,58 @@ def select(selection: melp.Detector):
 def calibrate(filename: str, **kwargs):
     # TODO: tidy up and streamline options
     global __detector__
+
     if __detector__ is None:
-        print("ERROR: Detector not selected")
+        warnings.warn("ERROR: Detector not selected")
         return
+
+    if __detector__.TileDetector.calibrated is True:
+        if kwargs.get("overwrite"):
+            warnings.warn("Warning: Overwriting old calibration data")
+        else:
+            warnings.warn("Warning: detector has already calibration data")
+            return
+
+    t = Timer()
+    t.start()
 
     file = ROOT.TFile(filename)
     ttree_mu3e = file.Get("mu3e")
 
-    # Get dict with histogramms with dt data
-    histogram = fill_dt_histos(ttree_mu3e)
-
+    resid_z, resid_phi = (None, None)
     # calculate residuals to truth
     # and dt between tiles (median of the histogram)
-    dt_z_rel, dt_phi_rel, resid_z, resid_phi = get_median_from_hist(histogram, resid=True)
+    if kwargs["dt_mode"] == "median":
+        # Get dict with histogramms with dt data
+        histogram = fill_dt_histos(ttree_mu3e)
+        dt_z_rel, dt_phi_rel, resid_z, resid_phi = get_median_from_hist(histogram, resid=True)
+    elif kwargs["dt_mode"] == "mean":
+        dt_z_rel, dt_phi_rel = get_mean_from_ttree(ttree_mu3e)
 
     # correction for phi loop (going around the loop should result in sum dt = 0)
-    loop_correction_phi(dt_phi_rel, 200000)
-    loop_correction_phi(dt_phi_rel, 300000)
+    loop_correction_phi(__detector__, dt_phi_rel, 200000)
+    loop_correction_phi(__detector__, dt_phi_rel, 300000)
 
-    tof_correction_z(dt_z_rel, 200000, kwargs["tof"])
-    tof_correction_z(dt_z_rel, 300000, kwargs["tof"])
+    dt_z_rel = tof_correction_z(__detector__, dt_z_rel, 200000, kwargs["tof"])
+    dt_z_rel = tof_correction_z(__detector__, dt_z_rel, 300000, kwargs["tof"])
 
-    align_timings()
+    align_timings(dt_phi_rel, dt_z_rel, 200000)
 
-    # TODO: combine phi and z information
+    # set calibrated Flag in detector
+    __detector__.TileDetector.calibrated = True
+
+    print("Calibration finished")
+    t.print()
 
     # ------------------------------------------------------
     # Only for testing below here:
-
+    #
     # pre align in z direction
     cal_station_1_z, cal_station_2_z = pre_align_z(dt_z_rel.copy())
-
+    #
     # pre align in phi direction
     cal_station_1_phi, cal_station_2_phi = pre_align_phi(dt_phi_rel.copy())
-
+    #
     # return difference from truth
     cal = None
     if "station" in kwargs.keys():
@@ -68,7 +93,7 @@ def calibrate(filename: str, **kwargs):
             cal = check_cal_z(cal_station_1_z, 1)
         elif kwargs["station"] == 2:
             cal = check_cal_z(cal_station_2_z, 2)
-
+    #
     cal_phi = None
     if "station" in kwargs.keys():
         if kwargs["station"] == 1:
@@ -81,65 +106,76 @@ def calibrate(filename: str, **kwargs):
 
 
 # ---------------------------------------
+def minimize_function_z(offset: float, dt_phi_rel: list, dt_z_rel: list, dt_phi_plus_one: list) -> float:
+    tmp = 0.
+    tmp += abs(offset - dt_z_rel[0])
+
+    tmp_1 = 0.
+    for i in range(len(dt_phi_rel) - 1):
+        for j in range(i):
+            tmp_1 += dt_phi_rel[j] - dt_phi_plus_one[j]
+
+        tmp_1 += - offset + dt_z_rel[i + 1]
+
+        tmp += abs(tmp_1)
+
+    return tmp
+
+
 # TODO
-def align_timings():
-    pass
+def align_timings(dt_phi_rel: dict, dt_z_rel: dict, station_offset: int):
+    print("Calculating absolute timing offsets to master tile.")
 
+    result = {}
+    for z_position in range(len(__detector__.TileDetector.row_ids(0, station_offset)) - 1):
+        # generating empty temporary arrays
+        dt_phi_arr_tmp = []
+        dt_phi_plus_one_arr_tmp = []
+        dt_z_arr_tmp = []
 
-# ---------------------------------------
-def loop_correction_phi(dt_phi_rel: dict, station: int):
-    for z in range(len(__detector__.TileDetector.row_ids(0, station))):
-        tile_ids = __detector__.TileDetector.column_ids(z, station)
+        # generating column ids
+        column_ids_for_current_z = __detector__.TileDetector.column_ids(z_position, station_offset)
+        column_ids_for_current_z_plus_one = __detector__.TileDetector.column_ids(z_position + 1, station_offset)
 
-        sum_dt_row = 0.
-        number_unfilled_dt = 0
-        for id_index in tile_ids:
-            try:
-                sum_dt_row += dt_phi_rel[id_index]
-            except KeyError:
-                number_unfilled_dt += 1
-                continue
+        # filling arrays with relative dt information
+        for tile_id in column_ids_for_current_z:
+            dt_phi_arr_tmp.append(dt_phi_rel[tile_id] if tile_id in dt_phi_rel.keys() else 0)
+            dt_z_arr_tmp.append(dt_z_rel[tile_id] if tile_id in dt_z_rel.keys() else 0)
 
-        sum_dt_row /= (len(tile_ids) - number_unfilled_dt)
+        for tile_id in column_ids_for_current_z_plus_one:
+            dt_phi_plus_one_arr_tmp.append(dt_phi_rel[tile_id] if tile_id in dt_phi_rel.keys() else 0)
 
-        for id_index in tile_ids:
-            try:
-                dt_phi_rel[id_index] -= sum_dt_row
-            except KeyError:
-                continue
+        dt_phi_arr_tmp = np.asarray(dt_phi_arr_tmp)
+        dt_phi_plus_one_arr_tmp = np.asarray(dt_phi_plus_one_arr_tmp)
+        dt_z_arr_tmp = np.asarray(dt_z_arr_tmp)
+        # optimizing z-direction
+        res = minimize(minimize_function_z, x0=0., args=(dt_phi_arr_tmp, dt_z_arr_tmp, dt_phi_plus_one_arr_tmp),
+                       tol=1e-6)
 
-    return dt_phi_rel
+        # print(res.x[0])
+        result[z_position] = res.x[0]
 
+    # first row
+    # we have to set the first tile as the master tile with offset = 0
+    absolute_timing_offset = 0.
+    for phi_id in __detector__.TileDetector.column_ids(0, station_offset):
+        __detector__.TileDetector.tile[phi_id].dt_cal = absolute_timing_offset
+        absolute_timing_offset += dt_phi_rel[phi_id if phi_id in dt_phi_rel.keys() else station_offset]
 
-# ---------------------------------------
-def tof_correction_z(dt_z_rel: dict, station_offset: int, tof_mode: str):
-    for phi in range(len(__detector__.TileDetector.column_ids(0, station_offset))):
-        tile_ids = __detector__.TileDetector.row_ids(phi, station_offset)
+    # all other rows
+    for z_position in range(1, len(__detector__.TileDetector.row_ids(0, station_offset))):
+        last_master_id = int(__detector__.TileDetector.row_ids(0, station_offset)[z_position - 1])
+        last_master_offset = __detector__.TileDetector.tile[last_master_id].dt_cal
+        # tmp_id = __detector__.TileDetector.column_ids (0, station_offset)[z_position]
+        current_master_offset = last_master_offset + result[z_position - 1]
 
-        for id_index in tile_ids:
-            try:
-                dt_tmp = dt_z_rel[id_index]
-            except KeyError:
-                continue
+        absolute_timing_offset = current_master_offset
+        for phi_id in __detector__.TileDetector.column_ids(z_position, station_offset):
+            # print(phi_id, dt_phi_rel[phi_id])
+            __detector__.TileDetector.tile[phi_id].dt_cal = absolute_timing_offset
+            absolute_timing_offset += dt_phi_rel[phi_id if phi_id in dt_phi_rel.keys() else station_offset]
 
-            # TOF correction advanced
-            # TODO: check tof_modes
-            if tof_mode == "advanced":
-                tof_time = tof_z(__detector__.TileDetector.tile[id_index].pos)
-                if station_offset == 200000:
-                    dt_tmp += tof_time
-                else:
-                    dt_tmp -= tof_time
-            elif tof_mode == "simple":
-                tof_time = 0.009
-                if station_offset == 200000:
-                    dt_tmp += tof_time
-                else:
-                    dt_tmp -= tof_time
-            else:
-                warnings.warn("No TOF correction applied")
-
-    return dt_z_rel
+    return
 
 
 # ---------------------------------------
@@ -187,8 +223,8 @@ def check_cal_phi(cal_data, station):
         dt_truth = [0]
         for tile in range(0, 56):
             tile_id = station_offset + z_column * 56 + tile
-            dt_tmp = (__detector__.TileDetector.tile[tile_id].dt -
-                      __detector__.TileDetector.tile[__detector__.TileDetector.getNeighbour(tile_id, "up")].dt)
+            dt_tmp = (__detector__.TileDetector.tile[tile_id].dt_truth -
+                      __detector__.TileDetector.tile[__detector__.TileDetector.getNeighbour(tile_id, "up")].dt_truth)
             dt_truth.append(dt_truth[-1] + dt_tmp)
 
         cal[z_column] = np.array(cal_data[z_column]) + np.array(dt_truth)
@@ -255,13 +291,100 @@ def check_cal_z(cal_data, station):
             tile_id = station_offset + phi_row + tile * 56
             tile_id_neighbour = __detector__.TileDetector.getNeighbour(tile_id, "right")
 
-            dt_tmp = (__detector__.TileDetector.tile[tile_id].dt -
-                      __detector__.TileDetector.tile[tile_id_neighbour].dt)
+            dt_tmp = (__detector__.TileDetector.tile[tile_id].dt_truth -
+                      __detector__.TileDetector.tile[tile_id_neighbour].dt_truth)
             dt_truth.append(dt_truth[-1] + dt_tmp)
 
         cal[phi_row] = np.array(cal_data[phi_row]) + np.array(dt_truth[1:])
 
     return cal
+
+
+# ---------------------------------------
+
+def get_mean_from_ttree(ttree_mu3e) -> (dict, dict):
+    dt_z = {}
+    dt_phi = {}
+    dt_z_n = {}
+    dt_phi_n = {}
+
+    cluster_counter = 0
+
+    for frame in range(ttree_mu3e.GetEntries()):
+        ttree_mu3e.GetEntry(frame)
+
+        # Printing status info
+        if frame % 10000 == 0:
+            print("Searching clusters. Progress: ", np.round(frame / ttree_mu3e.GetEntries() * 100), " % , Found: ",
+                  cluster_counter, end='\r')
+        ttree_mu3e.GetEntry(frame)
+
+        for hit_tile_index in range(len(ttree_mu3e.tilehit_tile)):
+            hit_tile = ttree_mu3e.tilehit_tile[hit_tile_index]
+
+            # -----------------------------
+            # Look for clusters in z-dir
+            neighbour_z_id = __detector__.TileDetector.getNeighbour(hit_tile, "right")
+            if neighbour_z_id in ttree_mu3e.tilehit_tile and neighbour_z_id is not False:
+                # find associated tile hit
+                hit_tile_assoc = index_finder(list(ttree_mu3e.tilehit_tile), neighbour_z_id)
+
+                # workaround for multiple hits in the same tile
+                try:
+                    hit_tile_assoc = int(*hit_tile_assoc)
+                except (TypeError, ValueError):
+                    continue
+
+                # calculate dt
+                # TODO: TOF maybe with edep ?
+                hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] + __detector__.TileDetector.tile[hit_tile].dt_truth
+                hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + __detector__.TileDetector.tile[
+                    neighbour_z_id].dt_truth
+                dt = hit_time_2 - hit_time_1
+
+                if abs(dt) <= 1:
+                    # Add to mean
+                    if dt_z.get(hit_tile):
+                        dt_z[hit_tile] = (dt_z[hit_tile] * dt_z_n[hit_tile] + dt) / (dt_z_n[hit_tile] + 1)
+                        dt_z_n[hit_tile] += 1
+                    else:
+                        dt_z[hit_tile] = dt
+                        dt_z_n[hit_tile] = 1
+
+                    cluster_counter += 1
+
+            # -----------------------------
+            # Look for clusters in phi-dir
+            neighbour_z_id = __detector__.TileDetector.getNeighbour(hit_tile, "up")
+            if neighbour_z_id in ttree_mu3e.tilehit_tile and neighbour_z_id is not False:
+                # find associated tile hit
+                hit_tile_assoc = index_finder(list(ttree_mu3e.tilehit_tile), neighbour_z_id)
+
+                # workaround for multiple hits in the same tile
+                try:
+                    hit_tile_assoc = int(*hit_tile_assoc)
+                except (TypeError, ValueError):
+                    continue
+
+                # calculate dt
+                # TODO: TOF maybe with edep ?
+                hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] + __detector__.TileDetector.tile[
+                    hit_tile].dt_truth
+                hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + __detector__.TileDetector.tile[
+                    neighbour_z_id].dt_truth
+                dt = hit_time_2 - hit_time_1
+
+                if abs(dt) <= 1:
+                    # Add to mean
+                    if dt_phi.get(hit_tile):
+                        dt_phi[hit_tile] = (dt + dt_phi[hit_tile] * dt_phi_n[hit_tile]) / (dt_phi_n[hit_tile] + 1)
+                        dt_phi_n[hit_tile] += 1
+                    else:
+                        dt_phi[hit_tile] = dt
+                        dt_phi_n[hit_tile] = 1
+                    cluster_counter += 1
+
+    return dt_z, dt_phi
 
 
 # ---------------------------------------
@@ -283,10 +406,10 @@ def get_median_from_hist(histogram: dict, resid=False):
             # warnings.warn(f"WARNING: INTEGRAL = 0, tile: {tile_entry}")
             continue
         histogram[tile_entry][0].GetQuantiles(1, q, prob)
-        dt_z[tile_entry] = q
+        dt_z[tile_entry] = q[0]
         if resid:
-            resid_dt = q - (__detector__.TileDetector.tile[neighbour_z_id].dt - __detector__.TileDetector.tile[
-                tile_entry].dt)
+            resid_dt = q - (__detector__.TileDetector.tile[neighbour_z_id].dt_truth - __detector__.TileDetector.tile[
+                tile_entry].dt_truth)
             resid_z.append(resid_dt)
 
     # phi dir:
@@ -304,10 +427,10 @@ def get_median_from_hist(histogram: dict, resid=False):
             # print("WARNING: INTEGRAL = 0", tile_entry)
             continue
         histogram[tile_entry][1].GetQuantiles(1, q, prob)
-        dt_phi[tile_entry] = q
+        dt_phi[tile_entry] = q[0]
         if resid:
-            resid_dt = q - (__detector__.TileDetector.tile[neighbour_phi_id].dt - __detector__.TileDetector.tile[
-                tile_entry].dt)
+            resid_dt = q - (__detector__.TileDetector.tile[neighbour_phi_id].dt_truth - __detector__.TileDetector.tile[
+                tile_entry].dt_truth)
             resid_phi.append(resid_dt)
 
     return dt_z, dt_phi, resid_z, resid_phi
@@ -360,8 +483,9 @@ def fill_dt_histos(ttree_mu3e) -> dict:
 
                 # calculate dt
                 # TODO: TOF maybe with edep ?
-                hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] + __detector__.TileDetector.tile[hit_tile].dt
-                hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + __detector__.TileDetector.tile[neighbour_z_id].dt
+                hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] + __detector__.TileDetector.tile[hit_tile].dt_truth
+                hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + __detector__.TileDetector.tile[
+                    neighbour_z_id].dt_truth
                 dt = hit_time_2 - hit_time_1
 
                 # Fill histogram
@@ -384,9 +508,9 @@ def fill_dt_histos(ttree_mu3e) -> dict:
 
                 # calculate dt
                 # TODO: TOF maybe with edep ?
-                hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] + __detector__.TileDetector.tile[hit_tile].dt
+                hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] + __detector__.TileDetector.tile[hit_tile].dt_truth
                 hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + __detector__.TileDetector.tile[
-                    neighbour_phi_id].dt
+                    neighbour_phi_id].dt_truth
                 dt = hit_time_2 - hit_time_1
 
                 # Fill histogram
