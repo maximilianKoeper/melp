@@ -77,12 +77,7 @@ def get_tid_file(ttree_mu3e, ttree_mu3e_mc):
 
 #--------------------------------------------------
 def get_tid_frame(ttree_mu3e, ttree_mu3e_mc):
-#def get_tid_frame(filename, frame):
-    #file = ROOT.TFile(filename)
-    #ttree_mu3e = file.Get("mu3e")
-    #ttree_mu3e_mc = file.Get("mu3e_mchits")
     tid = {}
-    #ttree_mu3e.GetEntry(frame)
     for i in range(len(ttree_mu3e.tilehit_tile)):
         tile = ttree_mu3e.tilehit_tile[i]
         mc_i = ttree_mu3e.tilehit_mc_i[i]
@@ -92,6 +87,19 @@ def get_tid_frame(ttree_mu3e, ttree_mu3e_mc):
         tid[tile] = ttree_mu3e_mc.tid
 
     return tid
+
+#--------------------------------------------------
+def get_primary_frame(ttree_mu3e, ttree_mu3e_mc):
+    primary = {}
+    for i in range(len(ttree_mu3e.tilehit_tile)):
+        tile = ttree_mu3e.tilehit_tile[i]
+        mc_i = ttree_mu3e.tilehit_mc_i[i]
+        ttree_mu3e_mc.GetEntry(mc_i)
+
+
+        primary[tile] = ttree_mu3e_mc.tilehit_primary
+
+    return primary
 
 #-----------------------------------------------
 def get_mc_primary_for_hit_frame(ttree_mu3e):
