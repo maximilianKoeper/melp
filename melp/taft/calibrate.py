@@ -12,7 +12,8 @@ from melp.libs.misc import index_finder
 
 # different functions for calibration
 from melp.taft.tof_corrections import tof_correction_z
-from melp.taft.misc_corrections import loop_correction_phi
+from melp.taft.misc_corrections import loop_correction_phi, loop_correction_z
+from melp.taft.global_align import *
 
 # ---------------------------------------------------------------------
 #  Define global variables and functions to select Detector
@@ -71,8 +72,11 @@ def calibrate(filename: str, **kwargs):
     loop_correction_phi(__detector__, dt_phi_rel, 200000)
     loop_correction_phi(__detector__, dt_phi_rel, 300000)
 
-    dt_z_rel = tof_correction_z(__detector__, dt_z_rel, 200000, kwargs["tof"])
-    dt_z_rel = tof_correction_z(__detector__, dt_z_rel, 300000, kwargs["tof"])
+    tof_correction_z(__detector__, dt_z_rel, 200000, kwargs["tof"])
+    tof_correction_z(__detector__, dt_z_rel, 300000, kwargs["tof"])
+
+    # loop_correction_z(__detector__, dt_phi_rel, dt_z_rel, 200000)
+    # loop_correction_z(__detector__, dt_phi_rel, dt_z_rel, 300000)
 
     align_timings(dt_phi_rel, dt_z_rel, 200000)
 
