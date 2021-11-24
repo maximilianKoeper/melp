@@ -237,7 +237,7 @@ def build_mask_around_cluster_primary(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: 
 
             mask_tmp = np.array([tile_centre, tile_centre_top, tile_centre_bottom, tile_left_top, tile_left_centre, tile_left_bottom,
                                    tile_right_top, tile_right_centre, tile_right_bottom, tile_centre_far_top, tile_centre_far_bottom, 
-                                   tile_left_far_centre, tile_left_far_top, tile_left_far_top, tile_left_far_bottom, tile_right_far_centre, 
+                                   tile_left_far_centre, tile_left_far_top, tile_left_far_bottom, tile_right_far_centre, 
                                    tile_right_far_top, tile_right_far_bottom, tile_far_left_top, tile_far_left_bottom, tile_far_right_top, 
                                    tile_far_right_bottom])
 
@@ -329,20 +329,52 @@ def build_cluster_with_truth_primary(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: m
     return clusters_with_primaries
 
 #-------------------------------------------------
+#builds dict with tid of master tile as key and tids of cluster as value
 def build_cluster_with_truth_tid(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.Detector, mask_type):
     #get tids
     tilehit_tid = get_tid_frame(ttree_mu3e, ttree_mu3e_mc)
     #get clusters
     clusters_frame = build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, mu3e_detector, mask_type)
-    whole_clusters = []
+    #whole_clusters = []
+    #tid_whole_clusters = []
     clusters_with_tid = {} #returned: keys:tid of "master"-tile; values:whole
     for key in clusters_frame.keys():
-        whole_clusters_tmp = []
-        whole_clusters_tmp.append(key)
+        #whole_clusters_tmp = []
+        tid_whole_clusters_tmp = []
+        #whole_clusters_tmp.append(key)
+        tid_whole_clusters_tmp.append(tilehit_tid[key])
         for i in clusters_frame[key]:
-            whole_clusters_tmp.append(i)
-        whole_clusters.append(np.array(whole_clusters_tmp))
+            #whole_clusters_tmp.append(i)
+            tid_whole_clusters_tmp.append(tilehit_tid[i])
+        #whole_clusters.append(np.array(whole_clusters_tmp))
+        #tid_whole_clusters_tmp.append(np.array(tid_whole_clusters_tmp))
 
-        clusters_with_tid[tilehit_tid[key]] = whole_clusters_tmp
+
+
+
+        #clusters_with_tid[tilehit_tid[key]] = whole_clusters_tmp
+        clusters_with_tid[tilehit_tid[key]] = tid_whole_clusters_tmp
     
     return clusters_with_tid
+
+#-----------------------------------------------------
+#returns number of hits in cluster and total number of hits
+def count_hits_in_cluster(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.Detector, mask_type):
+    total_hits_counter = 0
+    cluster_hits_counter = 0
+    for frame in range(ttree_mu3e.GetEntries()):
+        ttree_mu3e.GetEntry(frame)
+        
+        #count total hits
+        tot_hits_frame = len(ttree_mu3e.tilehit_tile)
+        total_hits_counter += tot_hits_frame
+
+        #count hits in clusters
+        clusters_frame = build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, mu3e_detector, mask_type)
+        
+        for key in clusters_frame.keys():
+            cluster_hits_counter +=1
+            for i in clusters_frame[key]:
+                cluster_hits_counter +=1
+
+    return cluster_hits_counter, total_hits_counter
