@@ -12,7 +12,7 @@ def alpha_from_z(z: float) -> float:
     return (((20 / 328.8) * z) / 180) * np.pi
 
 
-def tof_z(z: list) -> float:
+def tof_z_graf(z: list) -> float:
     # TODO: check equation (seems a bit off)
     tile_length = 5. * (10 ** (-3))  # m
     c = 299792458  # m/s
@@ -24,6 +24,16 @@ def tof_z(z: list) -> float:
 
     time = (tile_length / (2 * c)) * (1 + np.tan(alpha) ** 2 + np.tan(beta) ** 2)
     return time * (10 ** 9) - offset
+
+
+def tof_z_new(z: list) -> float:
+    tile_length = 5. * (10 ** (-3))  # m
+    c = 299792458  # m/s
+    beta = (19 / 180) * np.pi  # deg
+    alpha = alpha_from_z(z[2])
+
+    length_z = (tile_length/2)/(np.cos(alpha))
+    return length_z/c
 
 
 # ---------------------------------------
@@ -39,8 +49,14 @@ def tof_correction_z(__detector__, dt_z_rel: dict, station_offset: int, tof_mode
 
             # TOF correction advanced
             # TODO: check tof_modes
-            if tof_mode == "advanced":
-                tof_time = tof_z(__detector__.TileDetector.tile[id_index].pos)
+            if tof_mode == "advanced_graf":
+                tof_time = tof_z_graf(__detector__.TileDetector.tile[id_index].pos)
+                if station_offset == 200000:
+                    dt_tmp += tof_time
+                else:
+                    dt_tmp -= tof_time
+            if tof_mode == "advanced_new":
+                tof_time = tof_z_new(__detector__.TileDetector.tile[id_index].pos)
                 if station_offset == 200000:
                     dt_tmp += tof_time
                 else:
