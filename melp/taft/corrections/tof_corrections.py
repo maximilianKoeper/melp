@@ -1,5 +1,6 @@
-import numpy as np
 import warnings
+
+import numpy as np
 
 
 # ---------------------------------------
@@ -9,7 +10,7 @@ import warnings
 
 def alpha_from_z(z: float) -> float:
     # TODO: This is only approximated!
-    return (((20 / 328.8) * z) / 180) * np.pi
+    return np.pi - (((20 / 328.8) * abs(z)) / 180) * np.pi
 
 
 def tof_z_graf(z: list) -> float:
@@ -32,8 +33,10 @@ def tof_z_new(z: list) -> float:
     beta = (19 / 180) * np.pi  # deg
     alpha = alpha_from_z(z[2])
 
-    length_z = (tile_length/2)/(np.cos(alpha))
-    return length_z/c
+    length_z = (tile_length/2)*(np.cos(alpha))
+    tof = - (length_z/c) * (10 ** 9)  # ns
+    print(tof, alpha, z[2])
+    return tof
 
 
 # ---------------------------------------
@@ -55,12 +58,14 @@ def tof_correction_z(__detector__, dt_z_rel: dict, station_offset: int, tof_mode
                     dt_tmp += tof_time
                 else:
                     dt_tmp -= tof_time
-            if tof_mode == "advanced_new":
+            elif tof_mode == "advanced_new":
                 tof_time = tof_z_new(__detector__.TileDetector.tile[id_index].pos)
                 if station_offset == 200000:
                     dt_tmp += tof_time
                 else:
                     dt_tmp -= tof_time
+
+                # print(__detector__.TileDetector.tile[id_index].pos[2], tof_time)
             # TOF simple
             elif tof_mode == "simple":
                 tof_time = 0.009

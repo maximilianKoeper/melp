@@ -1,18 +1,16 @@
-import ROOT
-
-import numpy as np
-from scipy.optimize import minimize
 import warnings
 
-from melp import Detector
-from melp.libs.timer import Timer
+import ROOT
+import numpy as np
+from scipy.optimize import minimize
 
+from melp import Detector
 # fast index lookup
 from melp.libs.misc import index_finder
-
+from melp.libs.timer import Timer
+from melp.taft.corrections.misc_corrections import loop_correction_phi
 # different functions for calibration
 from melp.taft.corrections.tof_corrections import tof_correction_z
-from melp.taft.corrections.misc_corrections import loop_correction_phi
 
 # ---------------------------------------------------------------------
 #  Define global variables and functions to select Detector
@@ -474,12 +472,20 @@ def fill_dt_histos(ttree_mu3e, histo_options: tuple) -> dict:
     for tile in __detector__.TileDetector.tile:
         histo_name_z = str(tile) + "_z"
         histo_name_phi = str(tile) + "_phi"
-        hist_dict[tile] = [ROOT.TH1D(histo_name_z, 'my hist', nbins, lo, hi),
-                           ROOT.TH1D(histo_name_phi, 'my hist', nbins, lo, hi)]
+        hist_dict[tile] = [ROOT.TH1D(histo_name_z, histo_name_z, nbins, lo, hi),
+                           ROOT.TH1D(histo_name_phi, histo_name_phi, nbins, lo, hi)]
+
+    # tilehits = ROOT.vector('int')()
+    # tilehitstime = ROOT.vector('double')()
+    # ttree_mu3e.SetBranchStatus("tilehit_tile", 1)
+    # ttree_mu3e.SetBranchStatus("tilehit_time", 1)
+
+    # ttree_mu3e.SetBranchAddress("tilehit_tile", tilehits)
+    # ttree_mu3e.SetBranchAddress("tilehit_time", tilehitstime)
 
     for frame in range(ttree_mu3e.GetEntries()):
         ttree_mu3e.GetEntry(frame)
-
+        # print([*tilehits][0], [*tilehitstime][0])
         # Printing status info
         if frame % 10000 == 0:
             print("Searching clusters. Progress: ", np.round(frame / ttree_mu3e.GetEntries() * 100), " % , Found: ",
