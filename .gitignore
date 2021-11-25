@@ -10,4 +10,6 @@ test_mt.py
 **\root_files
 *.npz
 
+
 !/testdata/**
+*.root
