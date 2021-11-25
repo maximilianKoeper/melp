@@ -8,7 +8,7 @@ from melp.clustering.misc import*
 import melp.clustering.spatial_cluster as sclump
 
 #-------------------------------------------------
-def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.Detector, mask_type, number_of_frames = None):
+def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, mask_type, number_of_frames = None, rec_type = None):
     frac_corr_frame = []
     frac_uncorr_frame = []
     total_hits_counter = 0
@@ -41,7 +41,7 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.Detector, 
             primaries_frame_arr.append([key,primaries_frame[key]]) #[hit tile, primary for tile hit]
 
         #get clusters
-        clusters_with_primaries = sclump.build_cluster_with_truth_primary(ttree_mu3e, ttree_mu3e_mc, mu3e_detector, mask_type)
+        clusters_with_primaries = sclump.build_cluster_with_truth_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, mask_type, rec_type = None)
         cluster_primaries_arr = []
         cluster_master_primaries_arr = []
         for key in clusters_with_primaries.keys():
@@ -77,7 +77,7 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.Detector, 
 #----------------------------------------------------
 #compares the tids of hits in cluster to the of cluster master. Returns the fractions (correctly associated hits)/(all hits in clusters)
 # and (incorrectly associated hits)/(all hits in clusters)
-def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.Detector, mask_type, number_of_frames = None):
+def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, mask_type, number_of_frames = None, rec_type = None):
     frac_corr_frame = []
     frac_uncorr_frame = []
     total_hits_counter = 0
@@ -110,7 +110,7 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.Detector, mask
             tids_frame_arr.append([key,tids_frame[key]]) #[hit tile, tid for tile hit]
 
         #get clusters
-        clusters_with_tids = sclump.build_cluster_with_truth_tid(ttree_mu3e, ttree_mu3e_mc, mu3e_detector, mask_type)
+        clusters_with_tids = sclump.build_cluster_with_truth_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, mask_type, rec_type = None)
         cluster_tids_arr = []
         cluster_master_tids_arr = []
         for key in clusters_with_tids.keys():
@@ -141,13 +141,13 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.Detector, mask
             frac_uncorr_frame.append(uncorr_counter/cluster_hits_counter_tmp)
 
     print("Progress: 100 %","of ", frames_to_analyze, " frames")
-    print(total_hits_counter/cluster_hits_counter)
+    print("Total #hits in frames/#hits in clusters = ", total_hits_counter/cluster_hits_counter)
         
     return frac_corr_frame, frac_uncorr_frame
 
 #-----------------------------------------------------
 #returns fraction of number of hits in cluster and total number of hits
-def get_hits_not_in_cluster(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.Detector, mask_type, number_of_frames = None):
+def get_hits_not_in_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, mask_type, number_of_frames = None, rec_type = None):
     #set frame number
     if number_of_frames == None:
         frames_to_analyze = ttree_mu3e.GetEntries()
@@ -172,7 +172,7 @@ def get_hits_not_in_cluster(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.Detec
         total_hits_counter.append(tot_hits_frame)
 
         #count hits in clusters
-        clusters_frame = sclump.build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, mu3e_detector, mask_type)
+        clusters_frame = sclump.build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, mask_type, rec_type = None)
         cluster_hits_counter_tmp = 0
         for key in clusters_frame.keys():
             cluster_hits_counter_tmp +=1
