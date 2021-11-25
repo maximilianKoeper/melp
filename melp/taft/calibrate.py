@@ -11,9 +11,8 @@ from melp.libs.timer import Timer
 from melp.libs.misc import index_finder
 
 # different functions for calibration
-from melp.taft.tof_corrections import tof_correction_z
-from melp.taft.misc_corrections import loop_correction_phi, loop_correction_z
-from melp.taft.global_align import *
+from melp.taft.corrections.tof_corrections import tof_correction_z
+from melp.taft.corrections.misc_corrections import loop_correction_phi
 
 # ---------------------------------------------------------------------
 #  Define global variables and functions to select Detector
@@ -58,16 +57,22 @@ def calibrate(filename: str, **kwargs):
     # TODO: workaround
     resid_z, resid_phi = (None, None)
 
+    # ------------------------------------------------------
+    # reading data / preparing data
+    print("Using ", kwargs["dt_mode"])
     if kwargs["dt_mode"] == "median":
         # Get dict with histogramms with dt data
-        histogram = fill_dt_histos(ttree_mu3e)
+        histogram = fill_dt_histos(ttree_mu3e, histo_options=kwargs["histo_options"])
         # calculate residuals to truth
         # and dt between tiles (median of the histogram)
         dt_z_rel, dt_phi_rel, resid_z, resid_phi = get_median_from_hist(histogram, resid=True)
     elif kwargs["dt_mode"] == "mean":
         # calculate dt between tiles (mean)
-        dt_z_rel, dt_phi_rel = get_mean_from_ttree(ttree_mu3e)
+        dt_z_rel, dt_phi_rel = get_mean_from_ttree(ttree_mu3e, threshold=kwargs["mean_threshold"])
+    # ------------------------------------------------------
 
+    # ------------------------------------------------------
+    # correction relative dts
     # correction for phi loop (going around the loop should result in sum dt = 0)
     loop_correction_phi(__detector__, dt_phi_rel, 200000)
     loop_correction_phi(__detector__, dt_phi_rel, 300000)
@@ -77,15 +82,25 @@ def calibrate(filename: str, **kwargs):
 
     # loop_correction_z(__detector__, dt_phi_rel, dt_z_rel, 200000)
     # loop_correction_z(__detector__, dt_phi_rel, dt_z_rel, 300000)
+    # ------------------------------------------------------
 
+    # ------------------------------------------------------
+    # calculating absolute values
     align_timings(dt_phi_rel, dt_z_rel, 200000)
+    align_timings(dt_phi_rel, dt_z_rel, 300000)
+    # ------------------------------------------------------
 
+    # ------------------------------------------------------
+    # finalizing calibration
     # set calibrated Flag in detector
     __detector__.TileDetector.calibrated = True
 
     print("Calibration finished")
     t.print()
-
+    # ------------------------------------------------------
+    #
+    #
+    #
     # ------------------------------------------------------
     # Only for testing below here:
     #
@@ -97,17 +112,17 @@ def calibrate(filename: str, **kwargs):
     #
     # return difference from truth
     cal = None
-    if "station" in kwargs.keys():
-        if kwargs["station"] == 1:
+    if "debug_station" in kwargs.keys():
+        if kwargs["debug_station"] == 1:
             cal = check_cal_z(cal_station_1_z, 1)
-        elif kwargs["station"] == 2:
+        elif kwargs["debug_station"] == 2:
             cal = check_cal_z(cal_station_2_z, 2)
     #
     cal_phi = None
-    if "station" in kwargs.keys():
-        if kwargs["station"] == 1:
+    if "debug_station" in kwargs.keys():
+        if kwargs["debug_station"] == 1:
             cal_phi = check_cal_phi(cal_station_1_phi, 1)
-        elif kwargs["station"] == 2:
+        elif kwargs["debug_station"] == 2:
             cal_phi = check_cal_phi(cal_station_2_phi, 2)
     # ------------------------------------------------------
 
@@ -133,7 +148,7 @@ def minimize_function_z(offset: float, dt_phi_rel: list, dt_z_rel: list, dt_phi_
 
 # TODO
 def align_timings(dt_phi_rel: dict, dt_z_rel: dict, station_offset: int):
-    print("Calculating absolute timing offsets to master tile.")
+    print(f"Calculating absolute timing offsets to master tile: {station_offset}")
 
     result = {}
     for z_position in range(len(__detector__.TileDetector.row_ids(0, station_offset)) - 1):
@@ -311,7 +326,7 @@ def check_cal_z(cal_data, station):
 
 # ---------------------------------------
 
-def get_mean_from_ttree(ttree_mu3e) -> (dict, dict):
+def get_mean_from_ttree(ttree_mu3e, threshold: float) -> (dict, dict):
     dt_z = {}
     dt_phi = {}
     dt_z_n = {}
@@ -326,7 +341,6 @@ def get_mean_from_ttree(ttree_mu3e) -> (dict, dict):
         if frame % 10000 == 0:
             print("Searching clusters. Progress: ", np.round(frame / ttree_mu3e.GetEntries() * 100), " % , Found: ",
                   cluster_counter, end='\r')
-        ttree_mu3e.GetEntry(frame)
 
         for hit_tile_index in range(len(ttree_mu3e.tilehit_tile)):
             hit_tile = ttree_mu3e.tilehit_tile[hit_tile_index]
@@ -351,7 +365,7 @@ def get_mean_from_ttree(ttree_mu3e) -> (dict, dict):
                     neighbour_z_id].dt_truth
                 dt = hit_time_2 - hit_time_1
 
-                if abs(dt) <= 1:
+                if abs(dt) <= threshold:
                     # Add to mean
                     if dt_z.get(hit_tile):
                         dt_z[hit_tile] = (dt_z[hit_tile] * dt_z_n[hit_tile] + dt) / (dt_z_n[hit_tile] + 1)
@@ -383,7 +397,7 @@ def get_mean_from_ttree(ttree_mu3e) -> (dict, dict):
                     neighbour_z_id].dt_truth
                 dt = hit_time_2 - hit_time_1
 
-                if abs(dt) <= 1:
+                if abs(dt) <= threshold:
                     # Add to mean
                     if dt_phi.get(hit_tile):
                         dt_phi[hit_tile] = (dt + dt_phi[hit_tile] * dt_phi_n[hit_tile]) / (dt_phi_n[hit_tile] + 1)
@@ -392,7 +406,7 @@ def get_mean_from_ttree(ttree_mu3e) -> (dict, dict):
                         dt_phi[hit_tile] = dt
                         dt_phi_n[hit_tile] = 1
                     cluster_counter += 1
-
+    print("Searching clusters. Progress: ", 100, " % , Found: ", cluster_counter)
     return dt_z, dt_phi
 
 
@@ -451,11 +465,11 @@ def get_median_from_hist(histogram: dict, resid=False):
 #   -> dict[tileid] = [hist_z, hist_pih]
 #
 
-def fill_dt_histos(ttree_mu3e) -> dict:
+def fill_dt_histos(ttree_mu3e, histo_options: tuple) -> dict:
     cluster_counter = 0
 
     hist_dict = {}
-    nbins, lo, hi = 10000, -64, 64
+    nbins, lo, hi = histo_options
     # Generating empty histos:
     for tile in __detector__.TileDetector.tile:
         histo_name_z = str(tile) + "_z"
@@ -464,12 +478,12 @@ def fill_dt_histos(ttree_mu3e) -> dict:
                            ROOT.TH1D(histo_name_phi, 'my hist', nbins, lo, hi)]
 
     for frame in range(ttree_mu3e.GetEntries()):
+        ttree_mu3e.GetEntry(frame)
 
         # Printing status info
         if frame % 10000 == 0:
             print("Searching clusters. Progress: ", np.round(frame / ttree_mu3e.GetEntries() * 100), " % , Found: ",
                   cluster_counter, end='\r')
-        ttree_mu3e.GetEntry(frame)
 
         # TODO: index_finder cant handle multiple events on one tile in one frame!!!
         #       --> skipping frame (looses some data)

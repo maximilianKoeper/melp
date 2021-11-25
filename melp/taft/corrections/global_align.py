@@ -1,9 +1,7 @@
-import numba
-
 import numpy as np
 from scipy.optimize import minimize
 
-from melp.taft.misc_array_creation import create_array_from_dict
+from melp.taft.utils.misc_array_creation import create_array_from_dict
 
 
 def fit_func(params: np.array, arr: np.array) -> float:
