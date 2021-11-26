@@ -224,9 +224,9 @@ def get_mask_masters_hitAnglePixelRec(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, t
         z_arr.append(tile_pos[2])
         id_arr.append(tile_id)
 
-    print("HID CHECK: ", hid_ok, " of " , hid_ok+ hid_discard, "ok")
-    print("TID CHECK: ", tid_ok, " of " , tid_ok+ hid_discard, "ok")
-    print("Total Events with matching Tile and Sensor Hit: ", len(z_arr), " of: ", hid_ok, " primary Tile hits")
+    #print("HID CHECK: ", hid_ok, " of " , hid_ok+ hid_discard, "ok")
+    #print("TID CHECK: ", tid_ok, " of " , tid_ok+ hid_discard, "ok")
+    #print("Total Events with matching Tile and Sensor Hit: ", len(z_arr), " of: ", hid_ok, " primary Tile hits")
 
     result_id    = np.array(id_arr)
 

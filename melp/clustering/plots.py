@@ -15,6 +15,9 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
     total_hits_counter = 0
     cluster_hits_counter = 0
 
+    tot_corr_counter = 0
+    tot_uncorr_counter = 0
+
     #set frame number
     if number_of_frames == None:
         frames_to_analyze = ttree_mu3e.GetEntries()
@@ -24,7 +27,7 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
     for frame in range(frames_to_analyze):
         ttree_mu3e.GetEntry(frame)
         #Printing status info
-        if frame % 2000 == 0:
+        if frame % 5000 == 0:
             print("Progress: ", np.round(frame / frames_to_analyze * 100), " %","of ", frames_to_analyze, " frames", end='\r')
 
         #count total hits
@@ -42,7 +45,7 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
             primaries_frame_arr.append([key,primaries_frame[key]]) #[hit tile, primary for tile hit]
 
         #get clusters
-        clusters_with_primaries = sclump.build_cluster_with_truth_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, mask_type, rec_type = None)
+        clusters_with_primaries = sclump.build_cluster_with_truth_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, mask_type, rec_type)
         cluster_primaries_arr = []
         cluster_master_primaries_arr = []
         for key in clusters_with_primaries.keys():
@@ -68,6 +71,10 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
         #add #master tiles to corr_counter
         corr_counter += len(cluster_master_primaries_arr)
 
+        #add to total corr and uncorr counters
+        tot_corr_counter += corr_counter
+        tot_uncorr_counter += uncorr_counter
+
         if corr_counter != 0:
             frac_corr_clusters_frame.append(corr_counter/cluster_hits_counter_tmp)
             frac_corr_frame.append(corr_counter/total_hits_frame)
@@ -76,8 +83,10 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
             frac_uncorr_frame.append(uncorr_counter/cluster_hits_counter_tmp)
 
     print("Progress: 100 %","of ", frames_to_analyze, " frames")
+
+    print(tot_corr_counter/(total_hits_counter/100))
         
-    return frac_corr_frame, frac_corr_clusters_frame, frac_uncorr_frame
+    return frac_corr_frame, frac_corr_clusters_frame, frac_uncorr_frame, tot_corr_counter
 
 #----------------------------------------------------
 #compares the tids of hits in cluster to the of cluster master. Returns the fractions (correctly associated hits)/(all hits in clusters)
@@ -85,8 +94,12 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
 def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, mask_type, number_of_frames = None, rec_type = None):
     frac_corr_frame = []
     frac_uncorr_frame = []
+    frac_corr_clusters_frame = []
     total_hits_counter = 0
     cluster_hits_counter = 0
+
+    tot_corr_counter = 0
+    tot_uncorr_counter = 0
 
     #set frame number
     if number_of_frames == None:
@@ -97,7 +110,7 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_d
     for frame in range(frames_to_analyze):
         ttree_mu3e.GetEntry(frame)
         #Printing status info
-        if frame % 2000 == 0:
+        if frame % 5000 == 0:
             print("Progress: ", np.round(frame / frames_to_analyze * 100), " %","of ", frames_to_analyze, " frames", end='\r')
         
         #count total hits
@@ -115,7 +128,7 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_d
             tids_frame_arr.append([key,tids_frame[key]]) #[hit tile, tid for tile hit]
 
         #get clusters
-        clusters_with_tids = sclump.build_cluster_with_truth_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, mask_type, rec_type = None)
+        clusters_with_tids = sclump.build_cluster_with_truth_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, mask_type, rec_type)
         cluster_tids_arr = []
         cluster_master_tids_arr = []
         for key in clusters_with_tids.keys():
@@ -144,9 +157,14 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_d
         if (corr_counter + uncorr_counter) != cluster_hits_counter_tmp:
             print("error: counters don't match",(corr_counter + uncorr_counter), cluster_hits_counter_tmp)
 
+        #add to total corr and uncorr counters
+        tot_corr_counter += corr_counter
+        tot_uncorr_counter += uncorr_counter
+
         #calculate fractions
         if corr_counter != 0:
-            frac_corr_frame.append(corr_counter/cluster_hits_counter_tmp)  
+            frac_corr_clusters_frame.append(corr_counter/cluster_hits_counter_tmp)
+            frac_corr_frame.append(corr_counter/total_hits_frame)
 
         if uncorr_counter != 0:
             frac_uncorr_frame.append(uncorr_counter/cluster_hits_counter_tmp)
@@ -154,7 +172,7 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_d
     print("Progress: 100 %","of ", frames_to_analyze, " frames")
     print("Total #hits in frames/#hits in clusters = ", total_hits_counter/cluster_hits_counter)
         
-    return frac_corr_frame, frac_uncorr_frame
+    return frac_corr_frame, frac_corr_clusters_frame, frac_uncorr_frame, tot_corr_counter
 
 #-----------------------------------------------------
 #returns fraction of number of hits in cluster and total number of hits
@@ -175,7 +193,7 @@ def get_hits_not_in_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles
         ttree_mu3e.GetEntry(frame)
 
         #Printing status info
-        if frame % 2000 == 0:
+        if frame % 5000 == 0:
             print("Progress: ", np.round(frame / frames_to_analyze * 100), " %","of ", frames_to_analyze, " frames", end='\r')
         
         #count total hits
@@ -183,7 +201,7 @@ def get_hits_not_in_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles
         total_hits_counter.append(tot_hits_frame)
 
         #count hits in clusters
-        clusters_frame = sclump.build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, mask_type, rec_type = None)
+        clusters_frame = sclump.build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, mask_type, rec_type)
         cluster_hits_counter_tmp = 0
         for key in clusters_frame.keys():
             cluster_hits_counter_tmp +=1
