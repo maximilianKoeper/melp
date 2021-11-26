@@ -10,6 +10,7 @@ import melp.clustering.spatial_cluster as sclump
 #-------------------------------------------------
 def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, mask_type, number_of_frames = None, rec_type = None):
     frac_corr_frame = []
+    frac_corr_clusters_frame = []
     frac_uncorr_frame = []
     total_hits_counter = 0
     cluster_hits_counter = 0
@@ -62,17 +63,21 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
                 if cluster_primaries_arr[j][k] == cluster_master_primaries_arr[j]: #if primary in cluster = primary of cluster master
                     corr_counter += 1
                 else:
-                    uncorr_counter += 1  
+                    uncorr_counter += 1 
+
+        #add #master tiles to corr_counter
+        corr_counter += len(cluster_master_primaries_arr)
 
         if corr_counter != 0:
-            frac_corr_frame.append(corr_counter/cluster_hits_counter_tmp)  
+            frac_corr_clusters_frame.append(corr_counter/cluster_hits_counter_tmp)
+            frac_corr_frame.append(corr_counter/total_hits_frame)
 
         if uncorr_counter != 0:
             frac_uncorr_frame.append(uncorr_counter/cluster_hits_counter_tmp)
 
     print("Progress: 100 %","of ", frames_to_analyze, " frames")
         
-    return frac_corr_frame, frac_uncorr_frame
+    return frac_corr_frame, frac_corr_clusters_frame, frac_uncorr_frame
 
 #----------------------------------------------------
 #compares the tids of hits in cluster to the of cluster master. Returns the fractions (correctly associated hits)/(all hits in clusters)
@@ -126,12 +131,18 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_d
         cluster_hits_counter += cluster_hits_counter_tmp
 
         #comparison
-        for j in range(len(cluster_tids_arr)): #loop over all clusters in frame
+        for j in range(len(cluster_master_tids_arr)): #loop over all clusters in frame
             for k in range(len(cluster_tids_arr[j])): #loop over all tids in cluster 
                 if cluster_tids_arr[j][k] == cluster_master_tids_arr[j]: #if tid in cluster = tid of cluster master
                     corr_counter += 1
                 else:
-                    uncorr_counter += 1            
+                    uncorr_counter += 1  
+
+        #add #master tiles to corr_counter
+        corr_counter += len(cluster_master_tids_arr) 
+
+        if (corr_counter + uncorr_counter) != cluster_hits_counter_tmp:
+            print("error: counters don't match",(corr_counter + uncorr_counter), cluster_hits_counter_tmp)
 
         #calculate fractions
         if corr_counter != 0:
