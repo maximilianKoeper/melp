@@ -4,6 +4,7 @@ import melp
 from melp import Detector
 
 from melp.clustering.misc import*
+import melp.clustering.tracking as clump_tr
 
 
 """
@@ -128,13 +129,17 @@ def build_mask_detector_class(ttree_mu3e, mu3e_detector: melp.Detector, mask_typ
 
 #------------------------------------------------
 #builds masks around every hit in frame with hid=1,-1 using the get neighbour function, which works if hit is at the edge of the detector.
-def build_mask_around_cluster_primary(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.Detector, mask_type):
-    primaries = get_cluster_primary_truth_frame(ttree_mu3e, ttree_mu3e_mc)
+def build_mask_around_cluster_master(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector: melp.Detector, mask_type, rec_type = None):
+    #select reconstruction/tracking method
+    if rec_type == "pixelpixel":
+        mask_masters = clump_tr.get_mask_masters_hitAnglePixelRec(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, matching="nearest")
+    else:
+        mask_masters = get_cluster_primary_truth_frame(ttree_mu3e, ttree_mu3e_mc)
 
     mask = {}
     if mask_type == "small":
-        for i in range(len(primaries)):
-            tile_centre = primaries[i]
+        for i in range(len(mask_masters)):
+            tile_centre = mask_masters[i]
             tile_centre_top = mu3e_detector.TileDetector.getNeighbour(tile_centre, "up")
             tile_centre_bottom = mu3e_detector.TileDetector.getNeighbour(tile_centre, "down")
             tile_left_centre = mu3e_detector.TileDetector.getNeighbour(tile_centre, "left")
@@ -149,8 +154,8 @@ def build_mask_around_cluster_primary(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: 
             mask[tile_centre] = mask_tmp
 
     if mask_type == "medium":
-        for i in range(len(primaries)):
-            tile_centre = primaries[i]
+        for i in range(len(mask_masters)):
+            tile_centre = mask_masters[i]
             tile_centre_top = mu3e_detector.TileDetector.getNeighbour(tile_centre, "up")
             tile_centre_bottom = mu3e_detector.TileDetector.getNeighbour(tile_centre, "down")
             tile_left_centre = mu3e_detector.TileDetector.getNeighbour(tile_centre, "left")
@@ -170,8 +175,8 @@ def build_mask_around_cluster_primary(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: 
             mask[tile_centre] = mask_tmp
 
     if mask_type == "big":
-        for i in range(len(primaries)):
-            tile_centre = primaries[i]
+        for i in range(len(mask_masters)):
+            tile_centre = mask_masters[i]
             tile_centre_top = mu3e_detector.TileDetector.getNeighbour(tile_centre, "up")
             tile_centre_bottom = mu3e_detector.TileDetector.getNeighbour(tile_centre, "down")
             tile_left_centre = mu3e_detector.TileDetector.getNeighbour(tile_centre, "left")
@@ -210,11 +215,11 @@ def build_mask_around_cluster_primary(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: 
 
 #----------------------------------------------------
 #builds clusters in the masks around hit with hid=1,-1 according to primaries.
-def build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.Detector, mask_type):
+def build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, mask_type, rec_type = None):
     clusters = {} #keys: "master"-tile; values: rest of cluster
 
     #get masks around master tile
-    primary_masks = build_mask_around_cluster_primary(ttree_mu3e, ttree_mu3e_mc, mu3e_detector, mask_type)
+    primary_masks = build_mask_around_cluster_master(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector, mask_type, rec_type)
 
     keys = []
     values = []
@@ -252,12 +257,12 @@ def build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.Detec
 
 #-----------------------------------------------------
 #builds clusters where dict-key is the primary of "master"-tile and not "master" tile and value is the whole cluster
-def build_cluster_with_truth_primary(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.Detector, mask_type):
+def build_cluster_with_truth_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector: melp.Detector, mask_type, rec_type = None):
     #get primaries
     primaries = get_tid_frame(ttree_mu3e, ttree_mu3e_mc)
 
     #get clusters
-    clusters_frame = build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, mu3e_detector, mask_type)
+    clusters_frame = build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector, mask_type, rec_type)
 
     #convert cluster tiles to primaries
     clusters_with_primaries = {} #gets returned: keys:tid of "master"-tile; values:tids of whole cluster
@@ -273,12 +278,12 @@ def build_cluster_with_truth_primary(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: m
 
 #-------------------------------------------------
 #builds dict with tid of master tile as key and tids of cluster as value
-def build_cluster_with_truth_tid(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.Detector, mask_type):
+def build_cluster_with_truth_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector: melp.Detector, mask_type, rec_type = None):
     #get tids
     tilehit_tid = get_tid_frame(ttree_mu3e, ttree_mu3e_mc)
 
     #get clusters
-    clusters_frame = build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, mu3e_detector, mask_type)
+    clusters_frame = build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector, mask_type, rec_type)
 
     #convert cluster tiles to tids
     clusters_with_tid = {} #gets returned: keys:tid of "master"-tile; values:tids of whole cluster
@@ -294,7 +299,7 @@ def build_cluster_with_truth_tid(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.
 
 #-----------------------------------------------------
 #returns number of hits in cluster and total number of hits
-def count_hits_in_cluster(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.Detector, mask_type, number_of_frames = None):
+def count_hits_in_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector: melp.Detector, mask_type, number_of_frames = None, rec_type = None):
     #set frame number
     if number_of_frames == None:
         frames_to_analyze = ttree_mu3e.GetEntries()
@@ -318,7 +323,7 @@ def count_hits_in_cluster(ttree_mu3e, ttree_mu3e_mc, mu3e_detector: melp.Detecto
         total_hits_counter += tot_hits_frame
 
         #count hits in clusters
-        clusters_frame = build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, mu3e_detector, mask_type)
+        clusters_frame = build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector, mask_type, rec_type)
         
         for key in clusters_frame.keys():
             cluster_hits_counter +=1

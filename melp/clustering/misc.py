@@ -103,11 +103,8 @@ def get_primary_frame(ttree_mu3e, ttree_mu3e_mc):
 
 #-----------------------------------------------
 def get_mc_primary_for_hit_frame(ttree_mu3e):
-#def get_mc_primary_for_hit_frame(filename, frame):
-    #file = ROOT.TFile(filename)
-    #ttree_mu3e = file.Get("mu3e")
     tilehit_primary_dict = {}
-    #ttree_mu3e.GetEntry(frame)
+
     for i in range(len(ttree_mu3e.tilehit_tile)):
         tile = ttree_mu3e.tilehit_tile[i]
         primary = ttree_mu3e.tilehit_primary[i]
@@ -118,11 +115,8 @@ def get_mc_primary_for_hit_frame(ttree_mu3e):
 
 #-------------------------------------------------
 def get_mc_primary_for_hit_array(ttree_mu3e, cluster_tiles):
-#def get_mc_primary_for_hit_array(filename, frame, cluster_tiles):
-    #file = ROOT.TFile(filename)
-    #ttree_mu3e = file.Get("mu3e")
     tilehit_primary_dict = {}
-    #ttree_mu3e.GetEntry(frame)
+
     for i in range(len(ttree_mu3e.tilehit_tile)):
         tile = ttree_mu3e.tilehit_tile[i]
         primary = ttree_mu3e.tilehit_primary[i]
@@ -134,11 +128,8 @@ def get_mc_primary_for_hit_array(ttree_mu3e, cluster_tiles):
 
 #----------------------------------------------
 def frame_as_cluster(ttree_mu3e):
-#def frame_as_cluster(filename, frame):
-    #file = ROOT.TFile(filename)
-    #ttree_mu3e = file.Get("mu3e")
     hit_tiles = {}
-    #ttree_mu3e.GetEntry(frame)
+
     for i in range(len(ttree_mu3e.tilehit_tile)):
         tile = ttree_mu3e.tilehit_tile[i]
         primary = ttree_mu3e.tilehit_primary[0] #take first primary for all hits in frame
@@ -199,18 +190,9 @@ def get_cluster_primary_truth_frame(filename, frame):
 """
 
 def get_cluster_primary_truth_frame(ttree_mu3e, ttree_mu3e_mc):
-#def get_cluster_primary_truth_frame(filename, frame):
-    #file = ROOT.TFile(filename)
-    #ttree_mu3e = file.Get("mu3e")
-    #ttree_mu3e_mc = file.Get("mu3e_mchits")
-
     cluster_primary = []
 
-    #ttree_mu3e.GetEntry(frame)
     for i in range(len(ttree_mu3e.tilehit_tile)):
-        #tile = ttree_mu3e.tilehit_tile[i]
-        #mc_i = ttree_mu3e.tilehit_mc_i[i]
-        #ttree_mu3e_mc.GetEntry(mc_i)
         mc_i = ttree_mu3e.tilehit_mc_i[i]
         ttree_mu3e_mc.GetEntry(mc_i)
         hid = ttree_mu3e_mc.hid
@@ -223,15 +205,36 @@ def get_cluster_primary_truth_frame(ttree_mu3e, ttree_mu3e_mc):
 
 #------------------------------------------
 def hit_tiles_in_frame(ttree_mu3e):
-#def hit_tiles_in_frame(filename, frame):
     hit_tiles = []
-    #file = ROOT.TFile(filename)
-    #ttree_mu3e = file.Get("mu3e")
-    
-    #ttree_mu3e.GetEntry(frame)
 
     for hit_tile_index in range(len(ttree_mu3e.tilehit_tile)):
         hit_tiles.append(ttree_mu3e.tilehit_tile[hit_tile_index])
 
     return hit_tiles
 
+#-------------------------------------------------
+def get_hit_data_frame(ttree_mu3e, ttree_mu3e_mc, frames):
+    hit_data = {}
+    for frame in frames:
+        ttree_mu3e.GetEntry(frame)
+
+        for i in range(len(ttree_mu3e.tilehit_tile)):
+            data_tmp = []
+            tile = ttree_mu3e.tilehit_tile[i]
+            mc_i = ttree_mu3e.tilehit_mc_i[i]
+            ttree_mu3e_mc.GetEntry(mc_i)
+            hid = ttree_mu3e_mc.hid
+            tid = ttree_mu3e_mc.tid
+
+            data_tmp.append(hid)
+            data_tmp.append(tid)
+            data_tmp.append(frame)
+
+            hit_data[tile] = data_tmp
+
+    hit_data_sorted_tid = sorted(hit_data.items(), key=lambda x: x[1][1], reverse=True)
+
+    for i in range(len(hit_data_sorted_tid)):
+        print("Tile: ", hit_data_sorted_tid[i][0], " hid: ",hit_data_sorted_tid[i][1][0]," tid: ", hit_data_sorted_tid[i][1][1], "frame_id: ", hit_data_sorted_tid[i][1][2])
+
+    return hit_data_sorted_tid
