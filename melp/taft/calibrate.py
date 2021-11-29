@@ -11,6 +11,7 @@ from melp.libs.timer import Timer
 from melp.taft.corrections.misc_corrections import loop_correction_phi
 # different functions for calibration
 from melp.taft.corrections.tof_corrections import tof_correction_z
+from melp.taft.utils.root_helper import save_histo, read_histo, fill_dt_histos
 
 # ---------------------------------------------------------------------
 #  Define global variables and functions to select Detector
@@ -50,7 +51,7 @@ def calibrate(filename: str, **kwargs):
     t.start()
 
     file = ROOT.TFile(filename)
-    ttree_mu3e = file.Get("mu3e")
+    ttree_mu3e = file.Get(kwargs["ttree_loc"])
 
     # TODO: workaround
     resid_z, resid_phi = (None, None)
@@ -60,7 +61,12 @@ def calibrate(filename: str, **kwargs):
     print("Using ", kwargs["dt_mode"])
     if kwargs["dt_mode"] == "median":
         # Get dict with histogramms with dt data
-        histogram = fill_dt_histos(ttree_mu3e, histo_options=kwargs["histo_options"])
+        histogram = fill_dt_histos(__detector__, ttree_mu3e, histo_options=kwargs["histo_options"])
+
+        save_histo(kwargs["hist_file"], histogram)
+        #del histogram
+        #del file
+        #histogram = read_histo(kwargs["hist_file"])
         # calculate residuals to truth
         # and dt between tiles (median of the histogram)
         dt_z_rel, dt_phi_rel, resid_z, resid_phi = get_median_from_hist(histogram, resid=True)
@@ -455,96 +461,3 @@ def get_median_from_hist(histogram: dict, resid=False):
             resid_phi.append(resid_dt)
 
     return dt_z, dt_phi, resid_z, resid_phi
-
-
-# ---------------------------------------
-#
-# Generates dictionary with ROOT TH1D Histogramms
-#   -> dict[tileid] = [hist_z, hist_pih]
-#
-
-def fill_dt_histos(ttree_mu3e, histo_options: tuple) -> dict:
-    cluster_counter = 0
-
-    hist_dict = {}
-    nbins, lo, hi = histo_options
-    # Generating empty histos:
-    for tile in __detector__.TileDetector.tile:
-        histo_name_z = str(tile) + "_z"
-        histo_name_phi = str(tile) + "_phi"
-        hist_dict[tile] = [ROOT.TH1D(histo_name_z, histo_name_z, nbins, lo, hi),
-                           ROOT.TH1D(histo_name_phi, histo_name_phi, nbins, lo, hi)]
-
-    # tilehits = ROOT.vector('int')()
-    # tilehitstime = ROOT.vector('double')()
-    # ttree_mu3e.SetBranchStatus("tilehit_tile", 1)
-    # ttree_mu3e.SetBranchStatus("tilehit_time", 1)
-
-    # ttree_mu3e.SetBranchAddress("tilehit_tile", tilehits)
-    # ttree_mu3e.SetBranchAddress("tilehit_time", tilehitstime)
-
-    for frame in range(ttree_mu3e.GetEntries()):
-        ttree_mu3e.GetEntry(frame)
-        # print([*tilehits][0], [*tilehitstime][0])
-        # Printing status info
-        if frame % 10000 == 0:
-            print("Searching clusters. Progress: ", np.round(frame / ttree_mu3e.GetEntries() * 100), " % , Found: ",
-                  cluster_counter, end='\r')
-
-        # TODO: index_finder cant handle multiple events on one tile in one frame!!!
-        #       --> skipping frame (looses some data)
-        # Analyzing frame
-        for hit_tile_index in range(len(ttree_mu3e.tilehit_tile)):
-            hit_tile = ttree_mu3e.tilehit_tile[hit_tile_index]
-
-            # -----------------------------
-            # Look for clusters in z-dir
-            neighbour_z_id = __detector__.TileDetector.getNeighbour(hit_tile, "right")
-            if neighbour_z_id in ttree_mu3e.tilehit_tile and neighbour_z_id is not False:
-                # find associated tile hit
-                hit_tile_assoc = index_finder(list(ttree_mu3e.tilehit_tile), neighbour_z_id)
-
-                # workaround for multiple hits in the same tile
-                try:
-                    hit_tile_assoc = int(*hit_tile_assoc)
-                except (TypeError, ValueError):
-                    continue
-
-                # calculate dt
-                # TODO: TOF maybe with edep ?
-                hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] + __detector__.TileDetector.tile[hit_tile].dt_truth
-                hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + __detector__.TileDetector.tile[
-                    neighbour_z_id].dt_truth
-                dt = hit_time_2 - hit_time_1
-
-                # Fill histogram
-                hist_dict[hit_tile][0].Fill(dt)
-                cluster_counter += 1
-
-            # -----------------------------
-            # Look for clusters in phi-dir
-            neighbour_phi_id = __detector__.TileDetector.getNeighbour(hit_tile, "up")
-            if neighbour_phi_id in ttree_mu3e.tilehit_tile and neighbour_phi_id is not False:
-                hit_tile = ttree_mu3e.tilehit_tile[hit_tile_index]
-                # find associated tile hit
-                hit_tile_assoc = index_finder(list(ttree_mu3e.tilehit_tile), neighbour_phi_id)
-
-                # workaround for multiple hits in the same tile
-                try:
-                    hit_tile_assoc = int(*hit_tile_assoc)
-                except (TypeError, ValueError):
-                    continue
-
-                # calculate dt
-                # TODO: TOF maybe with edep ?
-                hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] + __detector__.TileDetector.tile[hit_tile].dt_truth
-                hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + __detector__.TileDetector.tile[
-                    neighbour_phi_id].dt_truth
-                dt = hit_time_2 - hit_time_1
-
-                # Fill histogram
-                hist_dict[hit_tile][1].Fill(dt)
-                cluster_counter += 1
-
-    print("Searching clusters. Progress: ", 100, " % , Found: ", cluster_counter)
-    return hist_dict
