@@ -94,9 +94,9 @@ def fill_dt_histos(detector, ttree_mu3e, histo_options: tuple) -> dict:
 
                 # calculate dt
                 # TODO: TOF maybe with edep ?
-                hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] + detector.TileDetector.tile[hit_tile].dt_truth
-                hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + detector.TileDetector.tile[
-                    neighbour_z_id].dt_truth
+                hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] #+ detector.TileDetector.tile[hit_tile].dt_truth
+                hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] #+ detector.TileDetector.tile[
+                    #neighbour_z_id].dt_truth
                 dt = hit_time_2 - hit_time_1
 
                 # Fill histogram
@@ -119,9 +119,9 @@ def fill_dt_histos(detector, ttree_mu3e, histo_options: tuple) -> dict:
 
                 # calculate dt
                 # TODO: TOF maybe with edep ?
-                hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] + detector.TileDetector.tile[hit_tile].dt_truth
-                hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + detector.TileDetector.tile[
-                    neighbour_phi_id].dt_truth
+                hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] #+ detector.TileDetector.tile[hit_tile].dt_truth
+                hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] #+ detector.TileDetector.tile[
+                    #neighbour_phi_id].dt_truth
                 dt = hit_time_2 - hit_time_1
 
                 # Fill histogram

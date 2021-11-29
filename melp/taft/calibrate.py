@@ -358,10 +358,11 @@ def get_median_from_hist(histogram: dict, resid=False):
             # warnings.warn(f"WARNING: INTEGRAL = 0, tile: {tile_entry}")
             continue
         histogram[tile_entry][0].GetQuantiles(1, q, prob)
-        dt_z[tile_entry] = q[0]
-        if resid:
-            resid_dt = q - (__detector__.TileDetector.tile[neighbour_z_id].dt_truth - __detector__.TileDetector.tile[
+        dt_z[tile_entry] = q[0] + (
+                    __detector__.TileDetector.tile[neighbour_z_id].dt_truth - __detector__.TileDetector.tile[
                 tile_entry].dt_truth)
+        if resid:
+            resid_dt = q
             resid_z.append(resid_dt)
 
     # phi dir:
@@ -379,10 +380,11 @@ def get_median_from_hist(histogram: dict, resid=False):
             # print("WARNING: INTEGRAL = 0", tile_entry)
             continue
         histogram[tile_entry][1].GetQuantiles(1, q, prob)
-        dt_phi[tile_entry] = q[0]
-        if resid:
-            resid_dt = q - (__detector__.TileDetector.tile[neighbour_phi_id].dt_truth - __detector__.TileDetector.tile[
+        dt_phi[tile_entry] = q[0] + (
+                    __detector__.TileDetector.tile[neighbour_phi_id].dt_truth - __detector__.TileDetector.tile[
                 tile_entry].dt_truth)
+        if resid:
+            resid_dt = q
             resid_phi.append(resid_dt)
 
     return dt_z, dt_phi, resid_z, resid_phi
