@@ -33,8 +33,8 @@ def tof_z_new(z: list) -> float:
     beta = (19 / 180) * np.pi  # deg
     alpha = alpha_from_z(z[2])
 
-    length_z = (tile_length/2)*(np.cos(alpha))
-    tof = - (length_z/c) * (10 ** 9)  # ns
+    length_z = (tile_length / 2) * (np.cos(alpha))
+    tof = - (length_z / c) * (10 ** 9)  # ns
     return tof
 
 
