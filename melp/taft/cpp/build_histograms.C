@@ -1,5 +1,7 @@
 // "mu3e" or "alignment/mu3e"
-#define TTREE_LOC "mu3e"
+#define TTREE_LOC "alignment/mu3e"
+#define OUTPUT_FILE "hist.root"
+
 int nbins = 20000;   //nbins
 int lo = -10;        //ns
 int hi = 10;         //ns
@@ -27,7 +29,6 @@ int build_histograms() {
   }
 
   // -----------------------------------------
-  TFile *savefile = new TFile("hist.root", "RECREATE");
   std::cout << "Generating histograms" << '\n';
   std::map<uint32_t, TH1D> m;
 
@@ -51,39 +52,35 @@ int build_histograms() {
     m[i+200000] = TH1D(hist_name_phi, hist_name_phi, nbins, lo, hi);
   }
   // -----------------------------------------
-  // std::cout << m[202911].GetName() << '\n';
-  // std::cout << m[202911+200000].GetName() << '\n';
-  // std::cout << m[302911].GetName() << '\n';
-  // std::cout << m[302911+200000].GetName() << '\n';
+
 
 
   for (auto f : files){
-    std::cout << f << " -> # Frames: ";
+
+    time_t start = time(0);
+
     TFile *sourceFile = new TFile(f, "READ");
     TTree *tree = (TTree *)(sourceFile->Get(TTREE_LOC));
     if(!tree) return 1;
 
     vector<unsigned int> *tilehit_tile = 0;
     vector<double> *tilehit_time = 0;
+    uint32_t cluster_number = 0;
 
     tree->SetBranchAddress("tilehit_tile", &tilehit_tile);
     tree->SetBranchAddress("tilehit_time", &tilehit_time);
     tree->SetBranchStatus("*", 1); // Activates reading of all branches
 
     uint32_t nEntries = tree->GetEntries();
-    std::cout << nEntries << std::endl;
+    std::cout << f << " -> # Frames: " << nEntries << std::endl;
+    std::cout << "Loading File to Memory" << "...";
+    tree->SetMaxVirtualSize(2e+9);
+    tree->LoadBaskets();
+    std::cout << "done \n" << "Searching clusters" << '\n';
 
     for (uint32_t frame = 0; frame < nEntries; frame++){
       tree->GetEntry(frame);
 
-      //for (unsigned int index = 0; index < tilehit_tile->size(); ++index)
-      //{
-      //  std::cout << &tilehit_tile[index] << "  "<< get_neighbour(&tilehit_tile[index], 2) << "  "<< get_neighbour(&tilehit_tile[index], 1) << "\n";
-      //}
-      //for(auto const& value: *tilehit_tile) {
-      //  std::cout << value-*tilehit_tile->begin() << '\n';
-      //  std::cout << value << "  "<< get_neighbour(value, 2) << "  "<< get_neighbour(value, 1) << "\n";
-      //}
       for (int index = 0, size = tilehit_tile->size(); index < size; ++index)
       {
         uint32_t current_tile_id = tilehit_tile->at(index);
@@ -95,23 +92,41 @@ int build_histograms() {
         auto index_phi = get_index(*tilehit_tile, tile_id_phi_neighbour);
 
         if (index_z >= 0){
-          
+          double_t hit_time_1 = tilehit_time->at(index);
+          double_t hit_time_2 = tilehit_time->at(index_z);
+
+          double_t dt = hit_time_2 - hit_time_1;
+
+          m[current_tile_id].Fill(dt);
+          cluster_number++;
         }
         if (index_phi >= 0){
+          double_t hit_time_1 = tilehit_time->at(index);
+          double_t hit_time_2 = tilehit_time->at(index_phi);
 
+          double_t dt = hit_time_2 - hit_time_1;
+
+          m[current_tile_id+200000].Fill(dt);
+          cluster_number++;
         }
       }
     }
+    sourceFile->Close();
+    std::cout << "Total clusters in file: " << cluster_number << '\n';
+    time_t end = time(0);
+    std::cout << "Time: " << difftime(end, start)  << "s \n";
+
   }
 
 
   // -----------------------------------------
   // Save everything
   std::cout << "Save File" << '\n';
+  TFile *saveFile = new TFile(OUTPUT_FILE, "RECREATE");
   for (auto const& [key, val] : m){
     val.Write();
   }
-  savefile->Close();
+  saveFile->Close();
   return 0;
 }
 
