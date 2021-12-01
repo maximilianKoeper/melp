@@ -85,6 +85,13 @@ int build_histograms() {
       {
         uint32_t current_tile_id = tilehit_tile->at(index);
         //std::cout << current_tile_id << "  "<< get_neighbour(current_tile_id, 2) << "  "<< get_neighbour(current_tile_id, 1) << "\n";
+
+        // -- discard tile if more than one hit is recoreded --
+        if (get_index(*tilehit_tile, current_tile_id) < 0) {
+          // std::cout << "WARNING: >1 Hit in one Tile/Frame" << '\n';
+          continue;
+        }
+
         auto tile_id_z_neighbour = get_neighbour(current_tile_id, 2);
         auto tile_id_phi_neighbour = get_neighbour(current_tile_id, 1);
 
