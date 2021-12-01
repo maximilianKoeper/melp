@@ -259,6 +259,23 @@ def get_cluster_primary_truth_3frames(ttree_mu3e, ttree_mu3e_mc, frame):
 
     return cluster_primary
 
+#-----------------------------------------------------
+#returns all hits with hid=-1,+1 in a single frame and the frame id 
+def get_cluster_primary_truth_and_frame_id(ttree_mu3e, ttree_mu3e_mc, frame):
+    cluster_primary = []
+
+    for i in range(len(ttree_mu3e.tilehit_tile)):
+        mc_i = ttree_mu3e.tilehit_mc_i[i]
+        ttree_mu3e_mc.GetEntry(mc_i)
+        hid = ttree_mu3e_mc.hid
+
+        if np.abs(hid) == 1:
+            tile = ttree_mu3e.tilehit_tile[i]
+            cluster_primary.append([tile, frame])
+
+    return cluster_primary
+
+
 #------------------------------------------
 def hit_tiles_in_frame(ttree_mu3e):
     hit_tiles = []

@@ -502,7 +502,7 @@ def check_for_multiple_frame_clusters(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, t
         total_cluster_hits_counter_tmp = 0
 
         #Printing status info
-        if int(frame) % 500 == 0:
+        if int(frame) % 250 == 0:
             print("Progress: ", np.round(frame / frames_to_analyze * 100), " %","of ", frames_to_analyze, " frames", end='\r')
 
         clusters_frame = build_clusters_in_masks_3_frames(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
@@ -510,14 +510,15 @@ def check_for_multiple_frame_clusters(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, t
         for key in clusters_frame.keys():
             value = np.array(clusters_frame[key])
             total_cluster_hits_counter_tmp += len(value)
-            for i in range(len(value)):
-                if value[i][1] != value[0][1]:
+            for i in range(len(value)): #checks if hit in cluster has different frame id than the "master" hit
+                if value[i][1] != value[0][1]: 
                     mult_frame_cluster_hits_counter_tmp += 1
 
         total_cluster_hits_counter += total_cluster_hits_counter_tmp
         mult_frame_cluster_hits_counter += mult_frame_cluster_hits_counter_tmp
 
-        frac_mult_frame_cluster_hits.append(mult_frame_cluster_hits_counter_tmp/total_cluster_hits_counter_tmp)
+        if total_cluster_hits_counter_tmp != 0:
+            frac_mult_frame_cluster_hits.append(mult_frame_cluster_hits_counter_tmp/total_cluster_hits_counter_tmp)
 
     print("Progress: 100 %","of ", frames_to_analyze, " frames")
     print("Hits in cluster in different frame than master out of all hits in clusters: ", mult_frame_cluster_hits_counter/(total_cluster_hits_counter/100), "%")
