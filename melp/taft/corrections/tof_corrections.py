@@ -11,27 +11,24 @@ import numpy as np
 def alpha_from_z(z: float) -> float:
     # TODO: This is only approximated!
     return np.pi - (((25 / 328.8) * abs(z)) / 180) * np.pi
+    # return np.pi + (((25 / 328.8) * z) / 180) * np.pi
 
 
 def tof_z_graf(z: list) -> float:
-    # TODO: check equation (seems a bit off)
     tile_length = 5. * (10 ** (-3))  # m
     c = 299792458  # m/s
     beta = (19 / 180) * np.pi  # deg
     alpha = alpha_from_z(z[2])
-
-    # offset = 0.003
-    offset = 0.
 
     time = (tile_length / (2 * c)) * (1 + np.tan(alpha) ** 2 + np.tan(beta) ** 2)
-    return time * (10 ** 9) - offset
+    return time * (10 ** 9)
 
 
-def tof_z_new(z: list) -> float:
+def tof_z_new(xyz: list) -> float:
     tile_length = 5. * (10 ** (-3))  # m
     c = 299792458  # m/s
     beta = (19 / 180) * np.pi  # deg
-    alpha = alpha_from_z(z[2])
+    alpha = alpha_from_z(xyz[2])
 
     length_z = (tile_length / 2) * (np.cos(alpha))
     tof = - (length_z / c) * (10 ** 9)  # ns

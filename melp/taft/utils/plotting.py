@@ -2,7 +2,14 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-def plot_station_calibration(mu3e_detector):
+def plot_station_calibration(mu3e_detector, station: int):
+    if station == 1:
+        station_offset = 200000
+    elif station == 2:
+        station_offset = 300000
+    else:
+        raise ValueError("station=(1 or 2) expected")
+
     # ---------------------------------------
     # get data
     # ---------------------------------------
@@ -12,18 +19,20 @@ def plot_station_calibration(mu3e_detector):
 
     for tile_id in mu3e_detector.TileDetector.tile:
         tile = mu3e_detector.TileDetector.tile[tile_id]
-        if tile.id > 300000:
+        if tile.id > 300000 and station == 1:
+            continue
+        if tile.id < 300000 and station == 2:
             continue
         y = tile.row()
         x = tile.column()
         # print(tile_id, x, y)
 
-        grid_relative[x][y] = float(tile.dt_truth - tile.dt_cal - mu3e_detector.TileDetector.tile[200000].dt_truth)
+        grid_relative[x][y] = float(tile.dt_truth - tile.dt_cal - mu3e_detector.TileDetector.tile[station_offset].dt_truth)
         grid_truth[x][y] = tile.dt_truth
-        grid_calibrated[x][y] = tile.dt_cal + mu3e_detector.TileDetector.tile[200000].dt_truth
+        grid_calibrated[x][y] = tile.dt_cal + mu3e_detector.TileDetector.tile[station_offset].dt_truth
 
     grid_relative[0][0] = 0
-    grid_truth[0][0] = mu3e_detector.TileDetector.tile[200000].dt_truth
+    grid_truth[0][0] = mu3e_detector.TileDetector.tile[station_offset].dt_truth
 
     # ---------------------------------------
     # Plotting
