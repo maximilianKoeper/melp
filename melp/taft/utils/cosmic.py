@@ -16,7 +16,7 @@ def find_cosmic_events(filename: str, **kwargs):
         ttree_mu3e.GetEntry(frame)
 
         if frame % 100000 == 0:
-            print(frame/ttree_mu3e.GetEntries())
+            print(round(frame/ttree_mu3e.GetEntries() * 100), " % | Total Frames: ", ttree_mu3e.GetEntries(), end='\r')
 
         if len(ttree_mu3e.tilehit_tile) > 0:
             frame_with_hit_counter += 1
@@ -31,11 +31,12 @@ def find_cosmic_events(filename: str, **kwargs):
                 else:
                     tmp_arr_1.append(ttree_mu3e.tilehit_time[hit_index]+3)
             if len(tmp_arr_1) > 0 and len(tmp_arr_2) > 0:
-                global_time = min(ttree_mu3e.tilehit_time)
-                tmp_time_1 = sum(tmp_arr_1)/len(tmp_arr_1) - global_time
-                tmp_time_2 = sum(tmp_arr_2)/len(tmp_arr_2) - global_time
+                # global_time = min(ttree_mu3e.tilehit_time)
+                tmp_time_1 = sum(tmp_arr_1)/len(tmp_arr_1)
+                tmp_time_2 = sum(tmp_arr_2)/len(tmp_arr_2)
 
                 time_dist_betw_stations.append(tmp_time_1-tmp_time_2)
 
-    print(frame_with_hit_counter, " von ", ttree_mu3e.GetEntries())
+    print("100 % | Total Frames: ", ttree_mu3e.GetEntries())
+    print("Frames with hits: ", frame_with_hit_counter)
     return np.array(time_total), np.array(time_dist_betw_stations)
