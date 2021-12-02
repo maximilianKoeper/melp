@@ -249,3 +249,109 @@ def check_for_mult_hit_tiles_diff_frame(ttree_mu3e, ttree_mu3e_mc, ttree_sensor,
         print("Tiles in cluster hit in multiple frames out of all hits in clusters: ", double_hit_counter/(total_cluster_hits_counter/100), "%")
 
     return double_hit_counter, total_cluster_hits_counter
+
+#----------------------------------------------
+#checks clusters retuned by build_clusters_in_masks_with_neighbours and deletes hits in overlapping frames if hit belongs to cluster in 
+#"main" frame. Then returns clusters without double hits to reduce the number of hits that can't get associated
+def del_double_hits_in_3_frame_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector: melp.Detector, mask_type, number_of_frames = None, rec_type = None):
+    #set frame number
+    if number_of_frames == None:
+        frames_to_analyze = ttree_mu3e.GetEntries()
+    else:
+        frames_to_analyze = number_of_frames
+    
+
+    hits_all_frames = {} #contains all hits from all frames. Key: frame_id, Value: List of all hits in frame with frame_id
+    hits_all_frames_counter_before = 0
+    removed_hits_counter = 0
+
+    #build dictionary with hits from all frames
+    for frame in np.arange(2, frames_to_analyze-2, 1):
+        ttree_mu3e.GetEntry(frame)
+        #Printing status info
+        if frame % 5000 == 0:
+            print("Progress of building dictionary with all hits: ", np.round(frame / frames_to_analyze * 100), " %","of ", frames_to_analyze, " frames", end='\r')
+
+        hit_tiles_frame_id = []
+        for hit_tile_index in range(len(ttree_mu3e.tilehit_tile)):
+            hit_tiles_frame_id.append([ttree_mu3e.tilehit_tile[hit_tile_index], frame])
+        
+        hits_all_frames[frame] = hit_tiles_frame_id
+        hits_all_frames_counter_before += len(hit_tiles_frame_id)
+
+    print("Progress of building dictionary with all hits: 100 %","of ", frames_to_analyze, " frames")
+
+    #loop over frames again
+    for frame in np.arange(2, frames_to_analyze-2, 1):
+        ttree_mu3e.GetEntry(frame)
+        #Printing status info
+        if frame % 1000 == 0:
+            print("Progress of removing double hits: ", np.round(frame / frames_to_analyze * 100), " %","of ", frames_to_analyze, " frames", end='\r')
+
+        #get clusters for single frame 
+        clusters_frame = build_clusters_in_masks_with_neighbours(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
+
+        #check if there is hit from other frame and add them to hits_from_other_frame_in_cluster
+        hits_from_other_frame_in_cluster = []
+        for key in clusters_frame.keys():
+            value = np.array(clusters_frame[key])
+            for i in range(len(value)): #checks if hit in cluster has different frame id than the "master" hit
+                if value[i][1] != value[0][1]:
+                    hits_from_other_frame_in_cluster.append([value[i][0], value[i][1]]) #add hits in different frame to list
+
+        ################################
+        #if frame == 385:
+        #    print(hits_all_frames[384])
+        #    print()
+        #    print(clusters_frame)
+        #    print()
+        #    print(hits_from_other_frame_in_cluster)
+        #    print()
+        ###############################
+
+        #get hits from other frames if hits_from_other_frame_in_cluster is not empty
+        if len(hits_from_other_frame_in_cluster) != 0:
+            #check which frame to get (faster if its just one)
+            for hit in hits_from_other_frame_in_cluster:
+                ##################################
+                #if frame == 385:
+                #    print(hit)
+                #    print()
+                ###################################
+                if hit[1] == frame+1:
+                    #get hits in frame +1
+                    hits_frame_plus = hits_all_frames[frame+1]
+                    if hit in hits_frame_plus:
+                        hits_frame_plus.remove(hit) #remove double hit
+                        removed_hits_counter += 1
+                    hits_all_frames[frame+1] = hits_frame_plus #replace the value in hits_all_frames with new value without double hits
+                elif hit[1] == frame-1:
+                    #get hits in frame -1
+                    hits_frame_minus = hits_all_frames[frame-1]
+                    ####################################
+                    #if frame == 385:
+                    #    print(hits_frame_minus)
+                    #    print()
+                    #    print(hit)
+                    #    print()
+                    ####################################
+                    if hit in hits_frame_minus:
+                        hits_frame_minus.remove(hit) #remove double hit
+                        removed_hits_counter += 1
+                    hits_all_frames[frame-1] = hits_frame_minus #replace the value in hits_all_frames with new value without double hits
+                else:
+                    print("ERROR: Difference of frame_ids > 1")
+
+        else:
+            continue
+
+    print("Progress of removing double hits: 100 %","of ", frames_to_analyze, " frames")
+    
+    #print number of hits before removing doubles
+    print("Number of hits before removing doubles: ", hits_all_frames_counter_before)
+    #print number of hits after removing doubles
+    print("Number of hits after removing doubles: ", hits_all_frames_counter_before - removed_hits_counter)
+    #print number of removed hits
+    print("Number of removed hits: ", removed_hits_counter)
+
+    return hits_all_frames
