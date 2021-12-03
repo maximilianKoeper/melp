@@ -272,12 +272,12 @@ def del_double_hits_in_3_frame_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, 
         if frame % 5000 == 0:
             print("Progress of building dictionary with all hits: ", np.round(frame / frames_to_analyze * 100), " %","of ", frames_to_analyze, " frames", end='\r')
 
-        hit_tiles_frame_id = []
+        hit_tiles_with_frame_id = []
         for hit_tile_index in range(len(ttree_mu3e.tilehit_tile)):
-            hit_tiles_frame_id.append([ttree_mu3e.tilehit_tile[hit_tile_index], frame])
+            hit_tiles_with_frame_id.append([ttree_mu3e.tilehit_tile[hit_tile_index], frame])
         
-        hits_all_frames[frame] = hit_tiles_frame_id
-        hits_all_frames_counter_before += len(hit_tiles_frame_id)
+        hits_all_frames[frame] = hit_tiles_with_frame_id
+        hits_all_frames_counter_before += len(hit_tiles_with_frame_id)
 
     print("Progress of building dictionary with all hits: 100 %","of ", frames_to_analyze, " frames")
 
@@ -299,25 +299,10 @@ def del_double_hits_in_3_frame_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, 
                 if value[i][1] != value[0][1]:
                     hits_from_other_frame_in_cluster.append([value[i][0], value[i][1]]) #add hits in different frame to list
 
-        ################################
-        #if frame == 385:
-        #    print(hits_all_frames[384])
-        #    print()
-        #    print(clusters_frame)
-        #    print()
-        #    print(hits_from_other_frame_in_cluster)
-        #    print()
-        ###############################
-
         #get hits from other frames if hits_from_other_frame_in_cluster is not empty
         if len(hits_from_other_frame_in_cluster) != 0:
             #check which frame to get (faster if its just one)
             for hit in hits_from_other_frame_in_cluster:
-                ##################################
-                #if frame == 385:
-                #    print(hit)
-                #    print()
-                ###################################
                 if hit[1] == frame+1:
                     #get hits in frame +1
                     hits_frame_plus = hits_all_frames[frame+1]
@@ -328,13 +313,6 @@ def del_double_hits_in_3_frame_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, 
                 elif hit[1] == frame-1:
                     #get hits in frame -1
                     hits_frame_minus = hits_all_frames[frame-1]
-                    ####################################
-                    #if frame == 385:
-                    #    print(hits_frame_minus)
-                    #    print()
-                    #    print(hit)
-                    #    print()
-                    ####################################
                     if hit in hits_frame_minus:
                         hits_frame_minus.remove(hit) #remove double hit
                         removed_hits_counter += 1
@@ -350,8 +328,9 @@ def del_double_hits_in_3_frame_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, 
     #print number of hits before removing doubles
     print("Number of hits before removing doubles: ", hits_all_frames_counter_before)
     #print number of hits after removing doubles
-    print("Number of hits after removing doubles: ", hits_all_frames_counter_before - removed_hits_counter)
+    hits_all_frames_counter_after = hits_all_frames_counter_before - removed_hits_counter
+    print("Number of hits after removing doubles: ", hits_all_frames_counter_after)
     #print number of removed hits
     print("Number of removed hits: ", removed_hits_counter)
 
-    return hits_all_frames
+    return hits_all_frames, hits_all_frames_counter_after

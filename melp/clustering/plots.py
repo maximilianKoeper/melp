@@ -6,6 +6,7 @@ from melp import Detector
 from melp.clustering.misc import*
 
 import melp.clustering.spatial_cluster as sclump
+import melp.clustering.three_frame_cluster as clump_3
 
 #-------------------------------------------------
 def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, mask_type, number_of_frames = None, rec_type = None):
@@ -218,5 +219,76 @@ def get_hits_not_in_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles
 
 
     print("Progress: 100 %","of ", frames_to_analyze, " frames")
+
+    return frac_not_in_cluster
+
+#-----------------------------------------------------
+#returns fraction of number of hits in cluster and total number of hits
+def get_hits_not_in_cluster_3_frame(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, mask_type, number_of_frames = None, rec_type = None):
+    #set frame number
+    if number_of_frames == None:
+        frames_to_analyze = ttree_mu3e.GetEntries()
+    else:
+        frames_to_analyze = number_of_frames
+    
+    #set counters
+    total_hits_counter = []
+    cluster_hits_counter = []
+    frac_not_in_cluster = []
+    #############################
+    over_counter = 0
+    ###############################
+
+    #get total hits
+    hits_all_frames ,hits_all_frames_counter_after = clump_3.del_double_hits_in_3_frame_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector, mask_type, number_of_frames, rec_type)
+
+
+    #counting
+    for frame in np.arange(2, frames_to_analyze-2, 1):
+        ttree_mu3e.GetEntry(frame)
+
+        #Printing status info
+        if frame % 2000 == 0:
+            print("Progress: ", np.round(frame / frames_to_analyze * 100), " %","of ", frames_to_analyze, " frames", end='\r')
+
+        #count total hits
+        tot_hits_frame = len(hits_all_frames[frame])
+        total_hits_counter.append(tot_hits_frame)
+
+        #count hits in clusters and
+        #remove double hits in clusters like in check_for_mult_hit_tiles_diff_frame
+        clusters_frame = clump_3.build_clusters_in_masks_with_neighbours(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
+        cluster_hits_counter_tmp = 0
+        double_hit_counter_tmp = 0
+        for key in clusters_frame.keys():
+            cluster = clusters_frame[key]
+            cluster_hits_counter_tmp += len(cluster)
+            for hit1 in cluster:
+                for hit2 in cluster:
+                    if hit1[0] == hit2[0] and hit1[1] != hit2[1]:
+                        double_hit_counter_tmp += 1
+            #correct for moved cluster hits
+            for hit in cluster:
+                if hit[1] != frame:
+                    tot_hits_frame += 1
+        cluster_hits_counter.append(cluster_hits_counter_tmp - double_hit_counter_tmp)
+        ##################################
+        if (cluster_hits_counter_tmp - double_hit_counter_tmp) > tot_hits_frame:
+            over_counter += (cluster_hits_counter_tmp - double_hit_counter_tmp)- tot_hits_frame
+            print(frame, (cluster_hits_counter_tmp - double_hit_counter_tmp)- tot_hits_frame)
+        ################################
+
+        #calculate fraction
+        if tot_hits_frame != 0:
+            frac_not_in_cluster.append((tot_hits_frame - (cluster_hits_counter_tmp - double_hit_counter_tmp))/tot_hits_frame)  
+
+    if np.sum(total_hits_counter) != hits_all_frames_counter_after:
+        print("ERROR: Total hit counters don't match", np.sum(total_hits_counter), hits_all_frames_counter_after)
+
+    print("Progress: 100 %","of ", frames_to_analyze, " frames")
+
+    ##########################
+    print(over_counter)
+    ##########################
 
     return frac_not_in_cluster
