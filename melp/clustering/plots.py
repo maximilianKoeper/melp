@@ -220,6 +220,8 @@ def get_hits_not_in_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles
 
     print("Progress: 100 %","of ", frames_to_analyze, " frames")
 
+    print("Not associated hits out of all hits: ",(np.sum(total_hits_counter)-np.sum(cluster_hits_counter))/(np.sum(total_hits_counter)/100) , "%")
+
     return frac_not_in_cluster
 
 #-----------------------------------------------------
@@ -286,6 +288,8 @@ def get_hits_not_in_cluster_3_frame(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttr
         print("ERROR: Total hit counters don't match", np.sum(total_hits_counter), hits_all_frames_counter_after)
 
     print("Progress: 100 %","of ", frames_to_analyze, " frames")
+
+    print("Not associated hits out of all hits: ", np.sum(cluster_hits_counter)/(np.sum(total_hits_counter)/100), "%")
 
     ##########################
     print(over_counter)
