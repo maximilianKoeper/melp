@@ -128,6 +128,8 @@ def calibrate(**kwargs):
 
 
 # ---------------------------------------
+# generates Histogram file
+# if possible use ROOT Macro
 def generate_hist(filename: str, **kwargs):
     # Start timers
     t = Timer()
@@ -216,6 +218,150 @@ def align_timings(dt_phi_rel: dict, dt_z_rel: dict, station_offset: int):
 
     return
 
+
+# ---------------------------------------
+# calculates the median from the histogram dict returned by fill_dt_histogram()
+# returns residuals to true dt if resid=True
+
+def get_median_from_hist(histogram: dict, resid=False):
+    # z dir:
+    resid_z = []
+    dt_z = {}
+    for tile_entry in histogram:
+        neighbour_z_id = __detector__.TileDetector.getNeighbour(tile_entry, "right")
+        if neighbour_z_id is False:
+            continue
+        # setting prob to 0.5 for median
+        prob = np.array([0.5])
+        # q for result (has to be np.array because of type casting)
+        q = np.array([0.])
+        if histogram[tile_entry][0].ComputeIntegral() == 0:
+            # warnings.warn(f"WARNING: INTEGRAL = 0, tile: {tile_entry}")
+            continue
+        histogram[tile_entry][0].GetQuantiles(1, q, prob)
+        dt_z[tile_entry] = q[0] + (
+                __detector__.TileDetector.tile[neighbour_z_id].dt_truth - __detector__.TileDetector.tile[
+            tile_entry].dt_truth)
+        if resid:
+            resid_dt = q
+            resid_z.append(resid_dt)
+
+    # phi dir:
+    resid_phi = []
+    dt_phi = {}
+    for tile_entry in histogram:
+
+        neighbour_phi_id = __detector__.TileDetector.getNeighbour(tile_entry, "up")
+
+        # setting prob to 0.5 for median
+        prob = np.array([0.5])
+        # q for result (has to be np.array because of type casting)
+        q = np.array([0.])
+        if histogram[tile_entry][1].ComputeIntegral() == 0:
+            # print("WARNING: INTEGRAL = 0", tile_entry)
+            continue
+        histogram[tile_entry][1].GetQuantiles(1, q, prob)
+        dt_phi[tile_entry] = q[0] + (
+                __detector__.TileDetector.tile[neighbour_phi_id].dt_truth - __detector__.TileDetector.tile[
+            tile_entry].dt_truth)
+        if resid:
+            resid_dt = q
+            resid_phi.append(resid_dt)
+
+    return dt_z, dt_phi, resid_z, resid_phi
+
+
+def get_mu_gaus(histogram: dict) -> (dict, dict):
+    ROOT.TVirtualFitter.SetDefaultFitter("Minuit2")
+    # z dir:
+    dt_z = {}
+    for tile_entry in histogram:
+        neighbour_z_id = __detector__.TileDetector.getNeighbour(tile_entry, "right")
+        if neighbour_z_id is False:
+            continue
+
+        if histogram[tile_entry][0].ComputeIntegral() == 0:
+            # warnings.warn(f"WARNING: INTEGRAL = 0, tile: {tile_entry}")
+            continue
+        g1 = ROOT.TF1("fit_f", "gaus", -2, 2)
+        h1 = histogram[tile_entry][0]
+        h1.Rebin(4)
+        # g1.SetParameters(h1.GetMaximum(), h1.GetMean(), h1.GetRMS())
+        # g1.SetParLimits(0, 1, 1000)
+        histogram[tile_entry][0].Fit(g1, "WMEGQR", "0")
+        # if g1.GetParameter(1) > 1:
+        #    print("z", tile_entry, g1.GetParameter(0), g1.GetParameter(1), g1.GetParameter(2))
+        dt_z[tile_entry] = g1.GetParameter(1) + (
+                __detector__.TileDetector.tile[neighbour_z_id].dt_truth - __detector__.TileDetector.tile[
+            tile_entry].dt_truth)
+        del g1
+
+    # phi dir:
+    dt_phi = {}
+    for tile_entry in histogram:
+
+        neighbour_phi_id = __detector__.TileDetector.getNeighbour(tile_entry, "up")
+
+        if histogram[tile_entry][1].ComputeIntegral() == 0:
+            # print("WARNING: INTEGRAL = 0", tile_entry)
+            continue
+        g1 = ROOT.TF1("fit_f", "gaus", -2, 2)
+        h1 = histogram[tile_entry][1]
+        h1.Rebin(4)
+        # g1.SetParameters(h1.GetMaximum(), h1.GetMean(), h1.GetRMS())
+        # g1.SetParLimits(0, 1, 1000)
+        histogram[tile_entry][1].Fit(g1, "WMEGQR", "0")
+        # if g1.GetParameter(1) > 1:
+        #    print("phi", tile_entry, g1.GetParameter(1))
+        dt_phi[tile_entry] = g1.GetParameter(1) + (
+                __detector__.TileDetector.tile[neighbour_phi_id].dt_truth - __detector__.TileDetector.tile[
+            tile_entry].dt_truth)
+
+        del g1
+
+    return dt_z, dt_phi
+
+
+def get_mean_from_hist(histogram: dict) -> (dict, dict):
+    # z dir:
+    dt_z = {}
+    for tile_entry in histogram:
+        neighbour_z_id = __detector__.TileDetector.getNeighbour(tile_entry, "right")
+        if neighbour_z_id is False:
+            continue
+
+        if histogram[tile_entry][0].ComputeIntegral() == 0:
+            # warnings.warn(f"WARNING: INTEGRAL = 0, tile: {tile_entry}")
+            continue
+
+        mean = histogram[tile_entry][0].GetMean()
+
+        dt_z[tile_entry] = mean + (
+                __detector__.TileDetector.tile[neighbour_z_id].dt_truth - __detector__.TileDetector.tile[
+            tile_entry].dt_truth)
+
+    # phi dir:
+    dt_phi = {}
+    for tile_entry in histogram:
+
+        neighbour_phi_id = __detector__.TileDetector.getNeighbour(tile_entry, "up")
+
+        if histogram[tile_entry][1].ComputeIntegral() == 0:
+            # print("WARNING: INTEGRAL = 0", tile_entry)
+            continue
+
+        mean = histogram[tile_entry][0].GetMean()
+
+        dt_phi[tile_entry] = mean + (
+                __detector__.TileDetector.tile[neighbour_phi_id].dt_truth - __detector__.TileDetector.tile[
+            tile_entry].dt_truth)
+
+    return dt_z, dt_phi
+
+
+# --------------------------------------------------------
+# ---------------------  DEPRECATED  ---------------------
+# --------------------------------------------------------
 
 # ---------------------------------------
 
@@ -339,149 +485,9 @@ def check_cal_z(cal_data, station):
     return cal
 
 
-# ---------------------------------------
-# calculates the median from the histogram dict returned by fill_dt_histogram()
-# returns residuals to true dt if resid=True
-
-def get_median_from_hist(histogram: dict, resid=False):
-    # z dir:
-    resid_z = []
-    dt_z = {}
-    for tile_entry in histogram:
-        neighbour_z_id = __detector__.TileDetector.getNeighbour(tile_entry, "right")
-        if neighbour_z_id is False:
-            continue
-        # setting prob to 0.5 for median
-        prob = np.array([0.5])
-        # q for result (has to be np.array because of type casting)
-        q = np.array([0.])
-        if histogram[tile_entry][0].ComputeIntegral() == 0:
-            # warnings.warn(f"WARNING: INTEGRAL = 0, tile: {tile_entry}")
-            continue
-        histogram[tile_entry][0].GetQuantiles(1, q, prob)
-        dt_z[tile_entry] = q[0] + (
-                __detector__.TileDetector.tile[neighbour_z_id].dt_truth - __detector__.TileDetector.tile[
-            tile_entry].dt_truth)
-        if resid:
-            resid_dt = q
-            resid_z.append(resid_dt)
-
-    # phi dir:
-    resid_phi = []
-    dt_phi = {}
-    for tile_entry in histogram:
-
-        neighbour_phi_id = __detector__.TileDetector.getNeighbour(tile_entry, "up")
-
-        # setting prob to 0.5 for median
-        prob = np.array([0.5])
-        # q for result (has to be np.array because of type casting)
-        q = np.array([0.])
-        if histogram[tile_entry][1].ComputeIntegral() == 0:
-            # print("WARNING: INTEGRAL = 0", tile_entry)
-            continue
-        histogram[tile_entry][1].GetQuantiles(1, q, prob)
-        dt_phi[tile_entry] = q[0] + (
-                __detector__.TileDetector.tile[neighbour_phi_id].dt_truth - __detector__.TileDetector.tile[
-            tile_entry].dt_truth)
-        if resid:
-            resid_dt = q
-            resid_phi.append(resid_dt)
-
-    return dt_z, dt_phi, resid_z, resid_phi
-
-
-def get_mu_gaus(histogram: dict) -> (dict, dict):
-    ROOT.TVirtualFitter.SetDefaultFitter("Minuit2")
-    # z dir:
-    dt_z = {}
-    for tile_entry in histogram:
-        neighbour_z_id = __detector__.TileDetector.getNeighbour(tile_entry, "right")
-        if neighbour_z_id is False:
-            continue
-
-        if histogram[tile_entry][0].ComputeIntegral() == 0:
-            # warnings.warn(f"WARNING: INTEGRAL = 0, tile: {tile_entry}")
-            continue
-        g1 = ROOT.TF1("fit_f", "gaus", -2, 2)
-        h1 = histogram[tile_entry][0]
-        h1.Rebin(4)
-        # g1.SetParameters(h1.GetMaximum(), h1.GetMean(), h1.GetRMS())
-        # g1.SetParLimits(0, 1, 1000)
-        histogram[tile_entry][0].Fit(g1, "WMEGQR", "0")
-        # if g1.GetParameter(1) > 1:
-        #    print("z", tile_entry, g1.GetParameter(0), g1.GetParameter(1), g1.GetParameter(2))
-        dt_z[tile_entry] = g1.GetParameter(1) + (
-                __detector__.TileDetector.tile[neighbour_z_id].dt_truth - __detector__.TileDetector.tile[
-            tile_entry].dt_truth)
-        del g1
-
-    # phi dir:
-    dt_phi = {}
-    for tile_entry in histogram:
-
-        neighbour_phi_id = __detector__.TileDetector.getNeighbour(tile_entry, "up")
-
-        if histogram[tile_entry][1].ComputeIntegral() == 0:
-            # print("WARNING: INTEGRAL = 0", tile_entry)
-            continue
-        g1 = ROOT.TF1("fit_f", "gaus", -2, 2)
-        h1 = histogram[tile_entry][1]
-        h1.Rebin(4)
-        # g1.SetParameters(h1.GetMaximum(), h1.GetMean(), h1.GetRMS())
-        # g1.SetParLimits(0, 1, 1000)
-        histogram[tile_entry][1].Fit(g1, "WMEGQR", "0")
-        # if g1.GetParameter(1) > 1:
-        #    print("phi", tile_entry, g1.GetParameter(1))
-        dt_phi[tile_entry] = g1.GetParameter(1) + (
-                __detector__.TileDetector.tile[neighbour_phi_id].dt_truth - __detector__.TileDetector.tile[
-            tile_entry].dt_truth)
-
-        del g1
-
-    return dt_z, dt_phi
-
-
-def get_mean_from_hist(histogram: dict) -> (dict, dict):
-    # z dir:
-    dt_z = {}
-    for tile_entry in histogram:
-        neighbour_z_id = __detector__.TileDetector.getNeighbour(tile_entry, "right")
-        if neighbour_z_id is False:
-            continue
-
-        if histogram[tile_entry][0].ComputeIntegral() == 0:
-            # warnings.warn(f"WARNING: INTEGRAL = 0, tile: {tile_entry}")
-            continue
-
-        mean = histogram[tile_entry][0].GetMean()
-
-        dt_z[tile_entry] = mean + (
-                    __detector__.TileDetector.tile[neighbour_z_id].dt_truth - __detector__.TileDetector.tile[
-                tile_entry].dt_truth)
-
-    # phi dir:
-    dt_phi = {}
-    for tile_entry in histogram:
-
-        neighbour_phi_id = __detector__.TileDetector.getNeighbour(tile_entry, "up")
-
-        if histogram[tile_entry][1].ComputeIntegral() == 0:
-            # print("WARNING: INTEGRAL = 0", tile_entry)
-            continue
-
-        mean = histogram[tile_entry][0].GetMean()
-
-        dt_phi[tile_entry] = mean + (
-                    __detector__.TileDetector.tile[neighbour_phi_id].dt_truth - __detector__.TileDetector.tile[
-                tile_entry].dt_truth)
-
-    return dt_z, dt_phi
-
-
-# ---------------------------------------
-# DEPRECATED / UNUSED
-# ---------------------------------------
+# --------------------------------------------------------
+# ---------------------    UNUSED    ---------------------
+# --------------------------------------------------------
 def get_mean_from_ttree(ttree_mu3e, threshold: float) -> (dict, dict):
     dt_z = {}
     dt_phi = {}

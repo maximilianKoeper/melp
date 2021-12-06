@@ -1,11 +1,66 @@
 import ROOT
 import numpy as np
 
+import warnings
+
+from melp.libs.misc import index_finder
+
+
+# --------------------------------------------------
+# TODO: get slope (linear approx) for correction in z-direction
+def cosmic_tof_correction(filename: str, detector, **kwargs):
+    root_file = ROOT.TFile.Open(filename, "READ")
+    ttree_mu3e = root_file.Get(kwargs["ttree_loc"])
+    time_dist_z = []
+
+    it = find_next_cosmic_event(ttree_mu3e, it=0, station=1)
+    while it != -1:
+
+        if kwargs["mc_primary"] is False:
+            test_dict = check_cosmic_events(ttree_mu3e, None, None)
+        else:
+            test_dict = check_cosmic_events_mc(ttree_mu3e, None, None)
+
+        for key in test_dict:
+            tmp_ids = test_dict[key][0]
+
+            if kwargs["station"] == 1:
+                if any(y >= 300000 for y in tmp_ids):
+                    continue
+            elif kwargs["station"] == 2:
+                if any(y < 300000 for y in tmp_ids):
+                    continue
+
+            tmp_time_1 = min(test_dict[key][1])
+            tmp_tile_id_1 = test_dict[key][0][int(*index_finder(list(test_dict[key][1]), tmp_time_1))]
+            tmp_time_2 = max(test_dict[key][1])
+            tmp_tile_id_2 = test_dict[key][0][int(*index_finder(list(test_dict[key][1]), tmp_time_2))]
+
+            tof = 0.
+            pos1 = detector.TileDetector.tile[tmp_tile_id_1].pos
+            pos2 = detector.TileDetector.tile[tmp_tile_id_2].pos
+            dist = np.sqrt((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2 + (pos1[2] - pos2[2]) ** 2)  # mm
+            dist *= 0.001  # m
+            tof = (dist / 299792458) * (10 ** 9)
+
+            if kwargs["tof"]:
+                if tmp_time_2 > tmp_time_1:
+                    time_dist_z.append((tmp_time_1 - tmp_time_2) + tof)
+                else:
+                    time_dist_z.append((tmp_time_1 - tmp_time_2) - tof)
+            else:
+                time_dist_z.append(abs(tmp_time_1 - tmp_time_2) - tof)
+        it += 1
+        it = find_next_cosmic_event(ttree_mu3e, it, 1)
+
+    return time_dist_z
+
 
 # --------------------------------------------------
 # searches all frames for hits
 # returns time dist from these hits
 def find_cosmic_events(filename: str, **kwargs):
+    warnings.warn("use station_station_timing()")
     root_file = ROOT.TFile.Open(filename, "READ")
     ttree_mu3e = root_file.Get(kwargs["ttree_loc"])
 
@@ -48,13 +103,14 @@ def find_cosmic_events(filename: str, **kwargs):
     return np.array(time_total), np.array(time_dist_betw_stations), np.array(event_size_per_station)
 
 
+# --------------------------------------
 def station_station_timing(filename: str, detector, **kwargs):
     root_file = ROOT.TFile.Open(filename, "READ")
     ttree_mu3e = root_file.Get(kwargs["ttree_loc"])
 
     time_dist_betw_stations = []
 
-    it = find_next_cosmic_event(ttree_mu3e, 0, 1)
+    it = find_next_cosmic_event(ttree_mu3e, it=0, station=1)
     while it != -1:
 
         if it % 100000 == 0:
@@ -143,6 +199,24 @@ def check_cosmic_events(ttree_mu3e, it: int, station: int):
 
 
 # --------------------------------------
+# checks event for useful data
+# with primary id information
+def check_cosmic_events_mc(ttree_mu3e, it: int, station: int):
+    # sort hits for primary id
+    indices = np.argsort(list(ttree_mu3e.tilehit_primary))
+    tilehit_times = np.asarray(list(ttree_mu3e.tilehit_time))[indices]
+    tilehit_ids = np.asarray(list(ttree_mu3e.tilehit_tile))[indices]
+    tilehit_primaries = np.asarray(list(ttree_mu3e.tilehit_primary))[indices]
+
+    # print(tilehit_ids)
+    # print(np.array(tilehit_times) - min(tilehit_times))
+
+    sorted_tracks = get_single_tracks_primary_mc(tilehit_ids, tilehit_times, tilehit_primaries)
+
+    return sorted_tracks
+
+
+# --------------------------------------
 # split list into chunks for each event (time cut)
 # returns dictionary with data (key is arbitrary but unique)
 def get_single_tracks_time_cut(tilehit_ids: list, tilehit_times: list, threshold: float = 8.) -> dict:
@@ -171,23 +245,6 @@ def get_single_tracks_time_cut(tilehit_ids: list, tilehit_times: list, threshold
         del single_events[key]
 
     return single_events
-
-
-# --------------------------------------
-# checks event for useful data
-def check_cosmic_events_mc(ttree_mu3e, it: int, station: int):
-    # sort hits for primary id
-    indices = np.argsort(list(ttree_mu3e.tilehit_primary))
-    tilehit_times = np.asarray(list(ttree_mu3e.tilehit_time))[indices]
-    tilehit_ids = np.asarray(list(ttree_mu3e.tilehit_tile))[indices]
-    tilehit_primaries = np.asarray(list(ttree_mu3e.tilehit_primary))[indices]
-
-    # print(tilehit_ids)
-    # print(np.array(tilehit_times) - min(tilehit_times))
-
-    sorted_tracks = get_single_tracks_primary_mc(tilehit_ids, tilehit_times, tilehit_primaries)
-
-    return sorted_tracks
 
 
 # --------------------------------------
