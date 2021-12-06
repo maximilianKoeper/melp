@@ -334,3 +334,36 @@ def del_double_hits_in_3_frame_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, 
     print("Number of removed hits: ", removed_hits_counter)
 
     return hits_all_frames, hits_all_frames_counter_after
+
+#-----------------------------------------------------
+#builds clusters where dict-key is the primary of "master"-tile and not "master" tile and value is the whole cluster
+def build_cluster_with_truth_primary_3_frame(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector: melp.Detector, frame, mask_type, rec_type = None):
+    #get primaries
+    primaries = get_mc_primary_for_hit_frame(ttree_mu3e)
+
+    ttree_mu3e.GetEntry(frame+1)
+    primaries_frame_plus = get_mc_primary_for_hit_frame(ttree_mu3e)
+    primaries.update(primaries_frame_plus)
+
+    ttree_mu3e.GetEntry(frame-1)
+    primaries_frame_minus = get_mc_primary_for_hit_frame(ttree_mu3e)
+    primaries.update(primaries_frame_minus)
+
+    ttree_mu3e.GetEntry(frame)
+
+    #get clusters
+    clusters_frame = build_clusters_in_masks_with_neighbours(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
+
+    #convert cluster tiles to primaries
+    clusters_with_primaries = {} #gets returned: keys:primary of "master"-tile; values: primary of whole cluster
+    for key in clusters_frame.keys():
+        primary_whole_clusters_tmp = []
+        #primary_whole_clusters_tmp.append(primaries[key])
+        for i in clusters_frame[key]:
+            tile_id = i[0]
+            if primaries[tile_id] not in primary_whole_clusters_tmp:
+                primary_whole_clusters_tmp.append(primaries[tile_id])
+
+        clusters_with_primaries[primaries[key]] = primary_whole_clusters_tmp
+    
+    return clusters_with_primaries

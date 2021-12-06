@@ -277,7 +277,7 @@ def get_hits_not_in_cluster_3_frame(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttr
         ##################################
         if (cluster_hits_counter_tmp - double_hit_counter_tmp) > tot_hits_frame:
             over_counter += (cluster_hits_counter_tmp - double_hit_counter_tmp)- tot_hits_frame
-            print(frame, (cluster_hits_counter_tmp - double_hit_counter_tmp)- tot_hits_frame)
+        #    print(frame, (cluster_hits_counter_tmp - double_hit_counter_tmp)- tot_hits_frame)
         ################################
 
         #calculate fraction
@@ -296,3 +296,103 @@ def get_hits_not_in_cluster_3_frame(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttr
     ##########################
 
     return frac_not_in_cluster
+
+#---------------------------------------------------------
+def compare_to_primary_3_frames(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, mask_type, number_of_frames = None, rec_type = None):
+    frac_corr_frame = []
+    frac_corr_clusters_frame = []
+    frac_uncorr_frame = []
+    total_hits_counter = []
+    cluster_hits_counter = 0
+
+    tot_corr_counter = 0
+    tot_uncorr_counter = 0
+
+    #set frame number
+    if number_of_frames == None:
+        frames_to_analyze = ttree_mu3e.GetEntries()
+    else:
+        frames_to_analyze = number_of_frames
+
+    #get total hits
+    hits_all_frames ,hits_all_frames_counter_after = clump_3.del_double_hits_in_3_frame_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector, mask_type, number_of_frames, rec_type)
+
+
+    for frame in np.arange(2, frames_to_analyze-2, 1):
+        ttree_mu3e.GetEntry(frame)
+        #Printing status info
+        if frame % 5000 == 0:
+            print("Progress: ", np.round(frame / frames_to_analyze * 100), " %","of ", frames_to_analyze, " frames", end='\r')
+
+        #count total hits
+        tot_hits_frame = len(hits_all_frames[frame])
+        total_hits_counter.append(tot_hits_frame)
+
+        #set counters
+        corr_counter = 0
+        uncorr_counter = 0
+        
+        #get primaries
+        primaries_frame_0 = get_mc_primary_for_hit_frame(ttree_mu3e)
+        ttree_mu3e.GetEntry(frame+1)
+        primaries_frame_plus = get_mc_primary_for_hit_frame(ttree_mu3e)
+        ttree_mu3e.GetEntry(frame-1)
+        primaries_frame_minus = get_mc_primary_for_hit_frame(ttree_mu3e)
+        ttree_mu3e.GetEntry(frame)
+
+        primaries_frame_arr_0 = []
+        for key in primaries_frame_0.keys():
+            primaries_frame_arr_0.append([key,primaries_frame_0[key]]) #[hit tile, primary for tile hit]
+
+        primaries_frame_arr_plus = []
+        for key in primaries_frame_plus.keys():
+            primaries_frame_arr_plus.append([key,primaries_frame_plus[key]]) #[hit tile, primary for tile hit]
+
+        primaries_frame_arr_minus = []
+        for key in primaries_frame_minus.keys():
+            primaries_frame_arr_minus.append([key,primaries_frame_minus[key]]) #[hit tile, primary for tile hit]
+
+        #get clusters
+        clusters_with_primaries = clump_3.build_cluster_with_truth_primary_3_frame(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
+        cluster_primaries_arr = []
+        cluster_master_primaries_arr = []
+        for key in clusters_with_primaries.keys():
+            cluster_master_primaries_arr.append(key)
+            cluster_primaries_arr.append(clusters_with_primaries[key])
+
+        #count hits in clusters
+        cluster_hits_counter_tmp = 0
+        for key in clusters_with_primaries.keys():
+            cluster_hits_counter_tmp += len(clusters_with_primaries[key])
+        cluster_hits_counter += cluster_hits_counter_tmp
+
+        #comparison
+        for j in range(len(cluster_primaries_arr)): #loop over all clusters in frame
+            for k in range(len(cluster_primaries_arr[j])): #loop over all primaries in cluster 
+                if cluster_primaries_arr[j][k] == cluster_master_primaries_arr[j]: #if primary in cluster = primary of cluster master
+                    corr_counter += 1
+                else:
+                    uncorr_counter += 1 
+
+        #add #master tiles to corr_counter
+        corr_counter += len(cluster_master_primaries_arr)
+
+        #add to total corr and uncorr counters
+        tot_corr_counter += corr_counter
+        tot_uncorr_counter += uncorr_counter
+
+        if cluster_hits_counter_tmp != 0:
+            frac_corr_clusters_frame.append(corr_counter/cluster_hits_counter_tmp)
+
+        if tot_hits_frame != 0:
+            frac_corr_frame.append(corr_counter/tot_hits_frame)
+
+        if cluster_hits_counter_tmp != 0:
+            frac_uncorr_frame.append(uncorr_counter/cluster_hits_counter_tmp)
+
+    print("Progress: 100 %","of ", frames_to_analyze, " frames")
+    print("Total #hits in frames/#hits in clusters = ", np.sum(total_hits_counter)/cluster_hits_counter)
+    print("Correctly associated out of all hits", tot_corr_counter/(np.sum(total_hits_counter)/100),"%")
+    print("Incorrectly associated out of all hits", tot_uncorr_counter/(np.sum(total_hits_counter)/100),"%")
+        
+    return frac_corr_frame, frac_corr_clusters_frame, frac_uncorr_frame, tot_corr_counter

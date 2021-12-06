@@ -403,13 +403,13 @@ def build_clusters_in_masks_3_frames(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, tt
 #builds clusters where dict-key is the primary of "master"-tile and not "master" tile and value is the whole cluster
 def build_cluster_with_truth_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector: melp.Detector, mask_type, frame, rec_type = None):
     #get primaries
-    primaries = get_tid_frame(ttree_mu3e, ttree_mu3e_mc)
+    primaries = get_primary_frame(ttree_mu3e, ttree_mu3e_mc)
 
     #get clusters
     clusters_frame = build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector, mask_type, frame, rec_type)
 
     #convert cluster tiles to primaries
-    clusters_with_primaries = {} #gets returned: keys:tid of "master"-tile; values:tids of whole cluster
+    clusters_with_primaries = {} #gets returned: keys:primary of "master"-tile; values: primary of whole cluster
     for key in clusters_frame.keys():
         primary_whole_clusters_tmp = []
         primary_whole_clusters_tmp.append(primaries[key])
