@@ -188,8 +188,9 @@ def get_cluster_primary_truth_frame(filename, frame):
 
     return mask_primary
 """
-
-def get_cluster_primary_truth_frame(ttree_mu3e, ttree_mu3e_mc):
+#-----------------------------------------------------------------
+#returna all hits in frame with hid = -1,+1
+def get_cluster_primary_truth_frame(ttree_mu3e, ttree_mu3e_mc, frame):
     cluster_primary = []
 
     for i in range(len(ttree_mu3e.tilehit_tile)):
@@ -202,6 +203,78 @@ def get_cluster_primary_truth_frame(ttree_mu3e, ttree_mu3e_mc):
             cluster_primary.append(tile)
 
     return cluster_primary
+
+#-----------------------------------------------------------------
+#returns all hits with hid=-1,+1 in 3 frames (overlapping)
+def get_cluster_primary_truth_3frames(ttree_mu3e, ttree_mu3e_mc, frame):
+    cluster_primary = []
+    tilehits_3_frames = []
+
+    #add hits in "middle" frame
+    tilehits_3_frames.append(np.array(ttree_mu3e.tilehit_tile))
+
+    #add hits in the frame before
+    if frame != 1:
+        ttree_mu3e.GetEntry(frame-1)
+        tilehits_3_frames.append(np.array(ttree_mu3e.tilehit_tile))
+
+    #add hits in the frame after
+    if frame != ttree_mu3e.GetEntries():
+        ttree_mu3e.GetEntry(frame+1)
+        tilehits_3_frames.append(np.array(ttree_mu3e.tilehit_tile))
+
+    #check frame before
+    ttree_mu3e.GetEntry(frame-1)
+    for i in range(len(tilehits_3_frames[1])):
+        mc_i = ttree_mu3e.tilehit_mc_i[i]
+        ttree_mu3e_mc.GetEntry(mc_i)
+        hid = ttree_mu3e_mc.hid
+
+        if np.abs(hid) == 1:
+            tile = ttree_mu3e.tilehit_tile[i]
+            cluster_primary.append([tile, frame-1])
+
+    #check frame after
+    ttree_mu3e.GetEntry(frame+1)
+    for i in range(len(tilehits_3_frames[2])):
+        mc_i = ttree_mu3e.tilehit_mc_i[i]
+        ttree_mu3e_mc.GetEntry(mc_i)
+        hid = ttree_mu3e_mc.hid
+
+        if np.abs(hid) == 1:
+            tile = ttree_mu3e.tilehit_tile[i]
+            cluster_primary.append([tile, frame+1])
+
+    #check middle frame
+    ttree_mu3e.GetEntry(frame)
+    for i in range(len(tilehits_3_frames[0])):
+        mc_i = ttree_mu3e.tilehit_mc_i[i]
+        ttree_mu3e_mc.GetEntry(mc_i)
+        hid = ttree_mu3e_mc.hid
+
+        if np.abs(hid) == 1:
+            tile = ttree_mu3e.tilehit_tile[i]
+            cluster_primary.append([tile, frame])
+
+
+    return cluster_primary
+
+#-----------------------------------------------------
+#returns all hits with hid=-1,+1 in a single frame and the frame id 
+def get_cluster_primary_truth_and_frame_id(ttree_mu3e, ttree_mu3e_mc, frame):
+    cluster_primary = []
+
+    for i in range(len(ttree_mu3e.tilehit_tile)):
+        mc_i = ttree_mu3e.tilehit_mc_i[i]
+        ttree_mu3e_mc.GetEntry(mc_i)
+        hid = ttree_mu3e_mc.hid
+
+        if np.abs(hid) == 1:
+            tile = ttree_mu3e.tilehit_tile[i]
+            cluster_primary.append([tile, frame])
+
+    return cluster_primary
+
 
 #------------------------------------------
 def hit_tiles_in_frame(ttree_mu3e):
