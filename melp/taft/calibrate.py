@@ -49,7 +49,7 @@ def calibrate(**kwargs):
     t = Timer()
     t.start()
 
-    # TODO: workaround
+    # TODO: workaround (not all functions return residuals)
     resid_z, resid_phi = (None, None)
 
     # ------------------------------------------------------
@@ -75,11 +75,9 @@ def calibrate(**kwargs):
     loop_correction_phi(__detector__, dt_phi_rel, 200000)
     loop_correction_phi(__detector__, dt_phi_rel, 300000)
 
+    # correcting for tof in z direction
     tof_correction_z(__detector__, dt_z_rel, 200000, kwargs["tof"])
     tof_correction_z(__detector__, dt_z_rel, 300000, kwargs["tof"])
-
-    # loop_correction_z(__detector__, dt_phi_rel, dt_z_rel, 200000)
-    # loop_correction_z(__detector__, dt_phi_rel, dt_z_rel, 300000)
     # ------------------------------------------------------
 
     # ------------------------------------------------------
@@ -127,9 +125,9 @@ def calibrate(**kwargs):
     return resid_z, resid_phi, cal, cal_phi
 
 
-# ---------------------------------------
+# ------------------------------------------------------
 # generates Histogram file
-# if possible use ROOT Macro
+# if possible use ROOT Macro (melp/taft/cpp)
 def generate_hist(filename: str, **kwargs):
     # Start timers
     t = Timer()
@@ -146,7 +144,8 @@ def generate_hist(filename: str, **kwargs):
     t.print()
 
 
-# ---------------------------------------
+# ------------------------------------------------------
+# currently used function to minimize error in z direction
 def minimize_function_z(offset: float, dt_phi_rel: list, dt_z_rel: list, dt_phi_plus_one: list) -> float:
     tmp = 0.
     tmp += abs(offset - dt_z_rel[0])
@@ -164,10 +163,12 @@ def minimize_function_z(offset: float, dt_phi_rel: list, dt_z_rel: list, dt_phi_
 
 
 # TODO
+# prepares data for minimizer and applies result to detector
 def align_timings(dt_phi_rel: dict, dt_z_rel: dict, station_offset: int):
     print(f"Calculating absolute timing offsets to master tile: {station_offset}")
 
     result = {}
+    # loop over all z - columns
     for z_position in range(len(__detector__.TileDetector.row_ids(0, station_offset)) - 1):
         # generating empty temporary arrays
         dt_phi_arr_tmp = []
@@ -180,11 +181,11 @@ def align_timings(dt_phi_rel: dict, dt_z_rel: dict, station_offset: int):
 
         # filling arrays with relative dt information
         for tile_id in column_ids_for_current_z:
-            dt_phi_arr_tmp.append(dt_phi_rel[tile_id] if tile_id in dt_phi_rel.keys() else 0)
-            dt_z_arr_tmp.append(dt_z_rel[tile_id] if tile_id in dt_z_rel.keys() else 0)
+            dt_phi_arr_tmp.append(dt_phi_rel[tile_id])
+            dt_z_arr_tmp.append(dt_z_rel[tile_id])
 
         for tile_id in column_ids_for_current_z_plus_one:
-            dt_phi_plus_one_arr_tmp.append(dt_phi_rel[tile_id] if tile_id in dt_phi_rel.keys() else 0)
+            dt_phi_plus_one_arr_tmp.append(dt_phi_rel[tile_id])
 
         dt_phi_arr_tmp = np.asarray(dt_phi_arr_tmp)
         dt_phi_plus_one_arr_tmp = np.asarray(dt_phi_plus_one_arr_tmp)
@@ -219,7 +220,7 @@ def align_timings(dt_phi_rel: dict, dt_z_rel: dict, station_offset: int):
     return
 
 
-# ---------------------------------------
+# ------------------------------------------------------
 # calculates the median from the histogram dict returned by fill_dt_histogram()
 # returns residuals to true dt if resid=True
 
@@ -271,6 +272,8 @@ def get_median_from_hist(histogram: dict, resid=False):
     return dt_z, dt_phi, resid_z, resid_phi
 
 
+# ------------------------------------------------------
+# fits a gaussian to every histogram to get mu
 def get_mu_gaus(histogram: dict) -> (dict, dict):
     ROOT.TVirtualFitter.SetDefaultFitter("Minuit2")
     # z dir:
@@ -322,6 +325,8 @@ def get_mu_gaus(histogram: dict) -> (dict, dict):
     return dt_z, dt_phi
 
 
+# ------------------------------------------------------
+# gets the mean from each histogram
 def get_mean_from_hist(histogram: dict) -> (dict, dict):
     # z dir:
     dt_z = {}
@@ -363,7 +368,7 @@ def get_mean_from_hist(histogram: dict) -> (dict, dict):
 # ---------------------  DEPRECATED  ---------------------
 # --------------------------------------------------------
 
-# ---------------------------------------
+# ------------------------------------------------------
 
 def pre_align_phi(dt_phi):
     warnings.warn("Warning: deprecated")
@@ -392,7 +397,7 @@ def pre_align_phi(dt_phi):
     return cal_station_1, cal_station_2
 
 
-# ---------------------------------------
+# ------------------------------------------------------
 
 def check_cal_phi(cal_data, station):
     cal = {}
@@ -417,7 +422,7 @@ def check_cal_phi(cal_data, station):
     return cal
 
 
-# ---------------------------------------
+# ------------------------------------------------------
 # - returns the absolute timing offset of the tile to the tile nearest to the target
 #
 # -> returned dictionaries:
@@ -457,7 +462,7 @@ def pre_align_z(dt_z):
     return cal_station_1, cal_station_2
 
 
-# ---------------------------------------
+# ------------------------------------------------------
 
 def check_cal_z(cal_data, station):
     cal = {}
