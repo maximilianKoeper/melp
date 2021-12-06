@@ -13,8 +13,13 @@ def cosmic_tof_correction(filename: str, detector, **kwargs):
     ttree_mu3e = root_file.Get(kwargs["ttree_loc"])
     time_dist_z = []
 
-    it = find_next_cosmic_event(ttree_mu3e, it=0, station=1)
+    # it -> iterator (frame_id). -1 if EOF
+    it = find_next_cosmic_event(ttree_mu3e, it=0, station=kwargs["station"])
     while it != -1:
+
+        if it % 100000 == 0:
+            print(round(it / ttree_mu3e.GetEntries() * 100), " % | Total Frames: ", ttree_mu3e.GetEntries(),
+                  end='\r')
 
         if kwargs["mc_primary"] is False:
             test_dict = check_cosmic_events(ttree_mu3e, None, None)
@@ -33,23 +38,25 @@ def cosmic_tof_correction(filename: str, detector, **kwargs):
 
             tmp_time_1 = min(test_dict[key][1])
             tmp_tile_id_1 = test_dict[key][0][int(*index_finder(list(test_dict[key][1]), tmp_time_1))]
+            tmp_time_1 += detector.TileDetector.tile[tmp_tile_id_1].dt_truth
+            tmp_time_1 -= detector.TileDetector.tile[tmp_tile_id_1].dt_cal
             tmp_time_2 = max(test_dict[key][1])
             tmp_tile_id_2 = test_dict[key][0][int(*index_finder(list(test_dict[key][1]), tmp_time_2))]
+            tmp_time_2 += detector.TileDetector.tile[tmp_tile_id_2].dt_truth
+            tmp_time_2 -= detector.TileDetector.tile[tmp_tile_id_2].dt_cal
 
-            tof = 0.
+            # calculating tof
             pos1 = detector.TileDetector.tile[tmp_tile_id_1].pos
             pos2 = detector.TileDetector.tile[tmp_tile_id_2].pos
             dist = np.sqrt((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2 + (pos1[2] - pos2[2]) ** 2)  # mm
             dist *= 0.001  # m
-            tof = (dist / 299792458) * (10 ** 9)
+            tof = (dist / 299792458) * (10 ** 9)  # ns
 
-            if kwargs["tof"]:
-                if tmp_time_2 > tmp_time_1:
-                    time_dist_z.append((tmp_time_1 - tmp_time_2) + tof)
-                else:
-                    time_dist_z.append((tmp_time_1 - tmp_time_2) - tof)
-            else:
-                time_dist_z.append(abs(tmp_time_1 - tmp_time_2) - tof)
+            z_dist = (detector.TileDetector.tile[tmp_tile_id_1].column() - detector.TileDetector.tile[tmp_tile_id_2].column())
+
+            if abs(z_dist) > 8:
+                time_dist_z.append((abs(tmp_time_1 - tmp_time_2) - tof) / z_dist)
+
         it += 1
         it = find_next_cosmic_event(ttree_mu3e, it, 1)
 

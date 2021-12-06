@@ -10,7 +10,7 @@ from melp.libs.misc import index_finder
 from melp.libs.timer import Timer
 from melp.taft.corrections.misc_corrections import loop_correction_phi
 # different functions for calibration
-from melp.taft.corrections.tof_corrections import tof_correction_z
+from melp.taft.corrections.tof_corrections import tof_correction_z, cosmic_correction_z
 from melp.taft.utils.root_helper import save_histo, read_histo, fill_dt_histos
 
 # ---------------------------------------------------------------------
@@ -84,6 +84,11 @@ def calibrate(**kwargs):
     # calculating absolute values
     align_timings(dt_phi_rel, dt_z_rel, 200000)
     align_timings(dt_phi_rel, dt_z_rel, 300000)
+    # ------------------------------------------------------
+
+    # ------------------------------------------------------
+    # correcting tof with cosmic data
+    cosmic_correction_z(__detector__, **kwargs)
     # ------------------------------------------------------
 
     # ------------------------------------------------------

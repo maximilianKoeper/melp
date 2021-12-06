@@ -2,6 +2,7 @@ import warnings
 
 import numpy as np
 
+from melp.taft.utils.cosmic import cosmic_tof_correction
 
 # ---------------------------------------
 # using angle distribution to correct for TOF
@@ -74,3 +75,33 @@ def tof_correction_z(__detector__, dt_z_rel: dict, station_offset: int, tof_mode
             dt_z_rel[id_index] = dt_tmp
 
     return dt_z_rel
+
+
+# ---------------------------------------------
+def cosmic_correction_z(__detector__, **kwargs):
+    print("analyzing cosmics file #1")
+    kwargs["station"] = 1
+    hist_z_1 = cosmic_tof_correction(kwargs["cosmic_file"], __detector__, **kwargs)
+    correction_1 = np.median(hist_z_1)
+    print("analyzing cosmics file #2")
+    kwargs["station"] = 2
+    hist_z_2 = cosmic_tof_correction(kwargs["cosmic_file"], __detector__, **kwargs)
+    correction_2 = np.median(hist_z_2)
+    print("done")
+    phi = __detector__.TileDetector.column_ids(0, 200000)
+
+    for p in range(len(phi)):
+        corr = []
+        row = __detector__.TileDetector.row_ids(p, 200000)
+        for i in range(len(row)):
+            corr.append(correction_1 * i)
+        for i in range(len(row)):
+            __detector__.TileDetector.tile[row[i]].dt_cal -= corr[i]
+
+    for p in range(len(phi)):
+        corr = []
+        row = __detector__.TileDetector.row_ids(p, 300000)
+        for i in range(len(row)):
+            corr.append(correction_2 * i)
+        for i in range(len(row)):
+            __detector__.TileDetector.tile[row[i]].dt_cal -= corr[i]
