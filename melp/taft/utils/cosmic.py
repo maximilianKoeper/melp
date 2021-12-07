@@ -1,14 +1,44 @@
+import warnings
+
 import ROOT
 import numpy as np
-
-import warnings
 
 from melp.libs.misc import index_finder
 
 
+# ---------------------------------------------
+def cosmic_correction_z(__detector__, **kwargs):
+    print("analyzing cosmics file #1")
+    kwargs["station"] = 1
+    hist_z_1 = cosmic_linear_correction(kwargs["cosmic_file"], __detector__, **kwargs)
+    correction_1 = np.median(hist_z_1)
+    print("analyzing cosmics file #2")
+    kwargs["station"] = 2
+    hist_z_2 = cosmic_linear_correction(kwargs["cosmic_file"], __detector__, **kwargs)
+    correction_2 = np.median(hist_z_2)
+    print("done")
+    phi = __detector__.TileDetector.column_ids(0, 200000)
+
+    for p in range(len(phi)):
+        corr = []
+        row = __detector__.TileDetector.row_ids(p, 200000)
+        for i in range(len(row)):
+            corr.append(correction_1 * i)
+        for i in range(len(row)):
+            __detector__.TileDetector.tile[row[i]].dt_cal -= corr[i]
+
+    for p in range(len(phi)):
+        corr = []
+        row = __detector__.TileDetector.row_ids(p, 300000)
+        for i in range(len(row)):
+            corr.append(correction_2 * i)
+        for i in range(len(row)):
+            __detector__.TileDetector.tile[row[i]].dt_cal -= corr[i]
+
+
 # --------------------------------------------------
-# TODO: get slope (linear approx) for correction in z-direction
-def cosmic_tof_correction(filename: str, detector, **kwargs):
+#
+def cosmic_linear_correction(filename: str, detector, **kwargs):
     root_file = ROOT.TFile.Open(filename, "READ")
     ttree_mu3e = root_file.Get(kwargs["ttree_loc"])
     time_dist_z = []
@@ -22,9 +52,9 @@ def cosmic_tof_correction(filename: str, detector, **kwargs):
                   end='\r')
 
         if kwargs["mc_primary"] is False:
-            test_dict = check_cosmic_events(ttree_mu3e, None, None)
+            test_dict = check_cosmic_events(ttree_mu3e)
         else:
-            test_dict = check_cosmic_events_mc(ttree_mu3e, None, None)
+            test_dict = check_cosmic_events_mc(ttree_mu3e)
 
         for key in test_dict:
             tmp_ids = test_dict[key][0]
@@ -52,62 +82,16 @@ def cosmic_tof_correction(filename: str, detector, **kwargs):
             dist *= 0.001  # m
             tof = (dist / 299792458) * (10 ** 9)  # ns
 
-            z_dist = (detector.TileDetector.tile[tmp_tile_id_1].column() - detector.TileDetector.tile[tmp_tile_id_2].column())
+            z_dist = (detector.TileDetector.tile[tmp_tile_id_1].column() - detector.TileDetector.tile[
+                tmp_tile_id_2].column())
 
-            if abs(z_dist) > 8:
+            if abs(z_dist) > kwargs["cosmic_threshold"]:
                 time_dist_z.append((abs(tmp_time_1 - tmp_time_2) - tof) / z_dist)
 
         it += 1
         it = find_next_cosmic_event(ttree_mu3e, it, 1)
 
     return time_dist_z
-
-
-# --------------------------------------------------
-# searches all frames for hits
-# returns time dist from these hits
-def find_cosmic_events(filename: str, **kwargs):
-    warnings.warn("use station_station_timing()")
-    root_file = ROOT.TFile.Open(filename, "READ")
-    ttree_mu3e = root_file.Get(kwargs["ttree_loc"])
-
-    frame_with_hit_counter = 0
-    time_total = []
-    time_dist_betw_stations = []
-    event_size_per_station = []
-
-    for frame in range(ttree_mu3e.GetEntries()):
-        ttree_mu3e.GetEntry(frame)
-
-        if frame % 100000 == 0:
-            print(round(frame / ttree_mu3e.GetEntries() * 100), " % | Total Frames: ", ttree_mu3e.GetEntries(),
-                  end='\r')
-
-        if ttree_mu3e.Ntilehit > 0:
-            frame_with_hit_counter += 1
-            time_total.append(
-                sum(ttree_mu3e.tilehit_time) / len(ttree_mu3e.tilehit_time) - min(ttree_mu3e.tilehit_time))
-
-            tmp_arr_1 = []
-            tmp_arr_2 = []
-            for hit_index in range(len(ttree_mu3e.tilehit_tile)):
-                tile_id = ttree_mu3e.tilehit_tile[hit_index]
-                if tile_id > 300000:
-                    tmp_arr_2.append(ttree_mu3e.tilehit_time[hit_index])
-                else:
-                    tmp_arr_1.append(ttree_mu3e.tilehit_time[hit_index] + 3)
-            if len(tmp_arr_1) > 0 and len(tmp_arr_2) > 0:
-                event_size_per_station.append(len(tmp_arr_2))
-                event_size_per_station.append(len(tmp_arr_1))
-                # global_time = min(ttree_mu3e.tilehit_time)
-                tmp_time_1 = sum(tmp_arr_1) / len(tmp_arr_1)
-                tmp_time_2 = sum(tmp_arr_2) / len(tmp_arr_2)
-
-                time_dist_betw_stations.append(tmp_time_1 - tmp_time_2)
-
-    print("100 % | Total Frames: ", ttree_mu3e.GetEntries())
-    print("Frames with hits: ", frame_with_hit_counter)
-    return np.array(time_total), np.array(time_dist_betw_stations), np.array(event_size_per_station)
 
 
 # --------------------------------------
@@ -125,9 +109,9 @@ def station_station_timing(filename: str, detector, **kwargs):
                   end='\r')
 
         if kwargs["mc_primary"] is False:
-            test_dict = check_cosmic_events(ttree_mu3e, None, None)
+            test_dict = check_cosmic_events(ttree_mu3e)
         else:
-            test_dict = check_cosmic_events_mc(ttree_mu3e, None, None)
+            test_dict = check_cosmic_events_mc(ttree_mu3e)
 
         for key in test_dict:
             tmp_ids = test_dict[key][0]
@@ -193,7 +177,7 @@ def find_next_cosmic_event(ttree_mu3e, it: int, station, threshold=1) -> int:
 
 # --------------------------------------
 # checks event for useful data
-def check_cosmic_events(ttree_mu3e, it: int, station: int):
+def check_cosmic_events(ttree_mu3e):
     # sort hits in time
     tilehit_times, tilehit_ids = (list(t) for t in
                                   zip(*sorted(zip(list(ttree_mu3e.tilehit_time), list(ttree_mu3e.tilehit_tile)))))
@@ -208,7 +192,7 @@ def check_cosmic_events(ttree_mu3e, it: int, station: int):
 # --------------------------------------
 # checks event for useful data
 # with primary id information
-def check_cosmic_events_mc(ttree_mu3e, it: int, station: int):
+def check_cosmic_events_mc(ttree_mu3e):
     # sort hits for primary id
     indices = np.argsort(list(ttree_mu3e.tilehit_primary))
     tilehit_times = np.asarray(list(ttree_mu3e.tilehit_time))[indices]

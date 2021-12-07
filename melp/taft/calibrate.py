@@ -6,11 +6,11 @@ from scipy.optimize import minimize
 
 from melp import Detector
 # fast index lookup
-from melp.libs.misc import index_finder
 from melp.libs.timer import Timer
 from melp.taft.corrections.misc_corrections import loop_correction_phi
 # different functions for calibration
-from melp.taft.corrections.tof_corrections import tof_correction_z, cosmic_correction_z
+from melp.taft.corrections.tof_corrections import tof_correction_z
+from melp.taft.utils.cosmic import cosmic_correction_z
 from melp.taft.utils.root_helper import save_histo, read_histo, fill_dt_histos
 
 # ---------------------------------------------------------------------
@@ -207,9 +207,9 @@ def align_timings(dt_phi_rel: dict, dt_z_rel: dict, station_offset: int):
     absolute_timing_offset = 0.
     for phi_id in __detector__.TileDetector.column_ids(0, station_offset):
         __detector__.TileDetector.tile[phi_id].dt_cal = absolute_timing_offset
-        absolute_timing_offset += dt_phi_rel[phi_id if phi_id in dt_phi_rel.keys() else station_offset]
+        absolute_timing_offset += dt_phi_rel[phi_id]
 
-    # all other rows
+    # all remaining rows
     for z_position in range(1, len(__detector__.TileDetector.row_ids(0, station_offset))):
         last_master_id = int(__detector__.TileDetector.row_ids(0, station_offset)[z_position - 1])
         last_master_offset = __detector__.TileDetector.tile[last_master_id].dt_cal
@@ -220,7 +220,7 @@ def align_timings(dt_phi_rel: dict, dt_z_rel: dict, station_offset: int):
         for phi_id in __detector__.TileDetector.column_ids(z_position, station_offset):
             # print(phi_id, dt_phi_rel[phi_id])
             __detector__.TileDetector.tile[phi_id].dt_cal = absolute_timing_offset
-            absolute_timing_offset += dt_phi_rel[phi_id if phi_id in dt_phi_rel.keys() else station_offset]
+            absolute_timing_offset += dt_phi_rel[phi_id]
 
     return
 
@@ -360,7 +360,7 @@ def get_mean_from_hist(histogram: dict) -> (dict, dict):
             # print("WARNING: INTEGRAL = 0", tile_entry)
             continue
 
-        mean = histogram[tile_entry][0].GetMean()
+        mean = histogram[tile_entry][1].GetMean()
 
         dt_phi[tile_entry] = mean + (
                 __detector__.TileDetector.tile[neighbour_phi_id].dt_truth - __detector__.TileDetector.tile[
@@ -494,89 +494,6 @@ def check_cal_z(cal_data, station):
 
     return cal
 
-
 # --------------------------------------------------------
 # ---------------------    UNUSED    ---------------------
 # --------------------------------------------------------
-def get_mean_from_ttree(ttree_mu3e, threshold: float) -> (dict, dict):
-    dt_z = {}
-    dt_phi = {}
-    dt_z_n = {}
-    dt_phi_n = {}
-
-    cluster_counter = 0
-
-    for frame in range(ttree_mu3e.GetEntries()):
-        ttree_mu3e.GetEntry(frame)
-
-        # Printing status info
-        if frame % 10000 == 0:
-            print("Searching clusters. Progress: ", np.round(frame / ttree_mu3e.GetEntries() * 100), " % , Found: ",
-                  cluster_counter, end='\r')
-
-        for hit_tile_index in range(len(ttree_mu3e.tilehit_tile)):
-            hit_tile = ttree_mu3e.tilehit_tile[hit_tile_index]
-
-            # -----------------------------
-            # Look for clusters in z-dir
-            neighbour_z_id = __detector__.TileDetector.getNeighbour(hit_tile, "right")
-            if neighbour_z_id in ttree_mu3e.tilehit_tile and neighbour_z_id is not False:
-                # find associated tile hit
-                hit_tile_assoc = index_finder(list(ttree_mu3e.tilehit_tile), neighbour_z_id)
-
-                # workaround for multiple hits in the same tile
-                try:
-                    hit_tile_assoc = int(*hit_tile_assoc)
-                except (TypeError, ValueError):
-                    continue
-
-                # calculate dt
-                # TODO: TOF maybe with edep ?
-                hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] + __detector__.TileDetector.tile[hit_tile].dt_truth
-                hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + __detector__.TileDetector.tile[
-                    neighbour_z_id].dt_truth
-                dt = hit_time_2 - hit_time_1
-
-                if abs(dt) <= threshold:
-                    # Add to mean
-                    if dt_z.get(hit_tile):
-                        dt_z[hit_tile] = (dt_z[hit_tile] * dt_z_n[hit_tile] + dt) / (dt_z_n[hit_tile] + 1)
-                        dt_z_n[hit_tile] += 1
-                    else:
-                        dt_z[hit_tile] = dt
-                        dt_z_n[hit_tile] = 1
-
-                    cluster_counter += 1
-
-            # -----------------------------
-            # Look for clusters in phi-dir
-            neighbour_z_id = __detector__.TileDetector.getNeighbour(hit_tile, "up")
-            if neighbour_z_id in ttree_mu3e.tilehit_tile and neighbour_z_id is not False:
-                # find associated tile hit
-                hit_tile_assoc = index_finder(list(ttree_mu3e.tilehit_tile), neighbour_z_id)
-
-                # workaround for multiple hits in the same tile
-                try:
-                    hit_tile_assoc = int(*hit_tile_assoc)
-                except (TypeError, ValueError):
-                    continue
-
-                # calculate dt
-                # TODO: TOF maybe with edep ?
-                hit_time_1 = ttree_mu3e.tilehit_time[hit_tile_index] + __detector__.TileDetector.tile[
-                    hit_tile].dt_truth
-                hit_time_2 = ttree_mu3e.tilehit_time[hit_tile_assoc] + __detector__.TileDetector.tile[
-                    neighbour_z_id].dt_truth
-                dt = hit_time_2 - hit_time_1
-
-                if abs(dt) <= threshold:
-                    # Add to mean
-                    if dt_phi.get(hit_tile):
-                        dt_phi[hit_tile] = (dt + dt_phi[hit_tile] * dt_phi_n[hit_tile]) / (dt_phi_n[hit_tile] + 1)
-                        dt_phi_n[hit_tile] += 1
-                    else:
-                        dt_phi[hit_tile] = dt
-                        dt_phi_n[hit_tile] = 1
-                    cluster_counter += 1
-    print("Searching clusters. Progress: ", 100, " % , Found: ", cluster_counter)
-    return dt_z, dt_phi

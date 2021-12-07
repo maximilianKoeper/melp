@@ -6,8 +6,11 @@ import melp.taft as taft
 taft.select(mu3e_detector)
 
 ```
+
 ## Generate Histogram file
+
 - Python Version:
+
 ```
 options_hist = {
     "histo_options": (10000, -32, 32),  # nbins, min, max (10000, -64, 64)
@@ -19,6 +22,7 @@ melp.taft.generate_hist("input_file", **options_hist)
 ```
 
 - ROOT Macro:
+
 ```
 CONDOR_INPUT="inputfile1.root inputfile2.root" root
 
