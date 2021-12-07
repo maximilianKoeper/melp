@@ -127,31 +127,31 @@ def build_clusters_in_masks_with_neighbours(ttree_mu3e, ttree_mu3e_mc, ttree_sen
 
     #build clusters around mask master tiles
     for tile in hit_tiles:
-        if tile[0] < 300000: #just left recurl station
-            cluster_tmp = []
-            cluster_primary_tmp = 0
-            if tile[0] not in keys: #if not primary
-                for i in range(len(values)):
-                    for j in range(len(values[i])):
-                        if tile[0] == values[i][j][0]: 
-                            #cluster_tmp.append(tile)
-                            if len(cluster_tmp) != 0:
-                                for k in cluster_tmp: #TODO: check if hit is already there from another frame (so the same tile isn't added twice when hit in multiple frames)
-                                    if tile[0] == k[0]:
-                                        continue
-                                    else:
-                                        cluster_tmp.append(tile)
-                            elif len(cluster_tmp) == 0:
-                                cluster_tmp.append(tile)
-                            if list(values[i][0]) not in cluster_tmp:
-                                cluster_tmp.insert(0,list(values[i][0]))
-                            cluster_primary_tmp = keys[i]
+        #if tile[0] < 300000: #just left recurl station
+        cluster_tmp = []
+        cluster_primary_tmp = 0
+        if tile[0] not in keys: #if not primary
+            for i in range(len(values)):
+                for j in range(len(values[i])):
+                    if tile[0] == values[i][j][0]: 
+                        #cluster_tmp.append(tile)
+                        if len(cluster_tmp) != 0:
+                            for k in cluster_tmp: #TODO: check if hit is already there from another frame (so the same tile isn't added twice when hit in multiple frames)
+                                if tile[0] == k[0]:
+                                    continue
+                                else:
+                                    cluster_tmp.append(tile)
+                        elif len(cluster_tmp) == 0:
+                            cluster_tmp.append(tile)
+                        if list(values[i][0]) not in cluster_tmp:
+                            cluster_tmp.insert(0,list(values[i][0]))
+                        cluster_primary_tmp = keys[i]
 
-            if cluster_primary_tmp != 0:
-                if cluster_primary_tmp not in clusters.keys() and len(cluster_tmp) > 0:          
-                    clusters[cluster_primary_tmp] = cluster_tmp
-                elif len(cluster_tmp) > 0: 
-                    clusters[cluster_primary_tmp].append(cluster_tmp[1])
+        if cluster_primary_tmp != 0:
+            if cluster_primary_tmp not in clusters.keys() and len(cluster_tmp) > 0:          
+                clusters[cluster_primary_tmp] = cluster_tmp
+            elif len(cluster_tmp) > 0: 
+                clusters[cluster_primary_tmp].append(cluster_tmp[1])
 
     for i in keys:
         if i not in clusters.keys():

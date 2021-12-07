@@ -88,19 +88,6 @@ def get_tid_frame(ttree_mu3e, ttree_mu3e_mc):
 
     return tid
 
-#--------------------------------------------------
-def get_primary_frame(ttree_mu3e, ttree_mu3e_mc):
-    primary = {}
-    for i in range(len(ttree_mu3e.tilehit_tile)):
-        tile = ttree_mu3e.tilehit_tile[i]
-        mc_i = ttree_mu3e.tilehit_mc_i[i]
-        ttree_mu3e_mc.GetEntry(mc_i)
-
-
-        primary[tile] = ttree_mu3e_mc.tilehit_primary
-
-    return primary
-
 #-----------------------------------------------
 def get_mc_primary_for_hit_frame(ttree_mu3e):
     tilehit_primary_dict = {}

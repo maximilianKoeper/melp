@@ -132,7 +132,9 @@ def build_mask_detector_class(ttree_mu3e, mu3e_detector: melp.Detector, mask_typ
 def build_mask_around_cluster_master(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector: melp.Detector, frame, mask_type, rec_type = None):
     #select reconstruction/tracking method
     if rec_type == "pixelpixel":
-        mask_masters = clump_tr.get_mask_masters_hitAnglePixelRec(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, matching="nearest")
+        mask_masters = clump_tr.get_mask_masters_hitAnglePixelRec_without_hid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, matching="nearest")
+    elif rec_type == "pixelpixelcheck":
+        mask_masters = clump_tr.get_mask_masters_hitAnglePixelRec_with_hid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, matching="nearest")
     else:
         mask_masters = get_cluster_primary_truth_frame(ttree_mu3e, ttree_mu3e_mc, frame)
 
@@ -218,7 +220,7 @@ def build_mask_around_cluster_master(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, tt
 def build_mask_around_cluster_master_3_frames(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector: melp.Detector, frame, mask_type, rec_type = None):
     #select reconstruction/tracking method
     if rec_type == "pixelpixel":
-        mask_masters = clump_tr.get_mask_masters_hitAnglePixelRec(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, matching="nearest")
+        mask_masters = clump_tr.get_mask_masters_hitAnglePixelRec_without_hid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, matching="nearest")
     else:
         mask_masters = get_cluster_primary_truth_3frames(ttree_mu3e, ttree_mu3e_mc, frame)
 
@@ -319,11 +321,12 @@ def build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles
         hit_tiles.append(ttree_mu3e.tilehit_tile[hit_tile_index])
 
     #build clusters around mask master tiles
+    """
     for tile_id in hit_tiles:
         if tile_id < 300000: #just left recurl station
             cluster_tmp = []
             cluster_primary_tmp = 0
-            if tile_id not in primary_masks.keys(): #if not primary
+            if tile_id not in primary_masks.keys(): #if not master
                 for i in range(len(values)):
                     if tile_id in values[i]:
                         cluster_tmp.append(tile_id)
@@ -338,6 +341,31 @@ def build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles
     for i in keys:
         if i not in clusters.keys():
             clusters[i] = []
+    """
+    ######################
+    #print(len(hit_tiles))
+    #print()
+    ########################
+    for key in primary_masks.keys():
+        cluster_tmp = []
+        for tile_id in hit_tiles:
+            #if tile_id < 300000: #just left recurl station
+            if tile_id in primary_masks[key]:
+                cluster_tmp.append(tile_id)
+                #hit_tiles.remove(tile_id) #prevent hits from being in multiple clusters
+                for _ in range(hit_tiles.count(tile_id)):
+                    hit_tiles.remove(tile_id)
+        
+        if len(cluster_tmp) != 0 and key in cluster_tmp:
+            clusters[key] = cluster_tmp
+
+    ###########################
+    #print(len(hit_tiles))
+    #print()
+    #########################
+    
+    #if frame < 10:
+    #    print(clusters)
 
     return clusters
 
@@ -374,17 +402,17 @@ def build_clusters_in_masks_3_frames(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, tt
 
     #build clusters around mask master tiles
     for tile_id in hit_tiles:
-        if tile_id < 300000: #just left recurl station
-            cluster_tmp = []
-            cluster_primary_tmp = 0
-            if tile_id not in keys: #if not primary
-                for i in range(len(values)):
-                    for j in range(len(values[i])):
-                        if tile_id == values[i][j][0]:   
-                            cluster_tmp.append(list(values[i][j]))
-                            if list(values[i][0]) not in cluster_tmp:
-                                cluster_tmp.insert(0,list(values[i][0]))
-                            cluster_primary_tmp = keys[i]
+        #if tile_id < 300000: #just left recurl station
+        cluster_tmp = []
+        cluster_primary_tmp = 0
+        if tile_id not in keys: #if not primary
+            for i in range(len(values)):
+                for j in range(len(values[i])):
+                    if tile_id == values[i][j][0]:   
+                        cluster_tmp.append(list(values[i][j]))
+                        if list(values[i][0]) not in cluster_tmp:
+                            cluster_tmp.insert(0,list(values[i][0]))
+                        cluster_primary_tmp = keys[i]
 
             if cluster_primary_tmp != 0:
                 if cluster_primary_tmp not in clusters.keys() and len(cluster_tmp) > 0:          
@@ -401,33 +429,34 @@ def build_clusters_in_masks_3_frames(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, tt
 
 #-----------------------------------------------------
 #builds clusters where dict-key is the primary of "master"-tile and not "master" tile and value is the whole cluster
-def build_cluster_with_truth_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector: melp.Detector, mask_type, frame, rec_type = None):
+def build_cluster_with_truth_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector: melp.Detector,frame, mask_type, rec_type = None):
     #get primaries
-    primaries = get_primary_frame(ttree_mu3e, ttree_mu3e_mc)
+    #primaries = get_primary_frame(ttree_mu3e, ttree_mu3e_mc)
+    primaries = get_mc_primary_for_hit_frame(ttree_mu3e)
 
     #get clusters
-    clusters_frame = build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector, mask_type, frame, rec_type)
+    clusters_frame = build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector,frame, mask_type, rec_type)
 
     #convert cluster tiles to primaries
     clusters_with_primaries = {} #gets returned: keys:primary of "master"-tile; values: primary of whole cluster
     for key in clusters_frame.keys():
         primary_whole_clusters_tmp = []
-        primary_whole_clusters_tmp.append(primaries[key])
+        #primary_whole_clusters_tmp.append(primaries[key])
         for i in clusters_frame[key]:
             primary_whole_clusters_tmp.append(primaries[i])
 
         clusters_with_primaries[primaries[key]] = primary_whole_clusters_tmp
-    
+
     return clusters_with_primaries
 
 #-------------------------------------------------
 #builds dict with tid of master tile as key and tids of cluster as value
-def build_cluster_with_truth_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector: melp.Detector, mask_type, frame, rec_type = None):
+def build_cluster_with_truth_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector: melp.Detector,frame, mask_type, rec_type = None):
     #get tids
     tilehit_tid = get_tid_frame(ttree_mu3e, ttree_mu3e_mc)
 
     #get clusters
-    clusters_frame = build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector, mask_type, frame, rec_type)
+    clusters_frame = build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector,frame, mask_type, rec_type)
 
     #convert cluster tiles to tids
     clusters_with_tid = {} #gets returned: keys:tid of "master"-tile; values:tids of whole cluster

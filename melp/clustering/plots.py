@@ -33,6 +33,10 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
 
         #count total hits
         total_hits_frame = len(ttree_mu3e.tilehit_tile)
+        #total_hits_frame = 0
+        #for tile in ttree_mu3e.tilehit_tile:
+        #    if tile < 300000:
+        #        total_hits_frame += 1
         total_hits_counter += total_hits_frame
 
         #set counters
@@ -53,12 +57,20 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
             cluster_master_primaries_arr.append(key)
             cluster_primaries_arr.append(clusters_with_primaries[key])
 
+        """
         #count hits in clusters
         cluster_hits_counter_tmp = 0
         for key in clusters_with_primaries.keys():
-            cluster_hits_counter_tmp +=1
-            for i in clusters_with_primaries[key]:
-                cluster_hits_counter_tmp +=1
+            cluster_hits_counter_tmp += len(clusters_with_primaries[key])
+        #    cluster_hits_counter_tmp +=1
+        #    for i in clusters_with_tids[key]:
+        #        cluster_hits_counter_tmp +=1
+        cluster_hits_counter += cluster_hits_counter_tmp
+        """
+        #count hits in clusters
+        cluster_hits_counter_tmp = 0
+        for key in clusters_with_primaries.keys():
+            cluster_hits_counter_tmp += len(clusters_with_primaries[key])
         cluster_hits_counter += cluster_hits_counter_tmp
 
         #comparison
@@ -70,7 +82,7 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
                     uncorr_counter += 1 
 
         #add #master tiles to corr_counter
-        corr_counter += len(cluster_master_primaries_arr)
+        #corr_counter += len(cluster_master_primaries_arr)
 
         #add to total corr and uncorr counters
         tot_corr_counter += corr_counter
@@ -85,9 +97,11 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
 
     print("Progress: 100 %","of ", frames_to_analyze, " frames")
     print("Total #hits in frames/#hits in clusters = ", total_hits_counter/cluster_hits_counter)
-    print("Correctly associated out of all hits", tot_corr_counter/(total_hits_counter/100),"%")
-    print("Incorrectly associated out of all hits", tot_uncorr_counter/(total_hits_counter/100),"%")
-        
+    print("Correctly associated out of all hits: ", tot_corr_counter/(total_hits_counter/100),"%")
+    print("Correctly associated out of all hits in clusters: ", tot_corr_counter/(cluster_hits_counter/100),"%")
+    print("Incorrectly associated out of all hits: ", tot_uncorr_counter/(total_hits_counter/100),"%")
+    print("Incorrectly associated out of all hits in clusters: ", tot_uncorr_counter/(cluster_hits_counter/100),"%")
+   
     return frac_corr_frame, frac_corr_clusters_frame, frac_uncorr_frame, tot_corr_counter
 
 #----------------------------------------------------
@@ -138,11 +152,19 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_d
             cluster_tids_arr.append(clusters_with_tids[key])
 
         #count hits in clusters
+        """
         cluster_hits_counter_tmp = 0
         for key in clusters_with_tids.keys():
-            cluster_hits_counter_tmp +=1
-            for i in clusters_with_tids[key]:
-                cluster_hits_counter_tmp +=1
+            cluster_hits_counter_tmp += len(clusters_with_tids[key])
+        #    cluster_hits_counter_tmp +=1
+        #    for i in clusters_with_tids[key]:
+        #        cluster_hits_counter_tmp +=1
+        cluster_hits_counter += cluster_hits_counter_tmp
+        """
+        #count hits in clusters
+        cluster_hits_counter_tmp = 0
+        for key in clusters_with_tids.keys():
+            cluster_hits_counter_tmp += len(clusters_with_tids[key])
         cluster_hits_counter += cluster_hits_counter_tmp
 
         #comparison
@@ -154,7 +176,7 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_d
                     uncorr_counter += 1  
 
         #add #master tiles to corr_counter
-        corr_counter += len(cluster_master_tids_arr) 
+        #corr_counter += len(cluster_master_tids_arr) 
 
         if (corr_counter + uncorr_counter) != cluster_hits_counter_tmp:
             print("error: counters don't match",(corr_counter + uncorr_counter), cluster_hits_counter_tmp)
@@ -173,8 +195,10 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_d
 
     print("Progress: 100 %","of ", frames_to_analyze, " frames")
     print("Total #hits in frames/#hits in clusters = ", total_hits_counter/cluster_hits_counter)
-    print("Correctly associated out of all hits", tot_corr_counter/(total_hits_counter/100),"%")
-    print("Incorrectly associated out of all hits", tot_uncorr_counter/(total_hits_counter/100),"%")
+    print("Correctly associated out of all hits: ", tot_corr_counter/(total_hits_counter/100),"%")
+    print("Correctly associated out of all hits in clusters: ", tot_corr_counter/(cluster_hits_counter/100),"%")
+    print("Incorrectly associated out of all hits: ", tot_uncorr_counter/(total_hits_counter/100),"%")
+    print("Incorrectly associated out of all hits in clusters: ", tot_uncorr_counter/(cluster_hits_counter/100),"%")
         
     return frac_corr_frame, frac_corr_clusters_frame, frac_uncorr_frame, tot_corr_counter
 
@@ -208,9 +232,7 @@ def get_hits_not_in_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles
         clusters_frame = sclump.build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
         cluster_hits_counter_tmp = 0
         for key in clusters_frame.keys():
-            cluster_hits_counter_tmp +=1
-            for i in clusters_frame[key]:
-                cluster_hits_counter_tmp +=1
+            cluster_hits_counter_tmp += len(clusters_frame[key])
         cluster_hits_counter.append(cluster_hits_counter_tmp)
 
         #calculate fraction
@@ -374,9 +396,6 @@ def compare_to_primary_3_frames(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_t
                 else:
                     uncorr_counter += 1 
 
-        #add #master tiles to corr_counter
-        corr_counter += len(cluster_master_primaries_arr)
-
         #add to total corr and uncorr counters
         tot_corr_counter += corr_counter
         tot_uncorr_counter += uncorr_counter
@@ -393,6 +412,8 @@ def compare_to_primary_3_frames(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_t
     print("Progress: 100 %","of ", frames_to_analyze, " frames")
     print("Total #hits in frames/#hits in clusters = ", np.sum(total_hits_counter)/cluster_hits_counter)
     print("Correctly associated out of all hits", tot_corr_counter/(np.sum(total_hits_counter)/100),"%")
+    print("Correctly associated out of all hits in clusters", tot_corr_counter/(cluster_hits_counter/100),"%")
     print("Incorrectly associated out of all hits", tot_uncorr_counter/(np.sum(total_hits_counter)/100),"%")
+    print("Incorrectly associated out of all hits in clusters", tot_uncorr_counter/(cluster_hits_counter/100),"%")
         
     return frac_corr_frame, frac_corr_clusters_frame, frac_uncorr_frame, tot_corr_counter
