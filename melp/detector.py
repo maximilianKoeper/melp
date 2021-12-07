@@ -1,8 +1,6 @@
 # ---------------------------------------------------------------------
 #  DETECTOR CLASS
 #       - creates a detector with tiles and pixel sensors
-#  TODO:
-#       - add fibre / mmpcs to detector
 # ---------------------------------------------------------------------
 import ROOT
 
@@ -31,6 +29,7 @@ class Detector:
         ttree_sensor = file.Get("alignment/sensors")
         ttree_tiles = file.Get("alignment/tiles")
         tilemisal = False
+        # check for misalignment data
         if file.Get("alignment/tiles_mis"):
             ttree_tiles_misal = file.Get("alignment/tiles_mis")
             tilemisal = True

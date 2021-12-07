@@ -26,14 +26,18 @@ def select(selection: Detector):
 
 
 # ---------------------------------------------------------------------
-# calibrate function is the only function the user should call
-# -> options for calibrating should be passed with **kwargs
+# calibrate functions calls each step for the calibration and writes result
+# to the detector object
+#
+# after the calibration the calibrated Flag in the detector is set to True
 # ---------------------------------------------------------------------
 
 def calibrate(**kwargs):
     # TODO: tidy up and streamline options
     global __detector__
 
+    # ------------------------------------------------------
+    # checking if everything is set up correctly
     if __detector__ is None:
         raise RuntimeError("ERROR: Detector not selected")
 
@@ -45,6 +49,7 @@ def calibrate(**kwargs):
             warnings.warn("Warning: detector has already calibration data")
             return
 
+    # ------------------------------------------------------
     # Start timers
     t = Timer()
     t.start()
@@ -87,7 +92,7 @@ def calibrate(**kwargs):
     # ------------------------------------------------------
 
     # ------------------------------------------------------
-    # correcting tof with cosmic data
+    # correcting tof with cosmic data (z - direction)
     cosmic_correction_z(__detector__, **kwargs)
     # ------------------------------------------------------
 

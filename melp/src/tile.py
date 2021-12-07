@@ -77,6 +77,8 @@ class TileDetector:
         self.tilemisal = misal
         self.calibrated = False
 
+    def __str__(self):
+        return f'Loaded Tiles: {len(self.tile)}'
     # -----------------------------------------
     #  public functions
     # -----------------------------------------
