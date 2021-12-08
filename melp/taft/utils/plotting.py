@@ -33,9 +33,6 @@ def plot_station_calibration(mu3e_detector, station: int):
         grid_truth[x][y] = tile.dt_truth
         grid_calibrated[x][y] = tile.dt_cal + mu3e_detector.TileDetector.tile[station_offset].dt_truth
 
-    #grid_relative[0][0] = 0
-    #grid_truth[0][0] = mu3e_detector.TileDetector.tile[station_offset].dt_truth
-
     # ---------------------------------------
     # Plotting
     # ---------------------------------------

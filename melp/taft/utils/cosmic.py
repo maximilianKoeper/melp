@@ -167,6 +167,8 @@ def find_next_cosmic_event(ttree_mu3e, it: int, station, threshold=1) -> int:
     for it in range(start, ttree_mu3e.GetEntries()):
         ttree_mu3e.GetEntry(it)
         if ttree_mu3e.Ntilehit >= threshold:
+            if station == 3:
+                return it
             for hit_index in range(len(ttree_mu3e.tilehit_tile)):
                 tile_id = ttree_mu3e.tilehit_tile[hit_index]
                 if station_offset <= tile_id < station_offset + 100000:
