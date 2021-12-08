@@ -382,7 +382,7 @@ def get_mask_masters_hitAnglePixelRec_without_hid(ttree_mu3e, ttree_mu3e_mc, ttr
     result_id    = np.array(id_arr)
 
     ####################
-    print(result_id)
+    #print(result_id)
     #####################
 
     return result_id
