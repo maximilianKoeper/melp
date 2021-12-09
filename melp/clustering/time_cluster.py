@@ -10,11 +10,13 @@ import melp.clustering.three_frame_cluster as clump_3
 
 #----------------------------------------------
 #simple threshold 1d time clustering 
-def time_clustering_frame(ttree_mu3e):
+def time_clustering_frame(ttree_mu3e, printing = None):
     time_clusters = {}
+    #same as time_clusters but without time information so it can be used with usual plotting routine
+    cluster_for_plt = {}
 
     #set maximum time between hits to get assigned to same cluster
-    time_threshold = 0.5 #ns
+    time_threshold = 0.01 #ns
 
     #get hittimes (and hit tiles) in frame
     hittimes_frame = hittimes_in_frame (ttree_mu3e)
@@ -26,25 +28,22 @@ def time_clustering_frame(ttree_mu3e):
         hit_times_frame_arr.append(hittimes_frame[key][0])
 
     #build clusters
-    i = 0
-    while i < len(hit_times_frame_arr)-1:
-        time_cluster_tmp = []
-        j = 0
-        time_cluster_tmp.append([hit_tiles_frame_arr[i], hit_times_frame_arr[i]])
-        while j < len(hit_times_frame_arr)-1:
-            if np.abs(hit_times_frame_arr[i] - hit_times_frame_arr[j]) < time_threshold:
-                if [hit_tiles_frame_arr[j], hit_times_frame_arr[j]] not in time_cluster_tmp:
-                    time_cluster_tmp.append([hit_tiles_frame_arr[j], hit_times_frame_arr[j]])
-                    #prevent double assignments
-                    hit_tiles_frame_arr.remove(hit_tiles_frame_arr[j]) 
-                    hit_times_frame_arr.remove(hit_times_frame_arr[j])
-            j += 1
-        time_clusters[hit_tiles_frame_arr[i]] = time_cluster_tmp
-        #prevent double assignments
-        if [hit_tiles_frame_arr[i], hit_times_frame_arr[i]] in time_cluster_tmp:
-            hit_tiles_frame_arr.remove(hit_tiles_frame_arr[i]) 
-            hit_times_frame_arr.remove(hit_times_frame_arr[i])
-        i += 1
+    added_tiles = []
+    for key1 in hittimes_frame.keys():
+        if key1 not in added_tiles:
+            time_cluster_tmp = []
+            cluster_for_plt_tmp = []
+            time_cluster_tmp.append([key1, hittimes_frame[key1][0]])
+            cluster_for_plt_tmp.append(key1)
+            added_tiles.append(key1)
+            for key2 in hittimes_frame.keys():
+                if key2 not in added_tiles:
+                    if np.abs(hittimes_frame[key1][0] - hittimes_frame[key2][0]) < time_threshold and key2 != key1:
+                        time_cluster_tmp.append([key2, hittimes_frame[key2][0]])
+                        cluster_for_plt_tmp.append(key2)
+                        added_tiles.append(key2)
+            time_clusters[key1] = time_cluster_tmp
+            cluster_for_plt[key1] = cluster_for_plt_tmp
 
     #get highest and lowest time
     hittimes_frame = hittimes_in_frame (ttree_mu3e)
@@ -52,8 +51,9 @@ def time_clustering_frame(ttree_mu3e):
     for key in hittimes_frame.keys():
         times_arr.append(hittimes_frame[key][0])
 
-    print("Highest time: ", np.max(times_arr), " ns")
-    print("Lowest time: ", np.min(times_arr), " ns")
+    if printing == True:
+        print("Highest time: ", np.max(times_arr), " ns")
+        print("Lowest time: ", np.min(times_arr), " ns")
 
     #get average time difference between hits and the minimum and maximum time difference
     times_arr_sorted = np.flip(np.sort(times_arr))
@@ -61,12 +61,13 @@ def time_clustering_frame(ttree_mu3e):
     for i in range(len(times_arr_sorted)-1):
         delta_t.append(times_arr_sorted[i]- times_arr_sorted[i+1])
 
-    print("Average time difference: ", np.sum(delta_t)/len(delta_t), " ns")
-    print("Minimum time difference: ", np.min(delta_t), " ns")
-    print("Maximum time difference: ", np.max(delta_t), " ns")
-    print("Sorted time differences: ", np.sort(delta_t))
+    if printing == True:
+        print("Average time difference: ", np.sum(delta_t)/len(delta_t), " ns")
+        print("Minimum time difference: ", np.min(delta_t), " ns")
+        print("Maximum time difference: ", np.max(delta_t), " ns")
+        print("Sorted time differences: ", np.sort(delta_t))
 
-    return time_clusters
+    return time_clusters , cluster_for_plt
 
 #----------------------------------
 #returns clusters from spatial_cluster with timestamp

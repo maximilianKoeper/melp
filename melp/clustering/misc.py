@@ -1,6 +1,9 @@
 from melp import Detector
 import ROOT
 import numpy as np
+import os
+import sys
+
 
 #----------------------------------------
 def hittimes_in_file (ttree_mu3e):
@@ -87,7 +90,7 @@ def get_tid_frame(ttree_mu3e, ttree_mu3e_mc):
 def get_mc_primary_for_hit_frame(ttree_mu3e):
     tilehit_primary_dict = {}
 
-    for i in range(len(ttree_mu3e.tilehit_tile)):
+    for i in range(ttree_mu3e.Ntilehit):
         tile = ttree_mu3e.tilehit_tile[i]
         primary = ttree_mu3e.tilehit_primary[i]
         
@@ -293,3 +296,18 @@ def get_hit_data_frame(ttree_mu3e, ttree_mu3e_mc, frames):
         print("Tile: ", hit_data_sorted_tid[i][0], " hid: ",hit_data_sorted_tid[i][1][0]," tid: ", hit_data_sorted_tid[i][1][1], "frame_id: ", hit_data_sorted_tid[i][1][2])
 
     return hit_data_sorted_tid
+
+#------------------------------------------
+# decorater used to block function printing to the console
+def blockPrinting(func):
+    def func_wrapper(*args, **kwargs):
+        # block all printing to the console
+        sys.stdout = open(os.devnull, 'w')
+        # call the method in question
+        value = func(*args, **kwargs)
+        # enable all printing to the console
+        sys.stdout = sys.__stdout__
+        # pass the return value of the method back
+        return value
+
+    return func_wrapper
