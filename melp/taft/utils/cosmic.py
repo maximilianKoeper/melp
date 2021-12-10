@@ -4,6 +4,7 @@ import ROOT
 import numpy as np
 
 from melp.libs.misc import index_finder
+from melp.taft.utils.mu3eDisplay_helper import Trajectory, generate_txt_event_file
 
 
 # ---------------------------------------------
@@ -96,6 +97,8 @@ def cosmic_linear_correction(filename: str, detector, **kwargs):
 
 # --------------------------------------
 def station_station_timing(filename: str, detector, **kwargs):
+    trajectories = []
+
     root_file = ROOT.TFile.Open(filename, "READ")
     ttree_mu3e = root_file.Get(kwargs["ttree_loc"])
 
@@ -117,21 +120,33 @@ def station_station_timing(filename: str, detector, **kwargs):
             tmp_ids = test_dict[key][0]
             if any(y > 300000 for y in tmp_ids) and any(y < 300000 for y in tmp_ids):
                 # print(test_dict[key][0])
-                tmp_arr_2 = []
-                tmp_arr_1 = []
+                tmp_time_arr_2 = []
+                tmp_id_arr_2 = []
+                tmp_time_arr_1 = []
+                tmp_id_arr_1 = []
                 for hit_index in range(len(tmp_ids)):
                     tile_id = tmp_ids[hit_index]
                     if tile_id >= 300000:
-                        tmp_arr_2.append(test_dict[key][1][hit_index])
+                        tmp_time_arr_2.append(test_dict[key][1][hit_index])
+                        tmp_id_arr_2.append(tile_id)
                     else:
-                        tmp_arr_1.append(test_dict[key][1][hit_index] + 3)
+                        tmp_time_arr_1.append(test_dict[key][1][hit_index])
+                        tmp_id_arr_1.append(tile_id)
 
-                tmp_time_1 = sum(tmp_arr_1) / len(tmp_arr_1)
-                tmp_time_2 = sum(tmp_arr_2) / len(tmp_arr_2)
+                # tmp_time_1 = sum(tmp_time_arr_1) / len(tmp_time_arr_1)
+                # tmp_time_2 = sum(tmp_time_arr_2) / len(tmp_time_arr_2)
 
-                tof = 0.
-                pos1 = detector.TileDetector.tile[max(tmp_ids)].pos
-                pos2 = detector.TileDetector.tile[min(tmp_ids)].pos
+                # first and last hit used for timing information
+                tilehit_times_2, tilehit_ids_2 = (list(t) for t in zip(*sorted(zip(tmp_time_arr_2, tmp_id_arr_2))))
+                tmp_time_2 = tilehit_times_2[-1]
+                tilehit_times_1, tilehit_ids_1 = (list(t) for t in zip(*sorted(zip(tmp_time_arr_1, tmp_id_arr_1))))
+                tmp_time_1 = tilehit_times_1[0]
+
+                # tof = 0.
+                pos1 = detector.TileDetector.tile[tilehit_ids_1[0]].pos
+                pos2 = detector.TileDetector.tile[tilehit_ids_2[-1]].pos
+                # pos1 = detector.TileDetector.tile[max(tmp_ids)].pos
+                # pos2 = detector.TileDetector.tile[min(tmp_ids)].pos
                 dist = np.sqrt((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2 + (pos1[2] - pos2[2]) ** 2)  # mm
                 dist *= 0.001  # m
                 tof = (dist / 299792458) * (10 ** 9)
@@ -142,10 +157,14 @@ def station_station_timing(filename: str, detector, **kwargs):
                     else:
                         time_dist_betw_stations.append((tmp_time_1 - tmp_time_2) - tof)
                 else:
-                    time_dist_betw_stations.append((tmp_time_1 - tmp_time_2))  # - tof)
+                    time_dist_betw_stations.append((tmp_time_1 - tmp_time_2))
+
+                trajectories.append(Trajectory(tile1_pos=pos1, tile2_pos=pos2))
+
         it += 1
         it = find_next_cosmic_event(ttree_mu3e, it, 1)
 
+    generate_txt_event_file(trajectories, 500)
     return time_dist_betw_stations
 
 
