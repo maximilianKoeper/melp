@@ -441,12 +441,6 @@ def build_cluster_with_truth_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, tt
     elif cluster_type == "time":
         __ , clusters_frame = tclump.time_clustering_frame(ttree_mu3e, printing = None)
 
-    #if frame == 11:
-    #    print(primaries)
-    #    print()
-    #    print(clusters_frame)
-    #    print()
-
     #convert cluster tiles to primaries
     clusters_with_primaries = {} #gets returned: keys:primary of "master"-tile; values: primary of whole cluster
 
@@ -466,12 +460,6 @@ def build_cluster_with_truth_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, tt
     len_counter_primary_clusters = 0
     for key in clusters_with_primaries.keys():
         len_counter_primary_clusters += len(clusters_with_primaries[key])
-
-    #if frame == 11:
-    #    print(clusters_with_primaries)
-
-    #if len_counter_clusters != len_counter_primary_clusters:
-    #    print("ERROR: Lengths don't match:", "\n", "Clusters: ", len_counter_clusters, len(clusters_frame.keys()), "\n", "Primary clusters: ", len_counter_primary_clusters, len(clusters_with_primaries.keys()))
 
     return clusters_with_primaries
 
