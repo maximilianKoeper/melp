@@ -1,6 +1,9 @@
 from melp import Detector
 import ROOT
 import numpy as np
+import os
+import sys
+
 
 #----------------------------------------
 def hittimes_in_file (ttree_mu3e):
@@ -25,15 +28,10 @@ def hittimes_in_file (ttree_mu3e):
 
 #-------------------------------------------
 def hittimes_in_frame (ttree_mu3e):
-#def hittimes_in_frame (filename, frame):
     hittimes = {}
-    #file = ROOT.TFile(filename)
-    #ttree_mu3e = file.Get("mu3e")
-    
-    #ttree_mu3e.GetEntry(frame)
 
     for hit_tile_index in range(len(ttree_mu3e.tilehit_tile)):
-        hittime = ttree_mu3e.tilehit_timestamp[hit_tile_index]
+        hittime = ttree_mu3e.tilehit_time[hit_tile_index]
         hit_tile = ttree_mu3e.tilehit_tile[hit_tile_index]
 
         if hit_tile in hittimes.keys():
@@ -88,24 +86,11 @@ def get_tid_frame(ttree_mu3e, ttree_mu3e_mc):
 
     return tid
 
-#--------------------------------------------------
-def get_primary_frame(ttree_mu3e, ttree_mu3e_mc):
-    primary = {}
-    for i in range(len(ttree_mu3e.tilehit_tile)):
-        tile = ttree_mu3e.tilehit_tile[i]
-        mc_i = ttree_mu3e.tilehit_mc_i[i]
-        ttree_mu3e_mc.GetEntry(mc_i)
-
-
-        primary[tile] = ttree_mu3e_mc.tilehit_primary
-
-    return primary
-
 #-----------------------------------------------
 def get_mc_primary_for_hit_frame(ttree_mu3e):
     tilehit_primary_dict = {}
 
-    for i in range(len(ttree_mu3e.tilehit_tile)):
+    for i in range(ttree_mu3e.Ntilehit):
         tile = ttree_mu3e.tilehit_tile[i]
         primary = ttree_mu3e.tilehit_primary[i]
         
@@ -311,3 +296,18 @@ def get_hit_data_frame(ttree_mu3e, ttree_mu3e_mc, frames):
         print("Tile: ", hit_data_sorted_tid[i][0], " hid: ",hit_data_sorted_tid[i][1][0]," tid: ", hit_data_sorted_tid[i][1][1], "frame_id: ", hit_data_sorted_tid[i][1][2])
 
     return hit_data_sorted_tid
+
+#------------------------------------------
+# decorater used to block function printing to the console
+def blockPrinting(func):
+    def func_wrapper(*args, **kwargs):
+        # block all printing to the console
+        sys.stdout = open(os.devnull, 'w')
+        # call the method in question
+        value = func(*args, **kwargs)
+        # enable all printing to the console
+        sys.stdout = sys.__stdout__
+        # pass the return value of the method back
+        return value
+
+    return func_wrapper

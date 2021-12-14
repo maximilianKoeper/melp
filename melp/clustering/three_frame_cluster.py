@@ -127,31 +127,31 @@ def build_clusters_in_masks_with_neighbours(ttree_mu3e, ttree_mu3e_mc, ttree_sen
 
     #build clusters around mask master tiles
     for tile in hit_tiles:
-        if tile[0] < 300000: #just left recurl station
-            cluster_tmp = []
-            cluster_primary_tmp = 0
-            if tile[0] not in keys: #if not primary
-                for i in range(len(values)):
-                    for j in range(len(values[i])):
-                        if tile[0] == values[i][j][0]: 
-                            #cluster_tmp.append(tile)
-                            if len(cluster_tmp) != 0:
-                                for k in cluster_tmp: #TODO: check if hit is already there from another frame (so the same tile isn't added twice when hit in multiple frames)
-                                    if tile[0] == k[0]:
-                                        continue
-                                    else:
-                                        cluster_tmp.append(tile)
-                            elif len(cluster_tmp) == 0:
-                                cluster_tmp.append(tile)
-                            if list(values[i][0]) not in cluster_tmp:
-                                cluster_tmp.insert(0,list(values[i][0]))
-                            cluster_primary_tmp = keys[i]
+        #if tile[0] < 300000: #just left recurl station
+        cluster_tmp = []
+        cluster_primary_tmp = 0
+        if tile[0] not in keys: #if not primary
+            for i in range(len(values)):
+                for j in range(len(values[i])):
+                    if tile[0] == values[i][j][0]: 
+                        #cluster_tmp.append(tile)
+                        if len(cluster_tmp) != 0:
+                            for k in cluster_tmp: #TODO: check if hit is already there from another frame (so the same tile isn't added twice when hit in multiple frames)
+                                if tile[0] == k[0]:
+                                    continue
+                                else:
+                                    cluster_tmp.append(tile)
+                        elif len(cluster_tmp) == 0:
+                            cluster_tmp.append(tile)
+                        if list(values[i][0]) not in cluster_tmp:
+                            cluster_tmp.insert(0,list(values[i][0]))
+                        cluster_primary_tmp = keys[i]
 
-            if cluster_primary_tmp != 0:
-                if cluster_primary_tmp not in clusters.keys() and len(cluster_tmp) > 0:          
-                    clusters[cluster_primary_tmp] = cluster_tmp
-                elif len(cluster_tmp) > 0: 
-                    clusters[cluster_primary_tmp].append(cluster_tmp[1])
+        if cluster_primary_tmp != 0:
+            if cluster_primary_tmp not in clusters.keys() and len(cluster_tmp) > 0:          
+                clusters[cluster_primary_tmp] = cluster_tmp
+            elif len(cluster_tmp) > 0: 
+                clusters[cluster_primary_tmp].append(cluster_tmp[1])
 
     for i in keys:
         if i not in clusters.keys():
@@ -334,3 +334,36 @@ def del_double_hits_in_3_frame_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, 
     print("Number of removed hits: ", removed_hits_counter)
 
     return hits_all_frames, hits_all_frames_counter_after
+
+#-----------------------------------------------------
+#builds clusters where dict-key is the primary of "master"-tile and not "master" tile and value is the whole cluster
+def build_cluster_with_truth_primary_3_frame(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector: melp.Detector, frame, mask_type, rec_type = None):
+    #get primaries
+    primaries = get_mc_primary_for_hit_frame(ttree_mu3e)
+
+    ttree_mu3e.GetEntry(frame+1)
+    primaries_frame_plus = get_mc_primary_for_hit_frame(ttree_mu3e)
+    primaries.update(primaries_frame_plus)
+
+    ttree_mu3e.GetEntry(frame-1)
+    primaries_frame_minus = get_mc_primary_for_hit_frame(ttree_mu3e)
+    primaries.update(primaries_frame_minus)
+
+    ttree_mu3e.GetEntry(frame)
+
+    #get clusters
+    clusters_frame = build_clusters_in_masks_with_neighbours(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
+
+    #convert cluster tiles to primaries
+    clusters_with_primaries = {} #gets returned: keys:primary of "master"-tile; values: primary of whole cluster
+    for key in clusters_frame.keys():
+        primary_whole_clusters_tmp = []
+        #primary_whole_clusters_tmp.append(primaries[key])
+        for i in clusters_frame[key]:
+            tile_id = i[0]
+            if primaries[tile_id] not in primary_whole_clusters_tmp:
+                primary_whole_clusters_tmp.append(primaries[tile_id])
+
+        clusters_with_primaries[primaries[key]] = primary_whole_clusters_tmp
+    
+    return clusters_with_primaries
