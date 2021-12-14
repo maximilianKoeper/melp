@@ -126,9 +126,8 @@ def frame_as_cluster(ttree_mu3e):
 
 #-----------------------------------------------------------------
 #returns all hits in frame with hid = -1,+1
-def get_cluster_master_truth_frame(ttree_mu3e, ttree_mu3e_mc, frame):
-    cluster_master = []
-    cluster_master_primary = []
+def get_cluster_primary_truth_frame(ttree_mu3e, ttree_mu3e_mc, frame):
+    cluster_primary = []
 
     for i in range(len(ttree_mu3e.tilehit_tile)):
         mc_i = ttree_mu3e.tilehit_mc_i[i]
@@ -137,11 +136,9 @@ def get_cluster_master_truth_frame(ttree_mu3e, ttree_mu3e_mc, frame):
 
         if np.abs(hid) == 1:
             tile = ttree_mu3e.tilehit_tile[i]
-            primary = ttree_mu3e.tilehit_primary[i]
-            cluster_master.append(tile)
-            cluster_master_primary.append(primary)
+            cluster_primary.append(tile)
 
-    return cluster_master, cluster_master_primary
+    return cluster_primary
 
 #-----------------------------------------------------------------
 #returns all hits with hid=-1,+1 in 3 frames (overlapping)
@@ -200,9 +197,8 @@ def get_cluster_primary_truth_3frames(ttree_mu3e, ttree_mu3e_mc, frame):
 
 #-----------------------------------------------------
 #returns all hits with hid=-1,+1 in a single frame and the frame id 
-def get_cluster_master_truth_and_frame_id(ttree_mu3e, ttree_mu3e_mc, frame):
-    cluster_master = []
-    cluster_master_primary = []
+def get_cluster_primary_truth_and_frame_id(ttree_mu3e, ttree_mu3e_mc, frame):
+    cluster_primary = []
 
     for i in range(len(ttree_mu3e.tilehit_tile)):
         mc_i = ttree_mu3e.tilehit_mc_i[i]
@@ -211,11 +207,9 @@ def get_cluster_master_truth_and_frame_id(ttree_mu3e, ttree_mu3e_mc, frame):
 
         if np.abs(hid) == 1:
             tile = ttree_mu3e.tilehit_tile[i]
-            primary = ttree_mu3e.tilehit_primary[i]
-            cluster_master.append([tile, frame])
-            cluster_master_primary.append(primary)
+            cluster_primary.append([tile, frame])
 
-    return cluster_master, cluster_master_primary
+    return cluster_primary
 
 
 #------------------------------------------

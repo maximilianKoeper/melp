@@ -17,13 +17,11 @@ def build_mask_around_cluster_master_frame_id(ttree_mu3e, ttree_mu3e_mc, ttree_s
     if rec_type == "pixelpixel":
         mask_masters = clump_tr.get_mask_masters_hitAnglePixelRec(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, matching="nearest")
     else:
-        mask_masters, cluster_master_primary = get_cluster_master_truth_and_frame_id(ttree_mu3e, ttree_mu3e_mc, frame)
+        mask_masters = get_cluster_primary_truth_and_frame_id(ttree_mu3e, ttree_mu3e_mc, frame)
 
     mask = {}
-    master_primaries = {}
     if mask_type == "small":
         for i in range(len(mask_masters)):
-            master_primary = cluster_master_primary[i]
             tile_centre = [mask_masters[i][0], mask_masters[i][1]]
             tile_centre_top = [mu3e_detector.TileDetector.getNeighbour(tile_centre[0], "up"), mask_masters[i][1]]
             tile_centre_bottom = [mu3e_detector.TileDetector.getNeighbour(tile_centre[0], "down"), mask_masters[i][1]]
@@ -37,11 +35,9 @@ def build_mask_around_cluster_master_frame_id(ttree_mu3e, ttree_mu3e_mc, ttree_s
                 mask_tmp = np.array([list(x) for x in mask_tmp if x[0] != False])
 
             mask[tile_centre[0]] = mask_tmp
-            master_primaries[tile_centre[0]] = master_primary
 
     if mask_type == "medium":
         for i in range(len(mask_masters)):
-            master_primary = cluster_master_primary[i]
             tile_centre = [mask_masters[i][0], mask_masters[i][1]]
             tile_centre_top = [mu3e_detector.TileDetector.getNeighbour(tile_centre[0], "up"), mask_masters[i][1]]
             tile_centre_bottom = [mu3e_detector.TileDetector.getNeighbour(tile_centre[0], "down"), mask_masters[i][1]]
@@ -60,11 +56,9 @@ def build_mask_around_cluster_master_frame_id(ttree_mu3e, ttree_mu3e_mc, ttree_s
                 mask_tmp = np.array([list(x) for x in mask_tmp if x[0] != False])
 
             mask[tile_centre[0]] = mask_tmp
-            master_primaries[tile_centre[0]] = master_primary
 
     if mask_type == "big":
         for i in range(len(mask_masters)):
-            master_primary = cluster_master_primary[i]
             tile_centre = [mask_masters[i][0], mask_masters[i][1]]
             tile_centre_top = [mu3e_detector.TileDetector.getNeighbour(tile_centre[0], "up"), mask_masters[i][1]]
             tile_centre_bottom = [mu3e_detector.TileDetector.getNeighbour(tile_centre[0], "down"), mask_masters[i][1]]
@@ -99,9 +93,8 @@ def build_mask_around_cluster_master_frame_id(ttree_mu3e, ttree_mu3e_mc, ttree_s
                 mask_tmp = np.array([list(x) for x in mask_tmp if x[0] != False])
 
             mask[tile_centre[0]] = mask_tmp
-            master_primaries[tile_centre[0]] = master_primary
 
-    return mask, master_primaries
+    return mask 
 
 #----------------------------------------------------
 #builds clusters in the masks around hit with hid=1,-1 according to primaries. Also checks for cluster constituents in neighbouring frames
@@ -109,45 +102,39 @@ def build_clusters_in_masks_with_neighbours(ttree_mu3e, ttree_mu3e_mc, ttree_sen
     clusters = {} #keys: "master"-tile; values: rest of cluster
 
     #get masks around master tile
-    master_masks, master_primaries = build_mask_around_cluster_master_frame_id(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector, frame, mask_type, rec_type)
+    primary_masks = build_mask_around_cluster_master_frame_id(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector, frame, mask_type, rec_type)
 
     keys = []
     values = []
-    for key in master_masks.keys():
+    for key in primary_masks.keys():
         keys.append(key)
-        values.append(master_masks[key])
+        values.append(primary_masks[key])
 
     #get all tiles that have been hit in frame
-    hit_tiles_frame = []
-    primaries_frame = []
-    times_frame = []
+    hit_tiles = []
     for hit_tile_index in range(len(ttree_mu3e.tilehit_tile)):
-        hit_tiles_frame.append([ttree_mu3e.tilehit_tile[hit_tile_index], frame])
-        primaries_frame.append([ttree_mu3e.tilehit_primary[hit_tile_index], frame])
-        times_frame.append([ttree_mu3e.tilehit_time[hit_tile_index], frame])
+        hit_tiles.append([ttree_mu3e.tilehit_tile[hit_tile_index], frame])
 
     ttree_mu3e.GetEntry(frame+1)
     for hit_tile_index in range(len(ttree_mu3e.tilehit_tile)):
-        hit_tiles_frame.append([ttree_mu3e.tilehit_tile[hit_tile_index], frame+1])
-        primaries_frame.append([ttree_mu3e.tilehit_primary[hit_tile_index], frame+1])
-        times_frame.append([ttree_mu3e.tilehit_time[hit_tile_index], frame+1])
+        hit_tiles.append([ttree_mu3e.tilehit_tile[hit_tile_index], frame+1])
 
     ttree_mu3e.GetEntry(frame-1)
     for hit_tile_index in range(len(ttree_mu3e.tilehit_tile)):
-        hit_tiles_frame.append([ttree_mu3e.tilehit_tile[hit_tile_index], frame-1])
-        primaries_frame.append([ttree_mu3e.tilehit_primary[hit_tile_index], frame-1])
-        times_frame.append([ttree_mu3e.tilehit_time[hit_tile_index], frame-1])
+        hit_tiles.append([ttree_mu3e.tilehit_tile[hit_tile_index], frame-1])
     
     ttree_mu3e.GetEntry(frame)
 
-    #build clusters around master tiles
-    for tile in hit_tiles_frame:
+    #build clusters around mask master tiles
+    for tile in hit_tiles:
+        #if tile[0] < 300000: #just left recurl station
         cluster_tmp = []
         cluster_primary_tmp = 0
         if tile[0] not in keys: #if not primary
             for i in range(len(values)):
                 for j in range(len(values[i])):
                     if tile[0] == values[i][j][0]: 
+                        #cluster_tmp.append(tile)
                         if len(cluster_tmp) != 0:
                             for k in cluster_tmp: #TODO: check if hit is already there from another frame (so the same tile isn't added twice when hit in multiple frames)
                                 if tile[0] == k[0]:
