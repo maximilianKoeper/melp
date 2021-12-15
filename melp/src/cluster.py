@@ -22,8 +22,8 @@ class ClusterHit:
     # -----------------------------------------
 
     #returns True if hits are the same
-    def __eq__(self, other):
-        return self.mc_i == other.mc_i
+    #def __eq__(self, other):
+    #    return self.mc_i == other.mc_i
 
     #returns 
 
@@ -73,5 +73,12 @@ class Cluster:
         for hit in self.hits:
             times.append(hit.time)
         return times
+
+    #return all frame ids in cluster
+    def get_frame_ids(self):
+        frame_ids = []
+        for hit in self.hits:
+            frame_ids.append(hit.frame_id)
+        return frame_ids
 
 
