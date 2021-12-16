@@ -73,6 +73,7 @@ def get_mask_masters_hitAnglePixelRec_with_hid(ttree_mu3e, ttree_mu3e_mc, ttree_
 
     # initialize dictionaries
     tilehit_tile     = []
+    tilehit_primary  = []
     tile_mc_i        = []
     tile_id_pos      = {}
     tile_id_dir      = {}
@@ -83,6 +84,9 @@ def get_mask_masters_hitAnglePixelRec_with_hid(ttree_mu3e, ttree_mu3e_mc, ttree_
 
     for j in ttree_mu3e.tilehit_tile:
         tilehit_tile.append(j)
+
+    for j in ttree_mu3e.tilehit_primary:
+        tilehit_primary.append(j)
 
     for i in range(ttree_tiles.GetEntries()):
         ttree_tiles.GetEntry(i)
@@ -112,7 +116,8 @@ def get_mask_masters_hitAnglePixelRec_with_hid(ttree_mu3e, ttree_mu3e_mc, ttree_
 
     # Define Arrays for result
     z_arr  = []
-    id_arr = []
+    tile_id_arr = []
+    primary_id_arr = []
 
 
     # loop over all tile hits in one Root frame
@@ -122,6 +127,7 @@ def get_mask_masters_hitAnglePixelRec_with_hid(ttree_mu3e, ttree_mu3e_mc, ttree_
         # only primary hit gets analyzed
         ##################################
         tile_id  = tilehit_tile[u]
+        primary_id = tilehit_primary[u]
         hid_test = __Get_HID_from_MC_I(ttree_mu3e_mc, tile_mc_i[u])
         if hid_test != 1:
             hid_discard += 1
@@ -164,13 +170,11 @@ def get_mask_masters_hitAnglePixelRec_with_hid(ttree_mu3e, ttree_mu3e_mc, ttree_
         sensor_frame_mc_i_layer3 = []
 
         for k in pixel_ids:
-            #if (k >= 2000 and k < 3000) or (k >= 14000 and k < 15200):
             if (k >= 10000 and k < 11500) or (k >= 14000 and k < 15200):
                 index_id_2 = np.where(np.array(pixel_ids) == k)
                 sensor_ids_layer2.append(sensor_id_tid[index_id_2[0][0]])
                 sensor_frame_mc_i_layer2.append(sensor_mc_i_tid[index_id_2[0][0]])
 
-            #elif (k >= 3000 and k < 4000) or (k >= 15200 and k < 16500):
             elif (k >= 11500 and k < 12500) or (k >= 15200 and k < 16500):
                 index_id_3 = np.where(np.array(pixel_ids) == k)
                 sensor_ids_layer3.append(sensor_id_tid[index_id_3[0][0]])
@@ -217,25 +221,15 @@ def get_mask_masters_hitAnglePixelRec_with_hid(ttree_mu3e, ttree_mu3e_mc, ttree_
 
         if np.array(pixel_pos_layer3).size == 0:
             continue
-        
-        #vector_sensor_layers = np.array(pixel_pos_layer3) - np.array(pixel_pos_layer2)
-        
-        #tile_norm = np.array(tile_id_dir[tile_id])
 
         z_arr.append(tile_pos[2])
-        id_arr.append(tile_id)
+        tile_id_arr.append(tile_id)
+        primary_id_arr.append(primary_id)
 
-    #print("HID CHECK: ", hid_ok, " of " , hid_ok+ hid_discard, "ok")
-    #print("TID CHECK: ", tid_ok, " of " , tid_ok+ hid_discard, "ok")
-    #print("Total Events with matching Tile and Sensor Hit: ", len(z_arr), " of: ", hid_ok, " primary Tile hits")
+    result_tile_id    = np.array(tile_id_arr)
+    result_primary_id = np.array(primary_id_arr)
 
-    result_id    = np.array(id_arr)
-
-    ####################
-    #print(result_id)
-    #####################
-
-    return result_id
+    return result_tile_id , result_primary_id
 
 #--------------------------------------------
 #propagates through two pixel layers onto tile surface and takes whatever tile is hit as mask "master". Only Tid of the pixel layers is checked.
@@ -246,6 +240,7 @@ def get_mask_masters_hitAnglePixelRec_without_hid(ttree_mu3e, ttree_mu3e_mc, ttr
 
     # initialize dictionaries
     tilehit_tile     = []
+    tilehit_primary  = []
     tile_mc_i        = []
     tile_id_pos      = {}
     tile_id_dir      = {}
@@ -253,6 +248,9 @@ def get_mask_masters_hitAnglePixelRec_without_hid(ttree_mu3e, ttree_mu3e_mc, ttr
 
     for j in ttree_mu3e.tilehit_mc_i:
         tile_mc_i.append(j)
+
+    for j in ttree_mu3e.tilehit_primary:
+        tilehit_primary.append(j)
 
     for j in ttree_mu3e.tilehit_tile:
         tilehit_tile.append(j)
@@ -280,12 +278,14 @@ def get_mask_masters_hitAnglePixelRec_without_hid(ttree_mu3e, ttree_mu3e_mc, ttr
 
     # Define Arrays for result
     z_arr  = []
-    id_arr = []
+    tile_id_arr = []
+    primary_id_arr = []
 
 
     # loop over all tile hits in one Root frame
     for u in range(len(tilehit_tile)):
         tile_id  = tilehit_tile[u]
+        primary_id = tilehit_primary[u]
 
         sensor_ids_tmp, sensor_frame_mc_i_tmp = __Get_Sensor_IDs_from_Frame_ID(ttree_mu3e)
 
@@ -377,12 +377,10 @@ def get_mask_masters_hitAnglePixelRec_without_hid(ttree_mu3e, ttree_mu3e_mc, ttr
                 continue
 
         z_arr.append(tile_pos[2])
-        id_arr.append(tile_id)
+        tile_id_arr.append(tile_id)
+        primary_id_arr.append(primary_id)
 
-    result_id    = np.array(id_arr)
+    result_tile_id    = np.array(tile_id_arr)
+    result_primary_id = np.array(primary_id_arr)
 
-    ####################
-    #print(result_id)
-    #####################
-
-    return result_id
+    return result_tile_id , result_primary_id

@@ -113,11 +113,11 @@ def build_clusters_in_masks_with_neighbours(ttree_mu3e, ttree_mu3e_mc, ttree_sen
     #get masks around master tile
     master_masks, master_primaries = build_mask_around_cluster_master_frame_id(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector, frame, mask_type, rec_type)
 
-    keys = []
-    values = []
+    mask_masters = []
+    masks = []
     for key in master_masks.keys():
-        keys.append(key)
-        values.append(master_masks[key])
+        mask_masters.append(key)
+        masks.append(master_masks[key])
 
     #get all tiles that have been hit in frame
     hit_tiles_frame = []
@@ -142,17 +142,18 @@ def build_clusters_in_masks_with_neighbours(ttree_mu3e, ttree_mu3e_mc, ttree_sen
     
     ttree_mu3e.GetEntry(frame)
 
+    """
     #build clusters around master tiles
     for i in range(len(hit_tiles_frame)):
     #for tile in hit_tiles_frame:
         cluster_tmp = []
         cluster_master_tmp = 0
         cluster_masters_tmp = []
-        #if tile[0] not in keys: #if not primary
-        if hit_tiles_frame[i][0] not in keys: #if not primary
-            for j in range(len(values)):
-                for k in range(len(values[j])):
-                    if hit_tiles_frame[i][0] == values[j][k][0]:
+        #if tile[0] not in keys: #if not master
+        if hit_tiles_frame[i][0] not in mask_masters: #if not master
+            for j in range(len(masks)):
+                for k in range(len(masks[j])):
+                    if hit_tiles_frame[i][0] == masks[j][k][0]:
                         if len(cluster_tmp) != 0:
                             for m in cluster_tmp: #TODO: check if hit is already there from another frame (so the same tile isn't added twice when hit in multiple frames)
                                 #if hit_tiles_frame[i][0] == m[0]:
@@ -164,10 +165,10 @@ def build_clusters_in_masks_with_neighbours(ttree_mu3e, ttree_mu3e_mc, ttree_sen
                         elif len(cluster_tmp) == 0:
                             #cluster_tmp.append(hit_tiles_frame[i])
                             cluster_tmp.append(ClusterHit(tile_id=hit_tiles_frame[i][0], primary=primaries_frame[i][0], time=times_frame[i][0], frame_id=hit_tiles_frame[i][1]))
-                        if list(values[j][0]) not in cluster_tmp:
+                        if list(masks[j][0]) not in cluster_tmp:
                             #cluster_tmp.insert(0,list(values[j][0]))
-                            cluster_tmp.insert(0,ClusterHit(tile_id=values[j][0][0], frame_id=values[j][0][1], primary=master_primaries[values[j][0][0]]))
-                        cluster_master_tmp = keys[j]
+                            cluster_tmp.insert(0,ClusterHit(tile_id=masks[j][0][0], frame_id=masks[j][0][1], primary=master_primaries[masks[j][0][0]]))
+                        cluster_master_tmp = mask_masters[j]
                         cluster_masters_tmp.append(cluster_masters_tmp)
 
         if cluster_master_tmp != 0:
@@ -175,21 +176,55 @@ def build_clusters_in_masks_with_neighbours(ttree_mu3e, ttree_mu3e_mc, ttree_sen
             #if cluster_master_tmp not in clusters.keys() and len(cluster_tmp) > 0: 
             if cluster_master_tmp not in cluster_masters_tmp and len(cluster_tmp) > 0:
                 #clusters[cluster_master_tmp] = cluster_tmp
-                clusters.append(Cluster(id=cluster_master_tmp, frame_id=frame, master_id=cluster_master_tmp, master_primary=master_primaries[values[j][0][0]], hits=cluster_tmp))
+                clusters.append(Cluster(id=cluster_master_tmp, frame_id=frame, master_id=cluster_master_tmp, master_primary=master_primaries[masks[j][0][0]], hits=cluster_tmp))
             elif len(cluster_tmp) > 0: 
                 #clusters[cluster_master_tmp].append(cluster_tmp[1])
-                clusters.append(Cluster(id=cluster_master_tmp, frame_id=frame, master_id=cluster_master_tmp, master_primary=master_primaries[values[j][0][0]], hits=cluster_tmp[1]))
+                #clusters.append(Cluster(id=cluster_master_tmp, frame_id=frame, master_id=cluster_master_tmp, master_primary=master_primaries[values[j][0][0]], hits=cluster_tmp[1]))
+                for cluster in clusters:
+                    print("ok")
+                    if cluster.master_id == cluster_master_tmp:
+                        cluster.hits.append(cluster_tmp[1])
+                        print("done")
 
-
-    for i in keys:
+    for i in mask_masters:
         #for cluster in clusters:
             #if i not in clusters.keys():
             #if i != cluster.master_id:
             if i not in cluster_masters_tmp:
-                index_tmp = keys.index(i)
+                index_tmp = mask_masters.index(i)
                 #clusters[i] = [list(values[index_tmp][0])]
-                clusters.append(Cluster(id=i, frame_id=values[index_tmp][0][1], master_id=i, master_primary=master_primaries[values[index_tmp][0][0]], hits=[ClusterHit(tile_id=list(values[index_tmp][0])[0], frame_id=list(values[index_tmp][0])[1], primary=master_primaries[values[index_tmp][0][0]])]))
+                clusters.append(Cluster(id=i, frame_id=masks[index_tmp][0][1], master_id=i, master_primary=master_primaries[masks[index_tmp][0][0]], hits=[ClusterHit(tile_id=list(masks[index_tmp][0])[0], frame_id=list(masks[index_tmp][0])[1], primary=master_primaries[masks[index_tmp][0][0]])]))
+    """
 
+    #build clusters around master tiles
+    for key in master_masks.keys():
+        cluster_tmp = []
+        cluster_tmp_ids = []
+        i = 0
+        while i in range(len(hit_tiles_frame)):
+        #for i in range(ttree_mu3e.Ntilehit):
+            if hit_tiles_frame[i] != "associated" and hit_tiles_frame[i][0] in master_masks[key]:
+                cluster_tmp.append(ClusterHit(tile_id = hit_tiles_frame[i][0], frame_id = hit_tiles_frame[i][1], primary = primaries_frame[i][0], time = times_frame[i][0]))
+                cluster_tmp_ids.append(hit_tiles_frame[i][0])
+                hit_tiles_frame[i] = "associated" #prevent hits from being in multiple clusters
+            i += 1    
+
+        if len(cluster_tmp) != 0 and key in cluster_tmp_ids:
+            master_id = key
+            id = master_id
+            primary_of_master = master_primaries[key]
+
+            clusters.append(Cluster(id = master_id, master_id=key, master_primary = primary_of_master, frame_id = frame, hits = cluster_tmp))
+
+
+
+    #check for too long clusters
+    #cluster_hits_counter_tmp = 0
+    #tot_hits_frame = ttree_mu3e.Ntilehit
+    #for i in range(len(clusters)):
+    #    cluster_hits_counter_tmp += clusters[i].__len__()
+    #if cluster_hits_counter_tmp > tot_hits_frame:
+    #    print("Total hits in frame: ", tot_hits_frame, "\n", "Total hits in clusters: ", cluster_hits_counter_tmp, "\n")
 
     return clusters
 
@@ -225,10 +260,9 @@ def check_for_multiple_frame_clusters(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, t
         #for key in clusters_frame.keys():
         for cluster in clusters_frame:
             #value = np.array(clusters_frame[key])
-            cluster_hits = cluster.get_tile_ids()
             cluster_hits_frame_ids = cluster.get_frame_ids()
-            total_cluster_hits_counter_tmp += len(cluster_hits)
-            for i in range(len(cluster_hits)): #checks if hit in cluster has different frame id than the "master" hit
+            total_cluster_hits_counter_tmp += len(cluster_hits_frame_ids)
+            for i in range(len(cluster_hits_frame_ids)): #checks if hit in cluster has different frame id than the "master" hit
                 #if cluster_hits[i][1] != cluster_hits[0][1]:
                 if cluster_hits_frame_ids[i] != cluster_hits_frame_ids[0]:
                     mult_frame_cluster_hits_counter_tmp += 1
@@ -271,19 +305,22 @@ def check_for_mult_hit_tiles_diff_frame(ttree_mu3e, ttree_mu3e_mc, ttree_sensor,
 
         clusters_frame = build_clusters_in_masks_with_neighbours(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
 
-        for key in clusters_frame.keys():
-            cluster = clusters_frame[key]
-            total_cluster_hits_counter_tmp += len(cluster)
-            for hit1 in cluster:
-                for hit2 in cluster:
-                    if hit1[0] == hit2[0] and hit1[1] != hit2[1]:
+        #for key in clusters_frame.keys():
+        for cluster in clusters_frame:
+            #cluster = clusters_frame[key]
+            total_cluster_hits_counter_tmp += cluster.__len__()
+            for hit1 in cluster.hits:
+                for hit2 in cluster.hits:
+                    #if hit1[0] == hit2[0] and hit1[1] != hit2[1]:
+                    if hit1.tile_id == hit2.tile_id and hit1.frame_id != hit2.frame_id:
                         double_hit_counter_tmp += 1
 
         double_hit_counter += double_hit_counter_tmp
         total_cluster_hits_counter += total_cluster_hits_counter_tmp
 
+    print("Progress: 100 %","of ", frames_to_analyze, " frames")
     if double_hit_counter != 0:
-        print("Tiles in cluster hit in multiple frames out of all hits in clusters: ", double_hit_counter/(total_cluster_hits_counter/100), "%")
+        print("Tiles in cluster that have been hit in multiple frames out of all hits in clusters: ", double_hit_counter/(total_cluster_hits_counter/100), "%")
 
     return double_hit_counter, total_cluster_hits_counter
 
@@ -310,7 +347,7 @@ def del_double_hits_in_3_frame_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, 
             print("Progress of building dictionary with all hits: ", np.round(frame / frames_to_analyze * 100), " %","of ", frames_to_analyze, " frames", end='\r')
 
         hit_tiles_with_frame_id = []
-        for hit_tile_index in range(len(ttree_mu3e.tilehit_tile)):
+        for hit_tile_index in range(ttree_mu3e.Ntilehit):
             hit_tiles_with_frame_id.append([ttree_mu3e.tilehit_tile[hit_tile_index], frame])
         
         hits_all_frames[frame] = hit_tiles_with_frame_id
@@ -330,28 +367,34 @@ def del_double_hits_in_3_frame_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, 
 
         #check if there is hit from other frame and add them to hits_from_other_frame_in_cluster
         hits_from_other_frame_in_cluster = []
-        for key in clusters_frame.keys():
-            value = np.array(clusters_frame[key])
-            for i in range(len(value)): #checks if hit in cluster has different frame id than the "master" hit
-                if value[i][1] != value[0][1]:
-                    hits_from_other_frame_in_cluster.append([value[i][0], value[i][1]]) #add hits in different frame to list
+        #for key in clusters_frame.keys():
+        for cluster in clusters_frame:
+            #cluster = np.array(clusters_frame[key])
+            frame_ids_cluster = cluster.get_frame_ids()
+            for i in range(len(frame_ids_cluster)): #checks if hit in cluster has different frame id than the "master" hit
+                #if value[i][1] != value[0][1]:
+                if frame_ids_cluster[i] != cluster.frame_id:
+                    #hits_from_other_frame_in_cluster.append([value[i][0], value[i][1]]) #add hits in different frame to list
+                    hits_from_other_frame_in_cluster.append(cluster.hits[i]) #add hits in different frame to list
 
         #get hits from other frames if hits_from_other_frame_in_cluster is not empty
         if len(hits_from_other_frame_in_cluster) != 0:
             #check which frame to get (faster if its just one)
             for hit in hits_from_other_frame_in_cluster:
-                if hit[1] == frame+1:
+                #if hit[1] == frame+1:
+                if hit.frame_id == frame+1:
                     #get hits in frame +1
                     hits_frame_plus = hits_all_frames[frame+1]
-                    if hit in hits_frame_plus:
-                        hits_frame_plus.remove(hit) #remove double hit
+                    while [hit.tile_id, hit.frame_id] in hits_frame_plus:
+                        hits_frame_plus.remove([hit.tile_id, hit.frame_id]) #remove double hit
                         removed_hits_counter += 1
                     hits_all_frames[frame+1] = hits_frame_plus #replace the value in hits_all_frames with new value without double hits
-                elif hit[1] == frame-1:
+                #elif hit[1] == frame-1:
+                elif hit.frame_id == frame-1:
                     #get hits in frame -1
                     hits_frame_minus = hits_all_frames[frame-1]
-                    if hit in hits_frame_minus:
-                        hits_frame_minus.remove(hit) #remove double hit
+                    while [hit.tile_id, hit.frame_id] in hits_frame_minus:
+                        hits_frame_minus.remove([hit.tile_id, hit.frame_id]) #remove double hit
                         removed_hits_counter += 1
                     hits_all_frames[frame-1] = hits_frame_minus #replace the value in hits_all_frames with new value without double hits
                 else:
@@ -372,6 +415,8 @@ def del_double_hits_in_3_frame_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, 
 
     return hits_all_frames, hits_all_frames_counter_after
 
+
+"""
 #-----------------------------------------------------
 #builds clusters where dict-key is the primary of "master"-tile and not "master" tile and value is the whole cluster
 def build_cluster_with_truth_primary_3_frame(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector: melp.Detector, frame, mask_type, rec_type = None):
@@ -404,3 +449,4 @@ def build_cluster_with_truth_primary_3_frame(ttree_mu3e, ttree_mu3e_mc, ttree_se
         clusters_with_primaries[primaries[key]] = primary_whole_clusters_tmp
     
     return clusters_with_primaries
+"""
