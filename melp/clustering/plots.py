@@ -115,8 +115,8 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
                             if cluster_primaries[k] == clusters[j].master_primary:
                                 number_of_primaries_comp += 1
                         if number_of_primaries_comp == 0: #if master primary of cluster i isn't found in cluster j do nothing
-                            continue
-                        elif number_of_primaries_comp <= number_of_primaries: #if correctly identified constituents are more in cluster i simply add cluster j as wrongly identified
+                            pass #continue
+                        elif number_of_primaries_comp < number_of_primaries: #if correctly identified constituents are more in cluster i simply add cluster j as wrongly identified
                             #TODO: maybe split into < and = and decide for the correct cluster either via the smallest timestamp or by amount of wrong hits in cluster
                             corr_counter -= number_of_primaries_comp
                             uncorr_counter += number_of_primaries_comp
@@ -126,7 +126,7 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
                             new_corr_cluster_flags.append(j)
                             old_corr_cluster_flags.append(i)
             
-                        
+                   
             #loop over old correct cluster flags
             checked_primaries_2 = []
             old_corr_cluster_flags_check = []
@@ -162,7 +162,7 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
                             new_corr_cluster_flags.append(j)
                             old_corr_cluster_flags.append(i)
                             old_corr_cluster_flags_check.append(i)
-        
+            
 
         #add to total corr and uncorr counters
         tot_corr_counter += corr_counter
@@ -217,7 +217,7 @@ def get_hits_not_in_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles
         if cluster_type == None:
             clusters_frame = clump.spatial_cluster.build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector,frame, mask_type, rec_type)
         elif cluster_type == "time":
-            __ , clusters_frame = clump.time_cluster.time_clustering_frame(ttree_mu3e, printing = None)
+            clusters_frame = clump.time_cluster.time_clustering_frame(ttree_mu3e, frame, printing = None)
 
         #count hits in clusters
         #cluster_hits_counter_tmp = 0

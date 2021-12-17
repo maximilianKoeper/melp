@@ -27,19 +27,23 @@ def hittimes_in_file (ttree_mu3e):
     return hittimes
 
 #-------------------------------------------
-def hittimes_in_frame (ttree_mu3e):
+def hittimes_and_primaries_in_frame (ttree_mu3e):
     hittimes = {}
+    primaries = {}
 
     for hit_tile_index in range(len(ttree_mu3e.tilehit_tile)):
         hittime = ttree_mu3e.tilehit_time[hit_tile_index]
         hit_tile = ttree_mu3e.tilehit_tile[hit_tile_index]
+        primary = ttree_mu3e.tilehit_primary[hit_tile_index]
 
         if hit_tile in hittimes.keys():
             hittimes[hit_tile].append(hittime)
+            primaries[hit_tile].append(primary)
         else:
             hittimes[hit_tile] = [hittime]
+            primaries[hit_tile] = [primary]
 
-    return hittimes
+    return hittimes, primaries
 
 #------------------------------------------
 def get_key_for_value(dict, val):

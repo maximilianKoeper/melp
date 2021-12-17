@@ -5,27 +5,35 @@ from melp import Detector
 
 from melp.clustering.misc import*
 
-import melp.clustering.spatial_cluster as sclump
-import melp.clustering.three_frame_cluster as clump_3
+from melp import clustering as clump
+
+from melp.src.cluster import ClusterHit
+from melp.src.cluster import Cluster
+
+#import melp.clustering.spatial_cluster as sclump
+#import melp.clustering.three_frame_cluster as clump_3
 
 #----------------------------------------------
 #simple threshold 1d time clustering 
-def time_clustering_frame(ttree_mu3e, printing = None):
-    time_clusters = {}
+def time_clustering_frame(ttree_mu3e, frame, printing = None):
+    #time_clusters = {}
+    time_clusters = []
     #same as time_clusters but without time information so it can be used with usual plotting routine
-    cluster_for_plt = {}
+    #cluster_for_plt = {}
 
     #set maximum time between hits to get assigned to same cluster
     time_threshold = 0.4 #ns
 
     #get hittimes (and hit tiles) in frame
-    hittimes_frame = hittimes_in_frame (ttree_mu3e)
+    hittimes_frame, primaries_frame = hittimes_and_primaries_in_frame (ttree_mu3e)
 
-    hit_tiles_frame_arr = []
-    hit_times_frame_arr = []
-    for key in hittimes_frame.keys():
-        hit_tiles_frame_arr.append(key)
-        hit_times_frame_arr.append(hittimes_frame[key][0])
+    #hit_tiles_frame_arr = []
+    #hit_times_frame_arr = []
+    #primaries_frame_arr = []
+    #for key in hittimes_frame.keys():
+    #    hit_tiles_frame_arr.append(key)
+    #    hit_times_frame_arr.append(hittimes_frame[key][0])
+    #    primaries_frame_arr.append(primaries_frame[key][0])
 
     #build clusters
     added_tiles = []
@@ -33,20 +41,23 @@ def time_clustering_frame(ttree_mu3e, printing = None):
         if key1 not in added_tiles:
             time_cluster_tmp = []
             cluster_for_plt_tmp = []
-            time_cluster_tmp.append([key1, hittimes_frame[key1][0]])
-            cluster_for_plt_tmp.append(key1)
+            #time_cluster_tmp.append([key1, hittimes_frame[key1][0]])
+            time_cluster_tmp.append(ClusterHit(tile_id=key1, time=hittimes_frame[key1][0], frame_id=frame, primary=primaries_frame[key1][0]))
+            #cluster_for_plt_tmp.append(key1)
             added_tiles.append(key1)
             for key2 in hittimes_frame.keys():
                 if key2 not in added_tiles:
                     if np.abs(hittimes_frame[key1][0] - hittimes_frame[key2][0]) < time_threshold and key2 != key1:
-                        time_cluster_tmp.append([key2, hittimes_frame[key2][0]])
-                        cluster_for_plt_tmp.append(key2)
+                        #time_cluster_tmp.append([key2, hittimes_frame[key2][0]])
+                        time_cluster_tmp.append(ClusterHit(tile_id=key2, time=hittimes_frame[key2][0], frame_id=frame, primary=primaries_frame[key2][0]))
+                        #cluster_for_plt_tmp.append(key2)
                         added_tiles.append(key2)
-            time_clusters[key1] = time_cluster_tmp
-            cluster_for_plt[key1] = cluster_for_plt_tmp
+            #time_clusters[key1] = time_cluster_tmp
+            time_clusters.append(Cluster(id=key1, master_id = key1, frame_id=frame, hits=time_cluster_tmp))
+            #cluster_for_plt[key1] = cluster_for_plt_tmp
 
     #get highest and lowest time
-    hittimes_frame = hittimes_in_frame (ttree_mu3e)
+    hittimes_frame, __ = hittimes_and_primaries_in_frame (ttree_mu3e)
     times_arr = []
     for key in hittimes_frame.keys():
         times_arr.append(hittimes_frame[key][0])
@@ -67,17 +78,17 @@ def time_clustering_frame(ttree_mu3e, printing = None):
         print("Maximum time difference: ", np.max(delta_t), " ns")
         print("Sorted time differences: ", np.sort(delta_t))
 
-    return time_clusters , cluster_for_plt
+    return time_clusters #, cluster_for_plt
 
 #----------------------------------
 #returns clusters from spatial_cluster with timestamp
 def add_hit_time_to_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, frame, mask_type, rec_type = None):
     time_spatial_clusters = {} #gets returned. Key: cluster_master_tile, Values: whole cluster with time info [[tile_id,time],[tile_id, time],...]
     #get spatial clusters
-    spatial_clusters = sclump.build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
+    spatial_clusters = clump.spatial_cluster.build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
 
     #get hittimes for all hits in frame
-    hittimes_frame = hittimes_in_frame(ttree_mu3e)
+    hittimes_frame, __ = hittimes_and_primaries_in_frame(ttree_mu3e)
 
     #get hit time for hits in cluster
     for key in spatial_clusters.keys():

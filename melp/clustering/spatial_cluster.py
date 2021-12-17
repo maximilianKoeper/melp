@@ -38,7 +38,6 @@ def build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles
         cluster_tmp_ids = []
         i = 0
         while i in range(len(hit_tiles_frame)):
-        #for i in range(ttree_mu3e.Ntilehit):
             if hit_tiles_frame[i] != "associated" and hit_tiles_frame[i] in master_masks[key]:
                 cluster_tmp.append(ClusterHit(tile_id = hit_tiles_frame[i], frame_id = frame, primary = primaries_frame[i], time = times_frame[i]))
                 cluster_tmp_ids.append(hit_tiles_frame[i])
