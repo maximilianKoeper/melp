@@ -81,4 +81,13 @@ class Cluster:
             frame_ids.append(hit.frame_id)
         return frame_ids
 
+    #return the value and index of hit with smallest time in cluster
+    def get_min_time(self):
+        times = []
+        for hit in self.hits:
+            times.append(hit.time) 
+        val, idx = min((val, idx) for (idx, val) in enumerate(times))
+        return self.hits[idx], idx
+    
+
 
