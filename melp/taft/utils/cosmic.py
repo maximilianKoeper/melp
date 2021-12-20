@@ -44,6 +44,8 @@ def cosmic_linear_correction(filename: str, detector, **kwargs):
     ttree_mu3e = root_file.Get(kwargs["ttree_loc"])
     time_dist_z = []
 
+    trajectories = []
+
     # it -> iterator (frame_id). -1 if EOF
     it = find_next_cosmic_event(ttree_mu3e, it=0, station=kwargs["station"])
     while it != -1:
@@ -89,9 +91,12 @@ def cosmic_linear_correction(filename: str, detector, **kwargs):
             if abs(z_dist) > kwargs["cosmic_threshold"]:
                 time_dist_z.append((abs(tmp_time_1 - tmp_time_2) - tof) / z_dist)
 
+            trajectories.append(Trajectory(tile1_pos=pos1, tile2_pos=pos2))
+
         it += 1
         it = find_next_cosmic_event(ttree_mu3e, it, 1)
 
+    generate_txt_event_file(trajectories, 500)
     return time_dist_z
 
 
