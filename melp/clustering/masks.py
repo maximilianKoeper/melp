@@ -3,6 +3,7 @@ import numpy as np
 
 import melp
 from melp import Detector
+from melp import clustering as clump
 from melp.clustering.misc import*
 
 from melp.src.cluster import ClusterHit
@@ -108,6 +109,8 @@ def build_mask_around_cluster_master(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, tt
         mask_masters, cluster_master_primary = melp.clustering.tracking.get_mask_masters_hitAnglePixelRec_without_hid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, matching="nearest")
     elif rec_type == "pixelpixelcheck":
         mask_masters, cluster_master_primary = melp.clustering.tracking.get_mask_masters_hitAnglePixelRec_with_hid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, matching="nearest")
+    elif rec_type == "timethenspatial":
+        mask_masters, cluster_master_primary = clump.three_dim_cluster.get_cluster_master_of_time_clusters(ttree_mu3e, frame, printing = None)
     else:
         mask_masters, cluster_master_primary = get_cluster_master_truth_frame(ttree_mu3e, ttree_mu3e_mc, frame)
 

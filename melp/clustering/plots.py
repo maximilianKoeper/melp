@@ -43,6 +43,8 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
         #get clusters
         if cluster_type == "time":
             clusters = clump.time_cluster.time_clustering_frame(ttree_mu3e, frame, printing = None)
+        elif cluster_type == "timethenspatial":
+            clusters = clump.three_dim_cluster.spatial_clustering_for_time_clusters(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
         else:
             clusters = clump.spatial_cluster.build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
         
@@ -121,6 +123,9 @@ def get_hits_not_in_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles
             clusters_frame = clump.spatial_cluster.build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector,frame, mask_type, rec_type)
         elif cluster_type == "time":
             clusters_frame = clump.time_cluster.time_clustering_frame(ttree_mu3e, frame, printing = None)
+        elif cluster_type == "timethenspatial":
+            clusters_frame = clump.three_dim_cluster.spatial_clustering_for_time_clusters(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
+    
 
         #count hits in clusters
         cluster_hits_counter_tmp = 0

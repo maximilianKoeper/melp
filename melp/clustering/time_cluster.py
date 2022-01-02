@@ -18,7 +18,7 @@ def time_clustering_frame(ttree_mu3e, frame, printing = None):
     #-------------------------------------------------------------
     #set maximum time between hits to get assigned to same cluster
     #-------------------------------------------------------------
-    time_threshold = 0.4 #ns
+    time_threshold = 0.02 #ideal for pure time is 0.4 #ns
 
     #get hittimes (and hit tiles) in frame
     hittimes_frame, primaries_frame = hittimes_and_primaries_in_frame (ttree_mu3e)

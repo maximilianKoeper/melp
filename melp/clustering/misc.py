@@ -264,3 +264,5 @@ def blockPrinting(func):
         return value
 
     return func_wrapper
+
+
