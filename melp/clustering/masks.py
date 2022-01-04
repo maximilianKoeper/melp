@@ -306,3 +306,85 @@ def build_mask_around_cluster_master_3_frames(ttree_mu3e, ttree_mu3e_mc, ttree_s
             mask[tile_centre[0]] = mask_tmp
 
     return mask 
+
+
+###############################
+def build_mask_single_hit(cluster_hit: ClusterHit, ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector: melp.Detector, frame, mask_type, rec_type = None):
+    #-----------------
+    #build small masks
+    #-----------------
+    if mask_type == "small":
+        master_primary     = cluster_hit.primary
+        tile_centre        = cluster_hit.tile_id
+        tile_centre_top    = mu3e_detector.TileDetector.getNeighbour(tile_centre, "up")
+        tile_centre_bottom = mu3e_detector.TileDetector.getNeighbour(tile_centre, "down")
+        tile_left_centre   = mu3e_detector.TileDetector.getNeighbour(tile_centre, "left")
+        tile_right_centre  = mu3e_detector.TileDetector.getNeighbour(tile_centre, "right")
+
+        mask_tmp = np.array([tile_centre, tile_centre_top, tile_centre_bottom, 
+                            tile_left_centre, tile_right_centre])
+
+        if False in mask_tmp:
+            mask_tmp = [x for x in mask_tmp if x != False]
+
+    #------------------
+    #build medium masks
+    #------------------
+    if mask_type == "medium":
+        master_primary     = cluster_hit.primary
+        tile_centre        = cluster_hit.tile_id
+        tile_centre_top    = mu3e_detector.TileDetector.getNeighbour(tile_centre, "up")
+        tile_centre_bottom = mu3e_detector.TileDetector.getNeighbour(tile_centre, "down")
+        tile_left_centre   = mu3e_detector.TileDetector.getNeighbour(tile_centre, "left")
+        tile_left_top      = mu3e_detector.TileDetector.getNeighbour(tile_left_centre, "up")
+        tile_left_bottom   = mu3e_detector.TileDetector.getNeighbour(tile_left_centre, "down")
+        tile_right_centre  = mu3e_detector.TileDetector.getNeighbour(tile_centre, "right")
+        tile_right_top     = mu3e_detector.TileDetector.getNeighbour(tile_right_centre, "up")
+        tile_right_bootom  = mu3e_detector.TileDetector.getNeighbour(tile_right_centre, "down")
+
+        mask_tmp = np.array([tile_centre, tile_centre_top, tile_centre_bottom, tile_left_top, 
+                            tile_left_centre, tile_left_bottom, tile_right_top, tile_right_centre, 
+                            tile_right_bootom])
+
+        if False in mask_tmp:
+            mask_tmp = [x for x in mask_tmp if x != False]
+
+    #---------------
+    #build big masks
+    #---------------
+    if mask_type == "big":
+        master_primary     = cluster_hit.primary
+        tile_centre        = cluster_hit.tile_id
+        tile_centre_top        = mu3e_detector.TileDetector.getNeighbour(tile_centre, "up")
+        tile_centre_bottom     = mu3e_detector.TileDetector.getNeighbour(tile_centre, "down")
+        tile_left_centre       = mu3e_detector.TileDetector.getNeighbour(tile_centre, "left")
+        tile_left_top          = mu3e_detector.TileDetector.getNeighbour(tile_left_centre, "up")
+        tile_left_bottom       = mu3e_detector.TileDetector.getNeighbour(tile_left_centre, "down")
+        tile_right_centre      = mu3e_detector.TileDetector.getNeighbour(tile_centre, "right")
+        tile_right_top         = mu3e_detector.TileDetector.getNeighbour(tile_right_centre, "up")
+        tile_right_bottom      = mu3e_detector.TileDetector.getNeighbour(tile_right_centre, "down")
+
+        tile_centre_far_top    = mu3e_detector.TileDetector.getNeighbour(tile_centre_top, "up")
+        tile_centre_far_bottom = mu3e_detector.TileDetector.getNeighbour(tile_centre_bottom, "down")
+        tile_left_far_centre   = mu3e_detector.TileDetector.getNeighbour(tile_left_centre, "left")
+        tile_left_far_top      = mu3e_detector.TileDetector.getNeighbour(tile_left_top, "up")
+        tile_left_far_bottom   = mu3e_detector.TileDetector.getNeighbour(tile_left_bottom, "down")
+        tile_right_far_centre  = mu3e_detector.TileDetector.getNeighbour(tile_right_centre, "right")
+        tile_right_far_top     = mu3e_detector.TileDetector.getNeighbour(tile_right_top, "up")
+        tile_right_far_bottom  = mu3e_detector.TileDetector.getNeighbour(tile_right_bottom, "down")
+
+        tile_far_left_top      = mu3e_detector.TileDetector.getNeighbour(tile_left_top, "left")
+        tile_far_left_bottom   = mu3e_detector.TileDetector.getNeighbour(tile_left_bottom, "left")
+        tile_far_right_top     = mu3e_detector.TileDetector.getNeighbour(tile_right_top, "right")
+        tile_far_right_bottom  = mu3e_detector.TileDetector.getNeighbour(tile_right_bottom, "right")
+
+        mask_tmp = np.array([tile_centre, tile_centre_top, tile_centre_bottom, tile_left_top, tile_left_centre, tile_left_bottom,
+                                tile_right_top, tile_right_centre, tile_right_bottom, tile_centre_far_top, tile_centre_far_bottom, 
+                                tile_left_far_centre, tile_left_far_top, tile_left_far_bottom, tile_right_far_centre, 
+                                tile_right_far_top, tile_right_far_bottom, tile_far_left_top, tile_far_left_bottom, tile_far_right_top, 
+                                tile_far_right_bottom])
+
+        if False in mask_tmp:
+            mask_tmp = [x for x in mask_tmp if x != False]
+
+    return mask_tmp, master_primary
