@@ -173,6 +173,73 @@ def station_station_timing(filename: str, detector, **kwargs):
     return time_dist_betw_stations
 
 
+# --------------------------------------------------
+#
+def get_cosmic_data_from_file(filename: str, detector, **kwargs):
+    root_file = ROOT.TFile.Open(filename, "READ")
+    ttree_mu3e = root_file.Get(kwargs["ttree_loc"])
+    time_offset_between_hits = []
+    position_hits_hit1_column = []
+    position_hits_hit1_row = []
+    position_hits_hit2_column = []
+    position_hits_hit2_row = []
+
+    # it -> iterator (frame_id). -1 if EOF
+    it = find_next_cosmic_event(ttree_mu3e, it=0, station=kwargs["station"])
+    while it != -1:
+        # TODO: just for debugging
+        if it >= 1500000:
+            it = 100000000000001
+        if it % 100000 == 0:
+            print(round(it / ttree_mu3e.GetEntries() * 100), " % | Total Frames: ", ttree_mu3e.GetEntries(),
+                  end='\r')
+
+        if kwargs["mc_primary"] is False:
+            test_dict = check_cosmic_events(ttree_mu3e)
+        else:
+            test_dict = check_cosmic_events_mc(ttree_mu3e)
+
+        for key in test_dict:
+            tmp_ids = test_dict[key][0]
+
+            if kwargs["station"] == 1:
+                if any(y >= 300000 for y in tmp_ids):
+                    continue
+            elif kwargs["station"] == 2:
+                if any(y < 300000 for y in tmp_ids):
+                    continue
+
+            tmp_time_1 = min(test_dict[key][1])
+            tmp_tile_id_1 = test_dict[key][0][int(*index_finder(list(test_dict[key][1]), tmp_time_1))]
+            tmp_time_1 += detector.TileDetector.tile[tmp_tile_id_1].dt_truth
+            tmp_time_1 -= detector.TileDetector.tile[tmp_tile_id_1].dt_cal
+            tmp_time_2 = max(test_dict[key][1])
+            tmp_tile_id_2 = test_dict[key][0][int(*index_finder(list(test_dict[key][1]), tmp_time_2))]
+            tmp_time_2 += detector.TileDetector.tile[tmp_tile_id_2].dt_truth
+            tmp_time_2 -= detector.TileDetector.tile[tmp_tile_id_2].dt_cal
+
+            # calculating tof
+            pos1 = detector.TileDetector.tile[tmp_tile_id_1].pos
+            pos2 = detector.TileDetector.tile[tmp_tile_id_2].pos
+            dist = np.sqrt((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2 + (pos1[2] - pos2[2]) ** 2)  # mm
+            dist *= 0.001  # m
+            tof = (dist / 299792458) * (10 ** 9)  # ns
+
+            if abs(dist) >= 0.05:
+                time_offset_between_hits.append((abs(tmp_time_1 - tmp_time_2) - tof))
+                position_hits_hit1_column.append(detector.TileDetector.tile[tmp_tile_id_1].column())
+                position_hits_hit1_row.append(detector.TileDetector.tile[tmp_tile_id_1].row())
+                position_hits_hit2_column.append(detector.TileDetector.tile[tmp_tile_id_2].column())
+                position_hits_hit2_row.append(detector.TileDetector.tile[tmp_tile_id_2].row())
+
+        it += 1
+        it = find_next_cosmic_event(ttree_mu3e, it, 1)
+
+    position_hits = (position_hits_hit1_column, position_hits_hit1_row, position_hits_hit2_column, position_hits_hit2_row)
+
+    return time_offset_between_hits, position_hits
+
+
 # --------------------------------------
 # returns index of next frame with cosmic event
 # it: iterator -> frame_id
