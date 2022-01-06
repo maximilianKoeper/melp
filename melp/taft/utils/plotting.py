@@ -4,6 +4,8 @@ import numpy as np
 
 # --------------------------------------------------------
 def plot_station_calibration(mu3e_detector, station: int):
+    f_size = 15
+
     if station == 1:
         station_offset = 200000
     elif station == 2:
@@ -28,10 +30,9 @@ def plot_station_calibration(mu3e_detector, station: int):
         x = tile.column()
         # print(tile_id, x, y)
 
-        grid_relative[x][y] = float(
-            tile.dt_truth - tile.dt_cal - mu3e_detector.TileDetector.tile[station_offset].dt_truth)
-        grid_truth[x][y] = tile.dt_truth
-        grid_calibrated[x][y] = tile.dt_cal + mu3e_detector.TileDetector.tile[station_offset].dt_truth
+        grid_relative[x][y] = float(tile.get_offset() - mu3e_detector.TileDetector.tile[station_offset].dt_truth)
+        grid_truth[x][y] = tile.get_truth_offset()
+        grid_calibrated[x][y] = tile.get_calibrated_offset() + mu3e_detector.TileDetector.tile[station_offset].dt_truth
 
     # ---------------------------------------
     # Plotting
@@ -44,25 +45,33 @@ def plot_station_calibration(mu3e_detector, station: int):
     # plot truth offsets
     ax = ax_arr[0][0]
     heatplot_truth = ax.imshow(grid_truth.T, cmap='magma', vmin=min, vmax=max)
-    ax.set_title("truth offset")
+    ax.set_title("truth offset", fontsize=f_size)
+    ax.set_ylabel("phi (column)", fontsize=f_size)
+    ax.set_xlabel("z", fontsize=f_size)
     fig.colorbar(heatplot_truth, ax=ax)
 
     # plot calibrated offsets
     ax = ax_arr[0][1]
     heatplot_calibrated = ax.imshow(grid_calibrated.T, cmap='magma', vmin=min, vmax=max)
-    ax.set_title("calibrated offset")
+    ax.set_title("calibrated offset", fontsize=f_size)
+    ax.set_ylabel("phi (column)", fontsize=f_size)
+    ax.set_xlabel("z", fontsize=f_size)
     fig.colorbar(heatplot_calibrated, ax=ax)
 
     # plot deviation
     ax = ax_arr[1][0]
     heatplot_relative = ax.imshow(grid_relative.T, cmap='magma')
-    ax.set_title("relative error to truth")
+    ax.set_title("relative error to truth", fontsize=f_size)
+    ax.set_ylabel("phi (column)", fontsize=f_size)
+    ax.set_xlabel("z", fontsize=f_size)
     fig.colorbar(heatplot_relative, ax=ax)
 
     # plot deviation with same range as offsets
     ax = ax_arr[1][1]
     heatplot_calibrated = ax.imshow(grid_relative.T, cmap='magma', vmin=min, vmax=max)
-    ax.set_title("relative error from truth (same scaling as offsets)")
+    ax.set_title("relative error from truth (same scaling as offsets)", fontsize=f_size)
+    ax.set_ylabel("phi (column)", fontsize=f_size)
+    ax.set_xlabel("z", fontsize=f_size)
     fig.colorbar(heatplot_calibrated, ax=ax)
 
     plt.show()
@@ -70,6 +79,7 @@ def plot_station_calibration(mu3e_detector, station: int):
 
 # --------------------------------------------------------
 def plot_calibration(mu3e_detector):
+    f_size = 15
     # ---------------------------------------
     # get data
     # ---------------------------------------
@@ -82,11 +92,9 @@ def plot_calibration(mu3e_detector):
         x = tile.column()
 
         if tile.id >= 300000:
-            grid_relative_2[x][y] = float(
-                tile.dt_truth - tile.dt_cal - mu3e_detector.TileDetector.tile[300000].dt_truth)
+            grid_relative_2[x][y] = float(tile.get_offset() - mu3e_detector.TileDetector.tile[300000].dt_truth)
         if tile.id < 300000:
-            grid_relative_1[x][y] = float(
-                tile.dt_truth - tile.dt_cal - mu3e_detector.TileDetector.tile[200000].dt_truth)
+            grid_relative_1[x][y] = float(tile.get_offset() - mu3e_detector.TileDetector.tile[200000].dt_truth)
 
     # ---------------------------------------
     # Plotting
@@ -96,13 +104,17 @@ def plot_calibration(mu3e_detector):
     # plot truth offsets
     ax = ax_arr[0]
     heatplot_truth = ax.imshow(grid_relative_1.T, cmap='magma')
-    ax.set_title("truth offset")
+    ax.set_title("truth offset", fontsize=f_size)
+    ax.set_ylabel("phi (column)", fontsize=f_size)
+    ax.set_xlabel("z", fontsize=f_size)
     fig.colorbar(heatplot_truth, ax=ax)
 
     # plot calibrated offsets
     ax = ax_arr[1]
     heatplot_calibrated = ax.imshow(grid_relative_2.T, cmap='magma')
-    ax.set_title("calibrated offset")
+    ax.set_title("calibrated offset", fontsize=f_size)
+    ax.set_ylabel("phi (column)", fontsize=f_size)
+    ax.set_xlabel("z", fontsize=f_size)
     fig.colorbar(heatplot_calibrated, ax=ax)
 
     plt.show()

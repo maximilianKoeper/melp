@@ -93,7 +93,7 @@ def calibrate(**kwargs):
 
     # ------------------------------------------------------
     # correcting tof with cosmic data (z - direction)
-    cosmic_correction_z(__detector__, **kwargs)
+    # cosmic_correction_z(__detector__, **kwargs)
     # ------------------------------------------------------
 
     # ------------------------------------------------------
@@ -139,6 +139,7 @@ def calibrate(**kwargs):
 # generates Histogram file
 # if possible use ROOT Macro (melp/taft/cpp)
 def generate_hist(filename: str, **kwargs):
+    global __detector__
     # Start timers
     t = Timer()
     t.start()
@@ -175,6 +176,7 @@ def minimize_function_z(offset: float, dt_phi_rel: list, dt_z_rel: list, dt_phi_
 # TODO
 # prepares data for minimizer and applies result to detector
 def align_timings(dt_phi_rel: dict, dt_z_rel: dict, station_offset: int):
+    global __detector__
     print(f"Calculating absolute timing offsets to master tile: {station_offset}")
 
     result = {}
@@ -211,13 +213,14 @@ def align_timings(dt_phi_rel: dict, dt_z_rel: dict, station_offset: int):
     # we have to set the first tile as the master tile with offset = 0
     absolute_timing_offset = 0.
     for phi_id in __detector__.TileDetector.column_ids(0, station_offset):
+        # ATTENTION: directly accessing timing data (can lead to bugs)
         __detector__.TileDetector.tile[phi_id].dt_cal = absolute_timing_offset
         absolute_timing_offset += dt_phi_rel[phi_id]
 
     # all remaining rows
     for z_position in range(1, len(__detector__.TileDetector.row_ids(0, station_offset))):
         last_master_id = int(__detector__.TileDetector.row_ids(0, station_offset)[z_position - 1])
-        last_master_offset = __detector__.TileDetector.tile[last_master_id].dt_cal
+        last_master_offset = __detector__.TileDetector.tile[last_master_id].get_calibrated_offset()
         # tmp_id = __detector__.TileDetector.column_ids (0, station_offset)[z_position]
         current_master_offset = last_master_offset + result[z_position - 1]
 
@@ -235,6 +238,7 @@ def align_timings(dt_phi_rel: dict, dt_z_rel: dict, station_offset: int):
 # returns residuals to true dt if resid=True
 
 def get_median_from_hist(histogram: dict, resid=False):
+    global __detector__
     # z dir:
     resid_z = []
     dt_z = {}
@@ -251,8 +255,8 @@ def get_median_from_hist(histogram: dict, resid=False):
             continue
         histogram[tile_entry][0].GetQuantiles(1, q, prob)
         dt_z[tile_entry] = q[0] + (
-                __detector__.TileDetector.tile[neighbour_z_id].dt_truth - __detector__.TileDetector.tile[
-            tile_entry].dt_truth)
+                __detector__.TileDetector.tile[neighbour_z_id].get_offset() - __detector__.TileDetector.tile[
+            tile_entry].get_offset())
         if resid:
             resid_dt = q
             resid_z.append(resid_dt)
@@ -273,8 +277,8 @@ def get_median_from_hist(histogram: dict, resid=False):
             continue
         histogram[tile_entry][1].GetQuantiles(1, q, prob)
         dt_phi[tile_entry] = q[0] + (
-                __detector__.TileDetector.tile[neighbour_phi_id].dt_truth - __detector__.TileDetector.tile[
-            tile_entry].dt_truth)
+                __detector__.TileDetector.tile[neighbour_phi_id].get_offset() - __detector__.TileDetector.tile[
+            tile_entry].get_offset())
         if resid:
             resid_dt = q
             resid_phi.append(resid_dt)
@@ -285,6 +289,7 @@ def get_median_from_hist(histogram: dict, resid=False):
 # ------------------------------------------------------
 # fits a gaussian to every histogram to get mu
 def get_mu_gaus(histogram: dict) -> (dict, dict):
+    global __detector__
     ROOT.TVirtualFitter.SetDefaultFitter("Minuit2")
     # z dir:
     dt_z = {}
@@ -305,8 +310,8 @@ def get_mu_gaus(histogram: dict) -> (dict, dict):
         # if g1.GetParameter(1) > 1:
         #    print("z", tile_entry, g1.GetParameter(0), g1.GetParameter(1), g1.GetParameter(2))
         dt_z[tile_entry] = g1.GetParameter(1) + (
-                __detector__.TileDetector.tile[neighbour_z_id].dt_truth - __detector__.TileDetector.tile[
-            tile_entry].dt_truth)
+                __detector__.TileDetector.tile[neighbour_z_id].get_offset() - __detector__.TileDetector.tile[
+            tile_entry].get_offset())
         del g1
 
     # phi dir:
@@ -327,8 +332,8 @@ def get_mu_gaus(histogram: dict) -> (dict, dict):
         # if g1.GetParameter(1) > 1:
         #    print("phi", tile_entry, g1.GetParameter(1))
         dt_phi[tile_entry] = g1.GetParameter(1) + (
-                __detector__.TileDetector.tile[neighbour_phi_id].dt_truth - __detector__.TileDetector.tile[
-            tile_entry].dt_truth)
+                __detector__.TileDetector.tile[neighbour_phi_id].get_offset() - __detector__.TileDetector.tile[
+            tile_entry].get_offset())
 
         del g1
 
@@ -338,6 +343,7 @@ def get_mu_gaus(histogram: dict) -> (dict, dict):
 # ------------------------------------------------------
 # gets the mean from each histogram
 def get_mean_from_hist(histogram: dict) -> (dict, dict):
+    global __detector__
     # z dir:
     dt_z = {}
     for tile_entry in histogram:
@@ -352,8 +358,8 @@ def get_mean_from_hist(histogram: dict) -> (dict, dict):
         mean = histogram[tile_entry][0].GetMean()
 
         dt_z[tile_entry] = mean + (
-                __detector__.TileDetector.tile[neighbour_z_id].dt_truth - __detector__.TileDetector.tile[
-            tile_entry].dt_truth)
+                __detector__.TileDetector.tile[neighbour_z_id].get_offset() - __detector__.TileDetector.tile[
+            tile_entry].get_offset())
 
     # phi dir:
     dt_phi = {}
@@ -368,8 +374,8 @@ def get_mean_from_hist(histogram: dict) -> (dict, dict):
         mean = histogram[tile_entry][1].GetMean()
 
         dt_phi[tile_entry] = mean + (
-                __detector__.TileDetector.tile[neighbour_phi_id].dt_truth - __detector__.TileDetector.tile[
-            tile_entry].dt_truth)
+                __detector__.TileDetector.tile[neighbour_phi_id].get_offset() - __detector__.TileDetector.tile[
+            tile_entry].get_offset())
 
     return dt_z, dt_phi
 
@@ -410,6 +416,7 @@ def pre_align_phi(dt_phi):
 # ------------------------------------------------------
 
 def check_cal_phi(cal_data, station):
+    global __detector__
     cal = {}
 
     if station == 1:
@@ -475,6 +482,7 @@ def pre_align_z(dt_z):
 # ------------------------------------------------------
 
 def check_cal_z(cal_data, station):
+    global __detector__
     cal = {}
 
     if station == 1:

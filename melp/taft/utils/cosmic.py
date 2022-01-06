@@ -71,13 +71,11 @@ def cosmic_linear_correction(filename: str, detector, **kwargs):
 
             tmp_time_1 = min(test_dict[key][1])
             tmp_tile_id_1 = test_dict[key][0][int(*index_finder(list(test_dict[key][1]), tmp_time_1))]
-            tmp_time_1 += detector.TileDetector.tile[tmp_tile_id_1].dt_truth
-            tmp_time_1 -= detector.TileDetector.tile[tmp_tile_id_1].dt_cal
+            tmp_time_1 += detector.TileDetector.tile[tmp_tile_id_1].get_offset()
+
             tmp_time_2 = max(test_dict[key][1])
             tmp_tile_id_2 = test_dict[key][0][int(*index_finder(list(test_dict[key][1]), tmp_time_2))]
-            tmp_time_2 += detector.TileDetector.tile[tmp_tile_id_2].dt_truth
-            tmp_time_2 -= detector.TileDetector.tile[tmp_tile_id_2].dt_cal
-
+            tmp_time_2 += detector.TileDetector.tile[tmp_tile_id_2].get_offset()
             # calculating tof
             pos1 = detector.TileDetector.tile[tmp_tile_id_1].pos
             pos2 = detector.TileDetector.tile[tmp_tile_id_2].pos
@@ -211,12 +209,11 @@ def get_cosmic_data_from_file(filename: str, detector, **kwargs):
 
             tmp_time_1 = min(test_dict[key][1])
             tmp_tile_id_1 = test_dict[key][0][int(*index_finder(list(test_dict[key][1]), tmp_time_1))]
-            tmp_time_1 += detector.TileDetector.tile[tmp_tile_id_1].dt_truth
-            tmp_time_1 -= detector.TileDetector.tile[tmp_tile_id_1].dt_cal
+            tmp_time_1 += detector.TileDetector.tile[tmp_tile_id_1].get_offset()
+
             tmp_time_2 = max(test_dict[key][1])
             tmp_tile_id_2 = test_dict[key][0][int(*index_finder(list(test_dict[key][1]), tmp_time_2))]
-            tmp_time_2 += detector.TileDetector.tile[tmp_tile_id_2].dt_truth
-            tmp_time_2 -= detector.TileDetector.tile[tmp_tile_id_2].dt_cal
+            tmp_time_2 += detector.TileDetector.tile[tmp_tile_id_2].get_offset()
 
             # calculating tof
             pos1 = detector.TileDetector.tile[tmp_tile_id_1].pos

@@ -61,11 +61,17 @@ class Tile:
         elif self.id < 300000:
             return 1
 
-    def dt(self) -> float:
+    def get_truth_offset(self) -> float:
+        return self.dt_truth
+
+    def get_calibrated_offset(self) -> float:
+        return self.dt_cal
+
+    def get_offset(self) -> float:
         return self.dt_truth - self.dt_cal
 
-    def update_dt_cal(self, offset):
-        self.dt_cal = offset
+    def update_calibration(self, offset):
+        self.dt_cal += offset
 
     def __eq__(self, other):
         return self.id == other.id
