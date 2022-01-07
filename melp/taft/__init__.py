@@ -1,4 +1,4 @@
 from melp.taft.utils.plotting import *
 from .calibrate import calibrate, select, generate_hist
 
-from .utils.cosmic import *
+from .corrections.global_fit import calibration_correction_z

@@ -6,8 +6,8 @@ import numpy as np
 from melp.libs.misc import index_finder
 from melp.taft.utils.mu3eDisplay_helper import Trajectory, generate_txt_event_file
 
-
 # ---------------------------------------------
+"""
 def cosmic_correction_z(__detector__, **kwargs):
     print("analyzing cosmics file #1")
     kwargs["station"] = 1
@@ -97,6 +97,8 @@ def cosmic_linear_correction(filename: str, detector, **kwargs):
     generate_txt_event_file(trajectories, 500)
     return time_dist_z
 
+"""
+
 
 # --------------------------------------
 def station_station_timing(filename: str, detector, **kwargs):
@@ -173,7 +175,7 @@ def station_station_timing(filename: str, detector, **kwargs):
 
 # --------------------------------------------------
 #
-def get_cosmic_data_from_file(filename: str, detector, **kwargs):
+def get_cosmic_data_from_file(filename: str, detector, cosmic_station: int, **kwargs):
     root_file = ROOT.TFile.Open(filename, "READ")
     ttree_mu3e = root_file.Get(kwargs["ttree_loc"])
     time_offset_between_hits = []
@@ -183,7 +185,7 @@ def get_cosmic_data_from_file(filename: str, detector, **kwargs):
     position_hits_hit2_row = []
 
     # it -> iterator (frame_id). -1 if EOF
-    it = find_next_cosmic_event(ttree_mu3e, it=0, station=kwargs["station"])
+    it = find_next_cosmic_event(ttree_mu3e, it=0, station=cosmic_station)
     while it != -1:
         # TODO: just for debugging
         if it >= 1500000:
@@ -192,7 +194,7 @@ def get_cosmic_data_from_file(filename: str, detector, **kwargs):
             print(round(it / ttree_mu3e.GetEntries() * 100), " % | Total Frames: ", ttree_mu3e.GetEntries(),
                   end='\r')
 
-        if kwargs["mc_primary"] is False:
+        if kwargs["cosmic_mc_primary"] is False:
             test_dict = check_cosmic_events(ttree_mu3e)
         else:
             test_dict = check_cosmic_events_mc(ttree_mu3e)
@@ -200,10 +202,10 @@ def get_cosmic_data_from_file(filename: str, detector, **kwargs):
         for key in test_dict:
             tmp_ids = test_dict[key][0]
 
-            if kwargs["station"] == 1:
+            if cosmic_station == 1:
                 if any(y >= 300000 for y in tmp_ids):
                     continue
-            elif kwargs["station"] == 2:
+            elif cosmic_station == 2:
                 if any(y < 300000 for y in tmp_ids):
                     continue
 
@@ -222,7 +224,7 @@ def get_cosmic_data_from_file(filename: str, detector, **kwargs):
             dist *= 0.001  # m
             tof = (dist / 299792458) * (10 ** 9)  # ns
 
-            if abs(dist) >= 0.05:
+            if abs(dist) >= kwargs["cosmic_threshold"]:
                 time_offset_between_hits.append((abs(tmp_time_1 - tmp_time_2) - tof))
                 position_hits_hit1_column.append(detector.TileDetector.tile[tmp_tile_id_1].column())
                 position_hits_hit1_row.append(detector.TileDetector.tile[tmp_tile_id_1].row())
@@ -232,7 +234,8 @@ def get_cosmic_data_from_file(filename: str, detector, **kwargs):
         it += 1
         it = find_next_cosmic_event(ttree_mu3e, it, 1)
 
-    position_hits = (position_hits_hit1_column, position_hits_hit1_row, position_hits_hit2_column, position_hits_hit2_row)
+    position_hits = (
+    position_hits_hit1_column, position_hits_hit1_row, position_hits_hit2_column, position_hits_hit2_row)
 
     return time_offset_between_hits, position_hits
 

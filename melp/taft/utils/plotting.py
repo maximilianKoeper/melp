@@ -118,3 +118,13 @@ def plot_calibration(mu3e_detector):
     fig.colorbar(heatplot_calibrated, ax=ax)
 
     plt.show()
+
+
+def plot_correction_function(cal_function, *popt):
+    x1 = np.linspace(0, 51, 52)
+    y1 = np.linspace(0, 55, 56)
+    x2, y2 = np.meshgrid(x1, y1)
+
+    plt.imshow(cal_function((x2, y2), *popt) - cal_function((0, 0), *popt), cmap="magma")
+    plt.colorbar()
+    plt.show()

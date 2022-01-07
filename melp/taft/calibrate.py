@@ -10,7 +10,8 @@ from melp.libs.timer import Timer
 from melp.taft.corrections.misc_corrections import loop_correction_phi
 # different functions for calibration
 from melp.taft.corrections.tof_corrections import tof_correction_z
-from melp.taft.utils.cosmic import cosmic_correction_z
+# from melp.taft.utils.cosmic import cosmic_correction_z
+from melp.taft.corrections.global_fit import correct_z_two_event
 from melp.taft.utils.root_helper import save_histo, read_histo, fill_dt_histos
 
 # ---------------------------------------------------------------------
@@ -94,6 +95,9 @@ def calibrate(**kwargs):
     # ------------------------------------------------------
     # correcting tof with cosmic data (z - direction)
     # cosmic_correction_z(__detector__, **kwargs)
+    if kwargs.get("cosmic_correction"):
+        popt_1 = correct_z_two_event(__detector__, cosmic_station=1, **kwargs)
+        popt_2 = correct_z_two_event(__detector__, cosmic_station=2, **kwargs)
     # ------------------------------------------------------
 
     # ------------------------------------------------------
@@ -132,7 +136,7 @@ def calibrate(**kwargs):
             cal_phi = check_cal_phi(cal_station_2_phi, 2)
     # ------------------------------------------------------
 
-    return resid_z, resid_phi, cal, cal_phi
+    return resid_z, resid_phi, cal, cal_phi, popt_1, popt_2
 
 
 # ------------------------------------------------------
