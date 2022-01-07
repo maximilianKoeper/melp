@@ -43,6 +43,10 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
         #get clusters
         if cluster_type == "time":
             clusters = clump.time_cluster.time_clustering_frame(ttree_mu3e, frame, printing = None)
+        elif cluster_type == "timethenspatial":
+            clusters = clump.three_dim_cluster.spatial_clustering_for_time_clusters(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
+        elif cluster_type == "timetheniterativespatial":
+            clusters = clump.three_dim_cluster.iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
         else:
             clusters = clump.spatial_cluster.build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
         
@@ -65,7 +69,81 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
                 else:
                     uncorr_counter += 1
 
+        #--------------------------------
+        #comparison of different clusters
+        #--------------------------------
+        #define which cluster_types should be analyzed by this part of the algorithm
+        sel_cluster_types = ["time", "timethenspatial", "timetheniterativespatial"]
+        if cluster_type in sel_cluster_types:
+            new_corr_cluster_flags = []
+            old_corr_cluster_flags = []
+            checked_primaries = []
+            for i in range(len(clusters)):
+                if clusters[i].master_primary not in checked_primaries:
+                    number_of_primaries = 0
+                    for hit in clusters[i].hits:
+                        if hit.primary == clusters[i].master_primary:
+                            number_of_primaries += 1
+                    checked_primaries.append(clusters[i].master_primary)
+                else:
+                    continue
+                for j in range(len(clusters)):
+                    number_of_primaries_comp = 0
+                    if j != i and j not in new_corr_cluster_flags:
+                        for k in range(clusters[j].__len__()):
+                            if clusters[j].hits[k].primary == clusters[i].master_primary:
+                                number_of_primaries_comp += 1
+                        if number_of_primaries_comp == 0: #if master primary of cluster i isn't found in cluster j do nothing
+                            continue
+                        elif number_of_primaries_comp <= number_of_primaries: #if correctly identified constituents are more in cluster i simply add cluster j as wrongly identified
+                            #TODO: maybe split into < and = and decide for the correct cluster either via the smallest timestamp or by amount of wrong hits in cluster
+                            corr_counter -= number_of_primaries_comp
+                            uncorr_counter += number_of_primaries_comp
+                        elif number_of_primaries_comp > number_of_primaries: #if cluster j has more correct primaries flag it as correct cluster and add cluster i to the incorrect counter
+                            corr_counter -= number_of_primaries
+                            uncorr_counter += number_of_primaries
+                            new_corr_cluster_flags.append(j)
+                            old_corr_cluster_flags.append(i)
+            
+            """"             
+            #loop over old correct cluster flags
+            checked_primaries_2 = []
+            old_corr_cluster_flags_check = []
+            for i in old_corr_cluster_flags:
+                master_primary = cluster_primaries_arr[i][0]
+                if master_primary not in checked_primaries_2:
+                    number_of_primaries = cluster_primaries_arr[i].count(master_primary)
+                    checked_primaries_2.append(master_primary)
+                else:
+                    continue
+                for j in range(len(cluster_primaries_arr)):
+                    number_of_primaries_comp = 0
+                    if j != i and j not in new_corr_cluster_flags:
+                        for k in range(len(cluster_primaries_arr[j])):
+                            if cluster_primaries_arr[j][k] == master_primary:
+                                number_of_primaries_comp += 1
+                        if number_of_primaries_comp == 0: #if master primary of cluster i isn't found in cluster j do nothing
+                            continue
+                        elif number_of_primaries_comp <= number_of_primaries: #if correctly identified constituents are more in cluster i simply add cluster j as wrongly identified
+                            #TODO: maybe split into < and = and decide for the correct cluster either via the smallest timestamp or by amount of wrong hits in cluster
+                            corr_counter -= number_of_primaries_comp
+                            uncorr_counter += number_of_primaries_comp
+                        elif number_of_primaries_comp > number_of_primaries: #if cluster j has more correct primaries flag it as correct cluster and add cluster i to the incorrect counter
+                            corr_counter -= number_of_primaries
+                            uncorr_counter += number_of_primaries
+                            new_corr_cluster_flags.append(j)
+                            old_corr_cluster_flags.append(i)
+                            old_corr_cluster_flags_check.append(i)
+
+            ####################################
+            if len(old_corr_cluster_flags_check) != 0:
+                print("Found a sneaky bastard")
+            ####################################
+            """
+
+        #-------------------------------------
         #add to total corr and uncorr counters
+        #-------------------------------------
         tot_corr_counter   += corr_counter
         tot_uncorr_counter += uncorr_counter
 
@@ -121,6 +199,12 @@ def get_hits_not_in_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles
             clusters_frame = clump.spatial_cluster.build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector,frame, mask_type, rec_type)
         elif cluster_type == "time":
             clusters_frame = clump.time_cluster.time_clustering_frame(ttree_mu3e, frame, printing = None)
+        elif cluster_type == "timethenspatial":
+            clusters_frame = clump.three_dim_cluster.spatial_clustering_for_time_clusters(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
+        elif cluster_type == "timetheniterativespatial":
+            clusters_frame = clump.three_dim_cluster.iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
+        
+    
 
         #count hits in clusters
         cluster_hits_counter_tmp = 0
