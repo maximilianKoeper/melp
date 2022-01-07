@@ -104,7 +104,7 @@ def plot_calibration(mu3e_detector):
     # plot truth offsets
     ax = ax_arr[0]
     heatplot_truth = ax.imshow(grid_relative_1.T, cmap='magma')
-    ax.set_title("truth offset", fontsize=f_size)
+    ax.set_title("error station 1", fontsize=f_size)
     ax.set_ylabel("phi (column)", fontsize=f_size)
     ax.set_xlabel("z", fontsize=f_size)
     fig.colorbar(heatplot_truth, ax=ax)
@@ -112,13 +112,66 @@ def plot_calibration(mu3e_detector):
     # plot calibrated offsets
     ax = ax_arr[1]
     heatplot_calibrated = ax.imshow(grid_relative_2.T, cmap='magma')
-    ax.set_title("calibrated offset", fontsize=f_size)
+    ax.set_title("error station 2", fontsize=f_size)
     ax.set_ylabel("phi (column)", fontsize=f_size)
     ax.set_xlabel("z", fontsize=f_size)
     fig.colorbar(heatplot_calibrated, ax=ax)
 
     plt.show()
 
+    min1 = np.min(grid_relative_1)
+    max1 = np.max(grid_relative_1)
+    print("Station 1: max error: ", np.round(max1, 5), " min error: ", np.round(min1, 5))
+
+    min2 = np.min(grid_relative_2)
+    max2 = np.max(grid_relative_2)
+    print("Station 2: max error: ", np.round(max2, 5), " min error: ", np.round(min2, 5))
+
+
+def plot_error_dist(mu3e_detector):
+    f_size = 15
+    # ---------------------------------------
+    # get data
+    # ---------------------------------------
+    relative_1 = []
+    relative_2 = []
+
+    for tile_id in mu3e_detector.TileDetector.tile:
+        tile = mu3e_detector.TileDetector.tile[tile_id]
+
+        if tile.id >= 300000:
+            relative_2.append(float(tile.get_offset() - mu3e_detector.TileDetector.tile[300000].dt_truth))
+        if tile.id < 300000:
+            relative_1.append(float(tile.get_offset() - mu3e_detector.TileDetector.tile[200000].dt_truth))
+
+    # ---------------------------------------
+    # Plotting
+    # ---------------------------------------
+    fig, ax_arr = plt.subplots(1, 2, figsize=(20, 10))
+
+    # plot truth offsets
+    ax = ax_arr[0]
+    ax.hist(relative_1, bins=50)
+    ax.set_title("error station 1", fontsize=f_size)
+    ax.set_ylabel("phi (column)", fontsize=f_size)
+    ax.set_xlabel("z", fontsize=f_size)
+
+    # plot calibrated offsets
+    ax = ax_arr[1]
+    ax.hist(relative_2, bins=50)
+    ax.set_title("error station 2", fontsize=f_size)
+    ax.set_ylabel("phi (column)", fontsize=f_size)
+    ax.set_xlabel("z", fontsize=f_size)
+
+    plt.show()
+
+    min1 = np.min(relative_1)
+    max1 = np.max(relative_1)
+    print("Station 1: max error: ", np.round(max1, 5), " min error: ", np.round(min1, 5))
+
+    min2 = np.min(relative_2)
+    max2 = np.max(relative_2)
+    print("Station 2: max error: ", np.round(max2, 5), " min error: ", np.round(min2, 5))
 
 def plot_correction_function(cal_function, *popt):
     x1 = np.linspace(0, 51, 52)
