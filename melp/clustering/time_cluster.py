@@ -20,7 +20,7 @@ def time_clustering_frame(ttree_mu3e, frame, printing = None):
     #-------------------------------------------------------------
     # 0.175ns is ideal for combined time and spatial clustering
     # 0.4ns is ideal for pure time clustering
-    time_threshold = 0.4 #ns
+    time_threshold = 0.6 #ns
 
     #get hittimes (and hit tiles) in frame
     hittimes_frame, primaries_frame = hittimes_and_primaries_in_frame (ttree_mu3e)

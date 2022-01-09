@@ -105,22 +105,25 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
                             new_corr_cluster_flags.append(j)
                             old_corr_cluster_flags.append(i)
             
-            """"             
+                       
             #loop over old correct cluster flags
             checked_primaries_2 = []
             old_corr_cluster_flags_check = []
             for i in old_corr_cluster_flags:
-                master_primary = cluster_primaries_arr[i][0]
+                master_primary = clusters[i].master_primary
                 if master_primary not in checked_primaries_2:
-                    number_of_primaries = cluster_primaries_arr[i].count(master_primary)
+                    number_of_primaries = 0
+                    for hit in clusters[i].hits:
+                        if hit.primary == master_primary:
+                            number_of_primaries += 1
                     checked_primaries_2.append(master_primary)
                 else:
                     continue
-                for j in range(len(cluster_primaries_arr)):
+                for j in range(len(clusters)):
                     number_of_primaries_comp = 0
                     if j != i and j not in new_corr_cluster_flags:
-                        for k in range(len(cluster_primaries_arr[j])):
-                            if cluster_primaries_arr[j][k] == master_primary:
+                        for k in range(len(clusters[j])):
+                            if clusters[j].hits[k].primary == master_primary:
                                 number_of_primaries_comp += 1
                         if number_of_primaries_comp == 0: #if master primary of cluster i isn't found in cluster j do nothing
                             continue
@@ -139,7 +142,7 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
             if len(old_corr_cluster_flags_check) != 0:
                 print("Found a sneaky bastard")
             ####################################
-            """
+            
 
         #-------------------------------------
         #add to total corr and uncorr counters
