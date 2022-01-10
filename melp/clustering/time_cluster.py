@@ -20,7 +20,7 @@ def time_clustering_frame(ttree_mu3e, frame, printing = None):
     #-------------------------------------------------------------
     # 0.175ns is ideal for combined time and spatial clustering
     # 0.4ns is ideal for pure time clustering
-    time_threshold = 0.6 #ns
+    time_threshold = 1.2 #ns
 
     #get hittimes (and hit tiles) in frame
     hittimes_frame, primaries_frame = hittimes_and_primaries_in_frame (ttree_mu3e)
@@ -97,4 +97,41 @@ def add_hit_time_to_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles
 
     return time_spatial_clusters
 
+################################
+def time_clustering_frame_improv(ttree_mu3e, frame: int, threshold: float = 2.) -> dict:
+    indices = np.argsort(list(ttree_mu3e.tilehit_time))
+    tilehit_times = np.asarray(list(ttree_mu3e.tilehit_time))[indices]
+    tilehit_ids = np.asarray(list(ttree_mu3e.tilehit_tile))[indices]
+    tilehit_primaries = np.asarray(list(ttree_mu3e.tilehit_primary))[indices]
 
+    if len(tilehit_times) == 0:
+        return [Cluster(id=-1, frame_id=frame, master_id=-1, master_primary=-1, hits=[])]
+    
+    else:
+        clusters_dict = {}
+        #print(len(tilehit_times))
+        #print(indices)
+        tmp_time_reference = tilehit_times[0]
+        index_start_track = 0
+        for index in range(len(tilehit_times)):
+            if abs(tmp_time_reference - tilehit_times[index]) > threshold:
+                clusters_dict[index] = [tilehit_ids[index_start_track:index], tilehit_primaries[index_start_track:index], tilehit_times[index_start_track:index]]
+                index_start_track = index
+                tmp_time_reference = tilehit_times[index]
+
+        # fill up remaining event
+        if index_start_track != len(tilehit_times):
+            clusters_dict[len(tilehit_times)] = [tilehit_ids[index_start_track:],
+                                                tilehit_primaries[index_start_track:],
+                                                tilehit_times[index_start_track:]]
+
+        #convert to cluster object
+        clusters = []
+        for key in clusters_dict.keys():
+            cluster_tmp = []
+            for i in range(len(clusters_dict[key][0])):
+                cluster_tmp.append(ClusterHit(tile_id=clusters_dict[key][0][i], frame_id=frame, primary=clusters_dict[key][1][i], time=clusters_dict[key][2][i]))
+            clusters.append(Cluster(id=key, frame_id=frame, master_id=cluster_tmp[0].tile_id, master_primary=cluster_tmp[0].primary, hits=cluster_tmp))
+
+    return clusters
+    

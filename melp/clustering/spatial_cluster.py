@@ -52,3 +52,29 @@ def build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles
     return clusters
 
 
+#######################
+def build_truth_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, frame, mask_type, rec_type = None):
+    #-----------------------------------------------------------------------
+    #get all tiles that have been hit in frame and their primaries and times
+    #-----------------------------------------------------------------------
+    hit_tiles_frame = []
+    primaries_frame = []
+    times_frame     = []
+    for hit_tile_index in range(ttree_mu3e.Ntilehit):
+        hit_tiles_frame.append(ttree_mu3e.tilehit_tile[hit_tile_index])
+        primaries_frame.append(ttree_mu3e.tilehit_primary[hit_tile_index])
+        times_frame.append(ttree_mu3e.tilehit_time[hit_tile_index])
+
+    #---------------------------------------------
+    #sort hits with same primary into same cluster
+    #---------------------------------------------
+    clusters = []
+    for i in range(len(primaries_frame)):
+        cluster_tmp = []
+        for j in range(len(primaries_frame)):
+            if primaries_frame[j] == primaries_frame[i]:
+                cluster_tmp.append(ClusterHit(tile_id = hit_tiles_frame[j], frame_id = frame, primary = primaries_frame[j], time = times_frame[j]))
+
+        clusters.append(Cluster(id=i, master_id=i, master_primary = primaries_frame[i], frame_id = frame, hits = cluster_tmp))
+
+    return clusters

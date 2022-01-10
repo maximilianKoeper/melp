@@ -105,7 +105,8 @@ def iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_senso
     #-----------------------------------------------
     #use time cluster as first rough cut / reference
     #-----------------------------------------------
-    time_clusters = clump.time_cluster.time_clustering_frame(ttree_mu3e, frame, printing = None)
+    #time_clusters = clump.time_cluster.time_clustering_frame(ttree_mu3e, frame, printing = None)
+    time_clusters = clump.time_cluster.time_clustering_frame_improv(ttree_mu3e, frame, threshold=1.2)
 
     #-----------------------------------------------------------------------
     #get all tiles that have been hit in frame and their primaries and times
@@ -121,46 +122,69 @@ def iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_senso
     #-------------------------
     #build iterative masks
     #-------------------------
-    added_hits = [] #just tile_ids
+    
     new_clusters = []
+    added_hits = [] #just tile_ids
     for time_cluster in time_clusters:  #loop over all clusters
-        if time_cluster.__len__() == 1:
-            new_clusters.append(time_cluster)
-            added_hits.append(time_cluster.hits[0].tile_id)
-        else:
-            for i in range(len(time_cluster.hits)):  #loop over all hits in cluster  
-                cluster_tmp = []  
-                if time_cluster.hits[i].tile_id not in added_hits:
-                    mask_tmp, master_primary_mask = clump.masks.build_mask_single_hit(time_cluster.hits[i], ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector, frame, mask_type, rec_type = None)
-                    #cluster_tmp = [] 
-                    for j in range(len(hit_tiles_frame)):
-                        if hit_tiles_frame[j] in mask_tmp and hit_tiles_frame[j] not in added_hits: 
-                            cluster_tmp.append(ClusterHit(tile_id = hit_tiles_frame[j], frame_id = frame, primary = primaries_frame[j], time = times_frame[j]))
-                            added_hits.append(hit_tiles_frame[j])
-                    #build mask around hits in first cluster
-                    if len(cluster_tmp) != 0:
-                        for hit_tmp in cluster_tmp:
-                            next_mask_tmp, __ = clump.masks.build_mask_single_hit(hit_tmp, ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector, frame, mask_type, rec_type = None)
-                            for m in range(len(hit_tiles_frame)):
-                                if hit_tiles_frame[m] in next_mask_tmp and hit_tiles_frame[m] not in added_hits: 
-                                    cluster_tmp.append(ClusterHit(tile_id = hit_tiles_frame[m], frame_id = frame, primary = primaries_frame[m], time = times_frame[m]))
-                                    added_hits.append(hit_tiles_frame[m])
+        #if time_cluster.__len__() == 1:
+        #    new_clusters.append(time_cluster)
+        #    added_hits.append(time_cluster.hits[0].tile_id)
+        #else:
+        for i in range(len(time_cluster.hits)):  #loop over all hits in cluster  
+            cluster_tmp = []  
+            if time_cluster.hits[i].tile_id not in added_hits:
+                mask_tmp, master_primary_mask = clump.masks.build_mask_single_hit(time_cluster.hits[i], ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector, frame, mask_type, rec_type = None)
+                #for j in range(len(hit_tiles_frame)):
+                #    if hit_tiles_frame[j] in mask_tmp and hit_tiles_frame[j] not in added_hits: 
+                #        cluster_tmp.append(ClusterHit(tile_id = hit_tiles_frame[j], frame_id = frame, primary = primaries_frame[j], time = times_frame[j]))
+                #        added_hits.append(hit_tiles_frame[j])
+                for j in range(len(time_cluster.hits)):
+                    if time_cluster.hits[j].tile_id in mask_tmp and time_cluster.hits[j].tile_id not in added_hits: 
+                        cluster_tmp.append(ClusterHit(tile_id = time_cluster.hits[j].tile_id, frame_id = frame, primary = time_cluster.hits[j].primary, time = time_cluster.hits[j].time))
+                        added_hits.append(time_cluster.hits[j].tile_id)
+                #build mask around hits in first cluster
+                #if len(cluster_tmp) != 0:
+                #    for hit_tmp in cluster_tmp:
+                #        next_mask_tmp, __ = clump.masks.build_mask_single_hit(hit_tmp, ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector, frame, mask_type, rec_type = None)
+                #        for m in range(len(hit_tiles_frame)):
+                #            if hit_tiles_frame[m] in next_mask_tmp and hit_tiles_frame[m] not in added_hits: 
+                #                cluster_tmp.append(ClusterHit(tile_id = hit_tiles_frame[m], frame_id = frame, primary = primaries_frame[m], time = times_frame[m]))
+                #                added_hits.append(hit_tiles_frame[m])
+            cluster_tmp_2 = []
+            if len(cluster_tmp) != 0:
+                for hit_tmp in cluster_tmp:
+                    next_mask_tmp, __ = clump.masks.build_mask_single_hit(hit_tmp, ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector, frame, mask_type, rec_type = None)
+                    for m in range(len(time_cluster.hits)):
+                        if time_cluster.hits[m].tile_id in next_mask_tmp and time_cluster.hits[m].tile_id not in added_hits: 
+                            cluster_tmp.append(ClusterHit(tile_id = time_cluster.hits[m].tile_id, frame_id = frame, primary = time_cluster.hits[m].primary, time = time_cluster.hits[m].time))
+                            cluster_tmp_2.append(ClusterHit(tile_id = time_cluster.hits[m].tile_id, frame_id = frame, primary = time_cluster.hits[m].primary, time = time_cluster.hits[m].time))
+                            added_hits.append(time_cluster.hits[m].tile_id)
 
-                #add leftover hits as separate cluster
-                separate_cluster_tmp = []
-                for n in range(len(time_cluster.hits)):
-                    tile_ids_tmp = []
-                    for hit_tmp in cluster_tmp:
-                        tile_ids_tmp.append(hit_tmp.tile_id)
-                    if time_cluster.hits[n].tile_id not in tile_ids_tmp and time_cluster.hits[n].tile_id not in added_hits: 
-                        separate_cluster_tmp.append(time_cluster.hits[n])
-                        added_hits.append(time_cluster.hits[n].tile_id)
-                if len(separate_cluster_tmp) != 0:
-                    new_clusters.append(Cluster(id = separate_cluster_tmp[0].tile_id, master_id = separate_cluster_tmp[0].tile_id, master_primary = separate_cluster_tmp[0].primary, frame_id = frame, hits = separate_cluster_tmp))
+            cluster_tmp_3 = []
+            if len(cluster_tmp_2) != 0:
+                for hit_tmp_2 in cluster_tmp_2:
+                    next_mask_tmp_2, __ = clump.masks.build_mask_single_hit(hit_tmp_2, ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector, frame, mask_type, rec_type = None)
+                    for m in range(len(time_cluster.hits)):
+                        if time_cluster.hits[m].tile_id in next_mask_tmp_2 and time_cluster.hits[m].tile_id not in added_hits: 
+                            cluster_tmp.append(ClusterHit(tile_id = time_cluster.hits[m].tile_id, frame_id = frame, primary = time_cluster.hits[m].primary, time = time_cluster.hits[m].time))
+                            cluster_tmp_3.append(ClusterHit(tile_id = time_cluster.hits[m].tile_id, frame_id = frame, primary = time_cluster.hits[m].primary, time = time_cluster.hits[m].time))
+                            added_hits.append(time_cluster.hits[m].tile_id)
+
+            #add leftover hits as separate cluster
+            #separate_cluster_tmp = []
+            #for n in range(len(time_cluster.hits)):
+            #    tile_ids_tmp = []
+            #    for hit_tmp in cluster_tmp:
+            #        tile_ids_tmp.append(hit_tmp.tile_id)
+            #    if time_cluster.hits[n].tile_id not in tile_ids_tmp and time_cluster.hits[n].tile_id not in added_hits: 
+            #        separate_cluster_tmp.append(time_cluster.hits[n])
+            #        added_hits.append(time_cluster.hits[n].tile_id)
+            #if len(separate_cluster_tmp) != 0:
+            #    new_clusters.append(Cluster(id = separate_cluster_tmp[0].tile_id, master_id = separate_cluster_tmp[0].tile_id, master_primary = separate_cluster_tmp[0].primary, frame_id = frame, hits = separate_cluster_tmp))
 
 
-                if len(cluster_tmp) != 0:
-                    new_clusters.append(Cluster(id = time_cluster.master_id, master_id = time_cluster.master_id, master_primary = master_primary_mask, frame_id = frame, hits = cluster_tmp))
+            if len(cluster_tmp) != 0:
+                new_clusters.append(Cluster(id = time_cluster.master_id, master_id = time_cluster.master_id, master_primary = master_primary_mask, frame_id = frame, hits = cluster_tmp))
 
     #######################################
     if frame < 100:
