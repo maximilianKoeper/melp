@@ -4,6 +4,7 @@
 import dataclasses
 import warnings
 import math
+from functools import lru_cache
 
 
 # ---------------------------------------------------------------------
@@ -127,6 +128,7 @@ class TileDetector:
     # up: +1 (exception: end of ring)
     # down: -1 (exception beginning of ring)
     #
+    @lru_cache
     def getNeighbour(self, tileid: int, position: str) -> int or bool:
 
         # left
@@ -184,6 +186,7 @@ class TileDetector:
 
     # -----------------------------------------
     # z - direction
+    @lru_cache
     def row_ids(self, phi: int, station_offset: int) -> list:
         if 0 <= phi <= 55:
             tile_ids = []
@@ -200,6 +203,7 @@ class TileDetector:
 
     # -----------------------------------------
     # phi - direction
+    @lru_cache
     def column_ids(self, z: int, station_offset: int) -> list:
         if 0 <= z <= 51:
             tile_ids = []
@@ -216,6 +220,7 @@ class TileDetector:
 
     # -----------------------------------------
     # get tile id from row and column
+    @lru_cache
     def id_from_row_col(self, row: int, column: int, station_offset: int) -> int:
         tile_id = station_offset + row + column * 56
 

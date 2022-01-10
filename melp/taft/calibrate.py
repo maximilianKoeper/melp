@@ -95,6 +95,7 @@ def calibrate(**kwargs):
     # ------------------------------------------------------
     # correcting tof with cosmic data (z - direction)
     # cosmic_correction_z(__detector__, **kwargs)
+    popt_1, popt_2 = (None, None)
     if kwargs.get("cosmic_correction"):
         popt_1 = correct_z_two_event(__detector__, cosmic_station=1, **kwargs)
         popt_2 = correct_z_two_event(__detector__, cosmic_station=2, **kwargs)
@@ -104,6 +105,13 @@ def calibrate(**kwargs):
     # finalizing calibration
     # set calibrated Flag in detector
     __detector__.TileDetector.calibrated = True
+
+    # ------------------------------------------------------
+    # deleting cached function calls
+    __detector__.TileDetector.getNeighbour.cache_clear()
+    __detector__.TileDetector.row_ids.cache_clear()
+    __detector__.TileDetector.column_ids.cache_clear()
+    __detector__.TileDetector.id_from_row_col.cache_clear()
 
     print("Calibration finished")
     t.print()
