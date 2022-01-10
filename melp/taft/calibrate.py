@@ -10,7 +10,6 @@ from melp.libs.timer import Timer
 from melp.taft.corrections.misc_corrections import loop_correction_phi
 # different functions for calibration
 from melp.taft.corrections.tof_corrections import tof_correction_z
-# from melp.taft.utils.cosmic import cosmic_correction_z
 from melp.taft.corrections.global_fit import correct_z_two_event
 from melp.taft.utils.root_helper import save_histo, read_histo, fill_dt_histos
 

@@ -143,13 +143,16 @@ def station_station_timing(filename: str, detector, **kwargs):
 
                 # first and last hit used for timing information
                 tilehit_times_2, tilehit_ids_2 = (list(t) for t in zip(*sorted(zip(tmp_time_arr_2, tmp_id_arr_2))))
-                tmp_time_2 = tilehit_times_2[-1]
+                tmp_time_2 = tilehit_times_2[0] -5
+                #tmp_time_2 += detector.TileDetector.tile[tilehit_ids_2[0]].get_offset()
+
                 tilehit_times_1, tilehit_ids_1 = (list(t) for t in zip(*sorted(zip(tmp_time_arr_1, tmp_id_arr_1))))
-                tmp_time_1 = tilehit_times_1[0]
+                tmp_time_1 = tilehit_times_1[-1] + 5
+                #tmp_time_1 += detector.TileDetector.tile[tilehit_ids_1[-1]].get_offset()
 
                 # tof = 0.
-                pos1 = detector.TileDetector.tile[tilehit_ids_1[0]].pos
-                pos2 = detector.TileDetector.tile[tilehit_ids_2[-1]].pos
+                pos1 = detector.TileDetector.tile[tilehit_ids_1[-1]].pos
+                pos2 = detector.TileDetector.tile[tilehit_ids_2[0]].pos
                 # pos1 = detector.TileDetector.tile[max(tmp_ids)].pos
                 # pos2 = detector.TileDetector.tile[min(tmp_ids)].pos
                 dist = np.sqrt((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2 + (pos1[2] - pos2[2]) ** 2)  # mm
@@ -157,10 +160,7 @@ def station_station_timing(filename: str, detector, **kwargs):
                 tof = (dist / 299792458) * (10 ** 9)
 
                 if kwargs["tof"]:
-                    if tmp_time_2 > tmp_time_1:
-                        time_dist_betw_stations.append((tmp_time_1 - tmp_time_2) + tof)
-                    else:
-                        time_dist_betw_stations.append((tmp_time_1 - tmp_time_2) - tof)
+                    time_dist_betw_stations.append(abs(tmp_time_1 - tmp_time_2) - tof)
                 else:
                     time_dist_betw_stations.append((tmp_time_1 - tmp_time_2))
 
@@ -169,7 +169,7 @@ def station_station_timing(filename: str, detector, **kwargs):
         it += 1
         it = find_next_cosmic_event(ttree_mu3e, it, 1)
 
-    generate_txt_event_file(trajectories, 500)
+    #generate_txt_event_file(trajectories, 500)
     return time_dist_betw_stations
 
 
