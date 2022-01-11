@@ -102,7 +102,7 @@ def cosmic_linear_correction(filename: str, detector, **kwargs):
 
 # --------------------------------------
 def station_station_timing(filename: str, detector, **kwargs):
-    trajectories = []
+    # trajectories = []
 
     root_file = ROOT.TFile.Open(filename, "READ")
     ttree_mu3e = root_file.Get(kwargs["ttree_loc"])
@@ -143,33 +143,35 @@ def station_station_timing(filename: str, detector, **kwargs):
 
                 # first and last hit used for timing information
                 tilehit_times_2, tilehit_ids_2 = (list(t) for t in zip(*sorted(zip(tmp_time_arr_2, tmp_id_arr_2))))
-                tmp_time_2 = tilehit_times_2[0] -5
+                tmp_time_2 = tilehit_times_2[0] + 5
                 #tmp_time_2 += detector.TileDetector.tile[tilehit_ids_2[0]].get_offset()
 
                 tilehit_times_1, tilehit_ids_1 = (list(t) for t in zip(*sorted(zip(tmp_time_arr_1, tmp_id_arr_1))))
-                tmp_time_1 = tilehit_times_1[-1] + 5
-                #tmp_time_1 += detector.TileDetector.tile[tilehit_ids_1[-1]].get_offset()
+                tmp_time_1 = tilehit_times_1[0] - 5
+                #tmp_time_1 += detector.TileDetector.tile[tilehit_ids_1[0]].get_offset()
 
                 # tof = 0.
-                pos1 = detector.TileDetector.tile[tilehit_ids_1[-1]].pos
+                pos1 = detector.TileDetector.tile[tilehit_ids_1[0]].pos
                 pos2 = detector.TileDetector.tile[tilehit_ids_2[0]].pos
-                # pos1 = detector.TileDetector.tile[max(tmp_ids)].pos
-                # pos2 = detector.TileDetector.tile[min(tmp_ids)].pos
+
                 dist = np.sqrt((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2 + (pos1[2] - pos2[2]) ** 2)  # mm
                 dist *= 0.001  # m
                 tof = (dist / 299792458) * (10 ** 9)
 
                 if kwargs["tof"]:
-                    time_dist_betw_stations.append(abs(tmp_time_1 - tmp_time_2) - tof)
+                    if (tmp_time_1 - tmp_time_2) < -10:
+                        time_dist_betw_stations.append(((tmp_time_1 - tmp_time_2) + tof))
+                    else:
+                        time_dist_betw_stations.append(((tmp_time_1 - tmp_time_2) - tof))
                 else:
                     time_dist_betw_stations.append((tmp_time_1 - tmp_time_2))
 
-                trajectories.append(Trajectory(tile1_pos=pos1, tile2_pos=pos2))
+                # trajectories.append(Trajectory(tile1_pos=pos1, tile2_pos=pos2))
 
         it += 1
         it = find_next_cosmic_event(ttree_mu3e, it, 1)
 
-    #generate_txt_event_file(trajectories, 500)
+    # generate_txt_event_file(trajectories, 500)
     return time_dist_betw_stations
 
 
@@ -235,7 +237,7 @@ def get_cosmic_data_from_file(filename: str, detector, cosmic_station: int, **kw
         it = find_next_cosmic_event(ttree_mu3e, it, 1)
 
     position_hits = (
-    position_hits_hit1_column, position_hits_hit1_row, position_hits_hit2_column, position_hits_hit2_row)
+        position_hits_hit1_column, position_hits_hit1_row, position_hits_hit2_column, position_hits_hit2_row)
 
     return time_offset_between_hits, position_hits
 
