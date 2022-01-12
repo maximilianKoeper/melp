@@ -69,12 +69,15 @@ def build_truth_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  m
     #sort hits with same primary into same cluster
     #---------------------------------------------
     clusters = []
+    added_primaries = []
     for i in range(len(primaries_frame)):
         cluster_tmp = []
         for j in range(len(primaries_frame)):
-            if primaries_frame[j] == primaries_frame[i]:
+            if primaries_frame[j] == primaries_frame[i] and primaries_frame[i] not in added_primaries:
                 cluster_tmp.append(ClusterHit(tile_id = hit_tiles_frame[j], frame_id = frame, primary = primaries_frame[j], time = times_frame[j]))
+        added_primaries.append(primaries_frame[i])
 
-        clusters.append(Cluster(id=i, master_id=i, master_primary = primaries_frame[i], frame_id = frame, hits = cluster_tmp))
+        if len(cluster_tmp) > 0:
+            clusters.append(Cluster(id=i, master_id=i, master_primary = primaries_frame[i], frame_id = frame, hits = cluster_tmp))
 
     return clusters

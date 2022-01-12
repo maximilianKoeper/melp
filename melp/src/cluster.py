@@ -6,8 +6,8 @@ import dataclasses
 class ClusterHit:
     tile_id: int
     #edep: float = 0
-    #mc_i: int = 0
-    #tid: int = -1
+    mc_i: int = 0
+    tid: int = -1
     frame_id: int = -1
     primary: int = 0
     time: float = -1

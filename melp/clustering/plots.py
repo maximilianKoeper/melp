@@ -11,7 +11,7 @@ from melp.src.cluster import Cluster
 
 ######################
 #compares primary of the cluster hits to that of the cluster master and therefore provides efficiency data
-def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, mask_type, number_of_frames = None, rec_type = None, cluster_type = None):
+def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, time_threshold, mask_type, number_of_frames = None, rec_type = None, cluster_type = None):
     frac_corr_frame          = []
     frac_corr_clusters_frame = []
     frac_uncorr_frame        = []
@@ -44,9 +44,9 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
         if cluster_type == "time":
             clusters = clump.time_cluster.time_clustering_frame(ttree_mu3e, frame, printing = None)
         elif cluster_type == "timethenspatial":
-            clusters = clump.three_dim_cluster.spatial_clustering_for_time_clusters(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
+            clusters = clump.three_dim_cluster.spatial_clustering_for_time_clusters(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, time_threshold, mask_type, rec_type)
         elif cluster_type == "timetheniterativespatial":
-            clusters = clump.three_dim_cluster.iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
+            clusters = clump.three_dim_cluster.iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, time_threshold, mask_type, rec_type)
         else:
             clusters = clump.spatial_cluster.build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
         
@@ -171,7 +171,7 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
 
 ###########################
 #returns fraction of number of hits in cluster and total number of hits
-def get_hits_not_in_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, mask_type, number_of_frames = None, rec_type = None, cluster_type = None):
+def get_hits_not_in_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, time_threshold, mask_type, number_of_frames = None, rec_type = None, cluster_type = None):
     #set frame number
     if number_of_frames == None:
         frames_to_analyze = ttree_mu3e.GetEntries()
@@ -203,9 +203,9 @@ def get_hits_not_in_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles
         elif cluster_type == "time":
             clusters_frame = clump.time_cluster.time_clustering_frame(ttree_mu3e, frame, printing = None)
         elif cluster_type == "timethenspatial":
-            clusters_frame = clump.three_dim_cluster.spatial_clustering_for_time_clusters(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
+            clusters_frame = clump.three_dim_cluster.spatial_clustering_for_time_clusters(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, time_threshold, mask_type, rec_type)
         elif cluster_type == "timetheniterativespatial":
-            clusters_frame = clump.three_dim_cluster.iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
+            clusters_frame = clump.three_dim_cluster.iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, time_threshold, mask_type, rec_type)
         
     
 

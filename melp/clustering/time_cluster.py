@@ -98,24 +98,23 @@ def add_hit_time_to_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles
     return time_spatial_clusters
 
 ################################
-def time_clustering_frame_improv(ttree_mu3e, frame: int, threshold: float = 2.) -> dict:
+def time_clustering_frame_improv(ttree_mu3e, frame: int, time_threshold: float = 2.) -> dict:
     indices = np.argsort(list(ttree_mu3e.tilehit_time))
     tilehit_times = np.asarray(list(ttree_mu3e.tilehit_time))[indices]
     tilehit_ids = np.asarray(list(ttree_mu3e.tilehit_tile))[indices]
     tilehit_primaries = np.asarray(list(ttree_mu3e.tilehit_primary))[indices]
+    tilehit_mcis = np.asarray(list(ttree_mu3e.tilehit_mc_i))[indices]
 
     if len(tilehit_times) == 0:
         return [Cluster(id=-1, frame_id=frame, master_id=-1, master_primary=-1, hits=[])]
     
     else:
         clusters_dict = {}
-        #print(len(tilehit_times))
-        #print(indices)
         tmp_time_reference = tilehit_times[0]
         index_start_track = 0
         for index in range(len(tilehit_times)):
-            if abs(tmp_time_reference - tilehit_times[index]) > threshold:
-                clusters_dict[index] = [tilehit_ids[index_start_track:index], tilehit_primaries[index_start_track:index], tilehit_times[index_start_track:index]]
+            if abs(tmp_time_reference - tilehit_times[index]) > time_threshold:
+                clusters_dict[index] = [tilehit_ids[index_start_track:index], tilehit_primaries[index_start_track:index], tilehit_times[index_start_track:index], tilehit_mcis[index_start_track:index]]
                 index_start_track = index
                 tmp_time_reference = tilehit_times[index]
 
@@ -123,7 +122,8 @@ def time_clustering_frame_improv(ttree_mu3e, frame: int, threshold: float = 2.) 
         if index_start_track != len(tilehit_times):
             clusters_dict[len(tilehit_times)] = [tilehit_ids[index_start_track:],
                                                 tilehit_primaries[index_start_track:],
-                                                tilehit_times[index_start_track:]]
+                                                tilehit_times[index_start_track:],
+                                                tilehit_mcis[index_start_track:]]
 
         #convert to cluster object
         clusters = []
@@ -135,3 +135,12 @@ def time_clustering_frame_improv(ttree_mu3e, frame: int, threshold: float = 2.) 
 
     return clusters
     
+def get_tid_frame(ttree_mu3e, ttree_mu3e_mc):
+    tid = {}
+    for i in range(len(ttree_mu3e.tilehit_tile)):
+        tile = ttree_mu3e.tilehit_tile[i]
+        mc_i = ttree_mu3e.tilehit_mc_i[i]
+        ttree_mu3e_mc.GetEntry(mc_i)
+        tid[tile] = ttree_mu3e_mc.tid
+
+    return tid
