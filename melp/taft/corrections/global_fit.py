@@ -8,19 +8,19 @@ def correct_z_two_event(detector, cosmic_station, **kwargs) -> np.array:
     a, b = get_cosmic_data_from_file(kwargs.get("cosmic_file"), detector, cosmic_station, **kwargs)
     print("\nCosmic Muons: ", len(a))
 
-    args = np.zeros(10) + 0.0001
+    args = np.zeros(kwargs["cosmic_n_modes"]*2) + 0.0001
     popt, cov = opt.curve_fit(fit_func, b, a, p0=args, method="lm")
 
-    station_offset=200000
+    station_offset = 200000
     if cosmic_station == 2:
         station_offset += 100000
     for row in range(len(detector.TileDetector.column_ids(0, station_offset))):
         for column in range(len(detector.TileDetector.row_ids(0, station_offset))):
             current_tile_id = detector.TileDetector.id_from_row_col(row=row, column=column, station_offset=station_offset)
             timing_correction = calibration_correction_z((column, row), *popt)
-            timing_correction -= calibration_correction_z((0,0), *popt)
+            timing_correction -= calibration_correction_z((0, 0), *popt)
 
-            detector.TileDetector.tile[current_tile_id].update_calibration(-timing_correction)
+            detector.TileDetector.tile[current_tile_id].update_calibration(timing_correction)
 
     return popt
 
@@ -57,11 +57,13 @@ def calibration_correction_z(x: tuple, *args) -> float or np.array:
     z, phi = x
     # print(phi, z)
     result = fourier_func(np.pi * (np.array(z) / 52), *args)
+    #result += args[0]*z
     return result
 
 
 def fit_func(x: tuple, *args) -> float or np.array:
     #if len(args) % 4 != 0:
     #    raise ValueError
-    z1, phi1, z2, phi2 = x
+    # z1, phi1, z2, phi2 = x
+    z2, phi2, z1, phi1 = x
     return calibration_correction_z((z1, phi1), *args) - calibration_correction_z((z2, phi2), *args)

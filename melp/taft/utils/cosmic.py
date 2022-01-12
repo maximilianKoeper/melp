@@ -102,6 +102,7 @@ def cosmic_linear_correction(filename: str, detector, **kwargs):
 
 # --------------------------------------
 def station_station_timing(filename: str, detector, **kwargs):
+    warnings.warn("NOT WORKING")
     # trajectories = []
 
     root_file = ROOT.TFile.Open(filename, "READ")
@@ -159,12 +160,21 @@ def station_station_timing(filename: str, detector, **kwargs):
                 tof = (dist / 299792458) * (10 ** 9)
 
                 if kwargs["tof"]:
-                    if (tmp_time_1 - tmp_time_2) < -10:
-                        time_dist_betw_stations.append(((tmp_time_1 - tmp_time_2) + tof))
+                    #if (tmp_time_1 - tmp_time_2) < -10:
+                    #    time_dist_betw_stations.append(((tmp_time_1 - tmp_time_2) + tof))
+                    #else:
+                    #    time_dist_betw_stations.append(((tmp_time_1 - tmp_time_2) - tof))
+                    if detector.TileDetector.tile[tilehit_ids_1[0]].pos[1] < detector.TileDetector.tile[tilehit_ids_2[0]].pos[2]:
+                        time_dist_betw_stations.append((abs(tmp_time_1 - tmp_time_2) - tof))  # abs not needed ?
                     else:
-                        time_dist_betw_stations.append(((tmp_time_1 - tmp_time_2) - tof))
+                        time_dist_betw_stations.append((abs(tmp_time_2 - tmp_time_1) - tof))
                 else:
-                    time_dist_betw_stations.append((tmp_time_1 - tmp_time_2))
+                    # time_offset_between_hits.append((abs(tmp_time_2 - tmp_time_1) - tof))  # abs not needed ?
+                    if detector.TileDetector.tile[tilehit_ids_1[0]].pos[1] > detector.TileDetector.tile[tilehit_ids_2[0]].pos[2]:
+                        time_dist_betw_stations.append(((tmp_time_1 - tmp_time_2)))  # abs not needed ?
+                    else:
+                        time_dist_betw_stations.append(((tmp_time_2 - tmp_time_1)))  # abs not needed ?
+                    # time_dist_betw_stations.append((tmp_time_1 - tmp_time_2))
 
                 # trajectories.append(Trajectory(tile1_pos=pos1, tile2_pos=pos2))
 
@@ -190,8 +200,8 @@ def get_cosmic_data_from_file(filename: str, detector, cosmic_station: int, **kw
     it = find_next_cosmic_event(ttree_mu3e, it=0, station=cosmic_station)
     while it != -1:
         # TODO: just for debugging
-        if it >= 1500000:
-            it = 100000000000001
+        #if it >= 500000:
+        #    it = 100000000000001
         if it % 100000 == 0:
             print(round(it / ttree_mu3e.GetEntries() * 100), " % | Total Frames: ", ttree_mu3e.GetEntries(),
                   end='\r')
@@ -211,6 +221,7 @@ def get_cosmic_data_from_file(filename: str, detector, cosmic_station: int, **kw
                 if any(y < 300000 for y in tmp_ids):
                     continue
 
+            # TODO: min() max() is not perfect !!!
             tmp_time_1 = min(test_dict[key][1])
             tmp_tile_id_1 = test_dict[key][0][int(*index_finder(list(test_dict[key][1]), tmp_time_1))]
             tmp_time_1 += detector.TileDetector.tile[tmp_tile_id_1].get_offset()

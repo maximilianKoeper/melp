@@ -153,15 +153,15 @@ def plot_error_dist(mu3e_detector):
     ax = ax_arr[0]
     ax.hist(relative_1, bins=50)
     ax.set_title("error station 1", fontsize=f_size)
-    ax.set_ylabel("phi (column)", fontsize=f_size)
-    ax.set_xlabel("z", fontsize=f_size)
+    ax.set_ylabel("n", fontsize=f_size)
+    ax.set_xlabel("t", fontsize=f_size)
 
     # plot calibrated offsets
     ax = ax_arr[1]
     ax.hist(relative_2, bins=50)
     ax.set_title("error station 2", fontsize=f_size)
-    ax.set_ylabel("phi (column)", fontsize=f_size)
-    ax.set_xlabel("z", fontsize=f_size)
+    ax.set_ylabel("n", fontsize=f_size)
+    ax.set_xlabel("t", fontsize=f_size)
 
     plt.show()
 
@@ -173,11 +173,19 @@ def plot_error_dist(mu3e_detector):
     max2 = np.max(relative_2)
     print("Station 2: max error: ", np.round(max2, 5), " min error: ", np.round(min2, 5))
 
-def plot_correction_function(cal_function, *popt):
+
+def plot_correction_function(cal_function, popt1, popt2):
+    fig, ax_arr = plt.subplots(1, 2, figsize=(20, 10))
+
     x1 = np.linspace(0, 51, 52)
     y1 = np.linspace(0, 55, 56)
     x2, y2 = np.meshgrid(x1, y1)
 
-    plt.imshow(cal_function((x2, y2), *popt) - cal_function((0, 0), *popt), cmap="magma")
-    plt.colorbar()
+    ax = ax_arr[0]
+    plot1 = ax.imshow(cal_function((x2, y2), *popt1) - cal_function((0, 0), *popt1), cmap="magma")
+    fig.colorbar(plot1, ax=ax)
+
+    ax = ax_arr[1]
+    plot2 = ax.imshow(cal_function((x2, y2), *popt2) - cal_function((0, 0), *popt2), cmap="magma")
+    fig.colorbar(plot2, ax=ax)
     plt.show()
