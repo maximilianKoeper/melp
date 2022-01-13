@@ -42,7 +42,7 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
 
         #get clusters
         if cluster_type == "time":
-            clusters = clump.time_cluster.time_clustering_frame(ttree_mu3e, frame, printing = None)
+            clusters = clump.time_cluster.time_clustering_frame_improv(ttree_mu3e, ttree_mu3e_mc, frame, time_threshold)
         elif cluster_type == "timethenspatial":
             clusters = clump.three_dim_cluster.spatial_clustering_for_time_clusters(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, time_threshold, mask_type, rec_type)
         elif cluster_type == "timetheniterativespatial":
@@ -168,6 +168,158 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
    
     return frac_corr_frame, frac_corr_clusters_frame, frac_uncorr_frame, tot_corr_counter
 
+######################
+#compares tid of the cluster hits to that of the cluster master and therefore provides efficiency data
+def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, time_threshold, mask_type, number_of_frames = None, rec_type = None, cluster_type = None):
+    frac_corr_frame            = []
+    frac_corr_clusters_frame   = []
+    frac_uncorr_frame          = []
+    total_hits_counter         = []
+    cluster_hits_counter       = 0
+    tot_corr_counter           = 0
+    tot_uncorr_counter         = 0
+
+    tot_cluster_counter        = 0
+    double_tid_cluster_counter = 0
+    double_tid_cluster_hits_counter = 0
+    corr_double_tid_cluster_counter = 0
+    long_time_between_cluster_hits_counter = 0
+
+    #set frame number
+    if number_of_frames == None:
+        frames_to_analyze = ttree_mu3e.GetEntries()
+    else:
+        frames_to_analyze = number_of_frames
+
+    for frame in range(frames_to_analyze):
+        ttree_mu3e.GetEntry(frame)
+        #Printing status info
+        if frame % 5000 == 0:
+            print("Progress: ", np.round(frame / frames_to_analyze * 100), " %","of ", frames_to_analyze, " frames", end='\r')
+
+        #count total hits
+        total_hits_frame = ttree_mu3e.Ntilehit 
+        total_hits_counter.append(total_hits_frame)
+
+        #set counters
+        corr_counter   = 0
+        uncorr_counter = 0
+
+        #get clusters
+        if cluster_type == "time":
+            clusters = clump.time_cluster.time_clustering_frame_improv(ttree_mu3e, ttree_mu3e_mc, frame, time_threshold)
+        elif cluster_type == "timethenspatial":
+            clusters = clump.three_dim_cluster.spatial_clustering_for_time_clusters(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, time_threshold, mask_type, rec_type)
+        elif cluster_type == "timetheniterativespatial":
+            clusters = clump.three_dim_cluster.iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, time_threshold, mask_type, rec_type)
+        else:
+            clusters = clump.spatial_cluster.build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
+        
+        #----------------------
+        #count hits in clusters
+        #----------------------
+        cluster_hits_counter_tmp = 0
+        for i in range(len(clusters)):
+            cluster_hits_counter_tmp += clusters[i].__len__()
+        cluster_hits_counter += cluster_hits_counter_tmp
+
+
+        #---------------------------------------------------
+        #count clusters with hits that are far apart in time
+        #---------------------------------------------------
+        long_time_between_cluster_hits_counter_tmp = 0
+        for i in range(len(clusters)):
+            times = clusters[i].get_times()
+            min_time = min(times)
+            max_time = max(times)
+            if max_time - min_time > 0.5:
+                long_time_between_cluster_hits_counter_tmp +=1
+        long_time_between_cluster_hits_counter += long_time_between_cluster_hits_counter_tmp
+
+        #--------------------------
+        #comparison hits in cluster
+        #--------------------------
+        for j in range(len(clusters)): #loop over all clusters in frame
+            cluster_tids = clusters[j].get_tids()
+            for k in range(len(cluster_tids)): #loop over all tids in cluster 
+                if cluster_tids[k] == clusters[j].master_tid:#if tid in cluster = tid of cluster master
+                    corr_counter += 1
+                else:
+                    uncorr_counter += 1
+
+        #--------------------------------
+        #comparison of different clusters
+        #--------------------------------
+        #define which cluster_types should be analyzed by this part of the algorithm
+        sel_cluster_types = ["time", "timethenspatial", "timetheniterativespatial"]
+        if cluster_type in sel_cluster_types:
+            #count number of clusters that have same master_tid as other cluster
+            for i in range(len(clusters)):
+                tot_cluster_counter += 1
+                master_tid_1 = clusters[i].master_tid
+                for j in range(len(clusters)):
+                    master_tid_2 = clusters[j].master_tid
+                    if j != i and master_tid_1 == master_tid_2:
+                        double_tid_cluster_counter += 1
+                        double_tid_cluster_hits_counter += len(clusters[j])
+
+            #correct for clusters with multiple tids
+            for i in range(len(clusters)):
+                master_tid_1 = clusters[i].master_tid
+                double_tid_clusters_tmp = []
+                min_times_clusters = [clusters[i]]
+                for j in range(len(clusters)):
+                    master_tid_2 = clusters[j].master_tid
+                    if j != i and master_tid_1 == master_tid_2:
+                        corr_double_tid_cluster_counter += 1
+                        double_tid_clusters_tmp.append(clusters[j])
+                        min_times_clusters.append(clusters[j])
+                if len(double_tid_clusters_tmp) != 0:
+                    min_times_tmp = []
+                    for cluster_tmp in min_times_clusters:
+                        min_times_tmp.append(min(cluster_tmp.get_times()))
+                    index_first_cluster = min_times_tmp.index(min(min_times_tmp))
+                    for k in range(len(min_times_clusters)):
+                        if k != index_first_cluster:
+                            pos_first_cluster = mu3e_detector.TileDetector.tile[min_times_clusters[index_first_cluster].hits[0].tile_id].pos
+                            pos_double_cluster = mu3e_detector.TileDetector.tile[min_times_clusters[k].hits[0].tile_id].pos
+                            distance = np.sqrt((pos_first_cluster[0] - pos_double_cluster[0]) ** 2 + (pos_first_cluster[1] - pos_double_cluster[1]) ** 2 + (pos_first_cluster[2] - pos_double_cluster[2]) ** 2) #mm
+                            if distance < 30: #mm
+                                corr_counter   -= len(min_times_clusters[k])
+                                uncorr_counter += len(min_times_clusters[k])
+
+        #-------------------------------------
+        #add to total corr and uncorr counters
+        #-------------------------------------
+        tot_corr_counter   += corr_counter
+        tot_uncorr_counter += uncorr_counter
+
+        if cluster_hits_counter_tmp != 0:
+            frac_corr_clusters_frame.append(corr_counter/cluster_hits_counter_tmp)
+            frac_uncorr_frame.append(uncorr_counter/cluster_hits_counter_tmp)
+
+        if total_hits_frame != 0:
+            frac_corr_frame.append(corr_counter/total_hits_frame)
+            
+
+    print("Progress: 100 %","of ", frames_to_analyze, " frames")
+
+    print("Number of analyzed frames: ", len(total_hits_counter), "Number of correct counter fractions: ", len(frac_corr_frame))
+    print("Total number of hits =",np.sum(total_hits_counter), ", Identified correctly + identified incorrectly =", tot_corr_counter + tot_uncorr_counter)
+    print("Identified correctly:", tot_corr_counter)
+    print("Identified incorrectly:", tot_uncorr_counter)
+    print("Total #hits in frames/#hits in clusters = ", np.sum(total_hits_counter)/cluster_hits_counter)
+    print("Total number of clusters:",tot_cluster_counter, ", Hits:",np.sum(total_hits_counter))
+    print("Number of clusters with hits that are far apart in time:", long_time_between_cluster_hits_counter)
+    print("Number of clusters where tid already exists:",double_tid_cluster_counter, ", Hits:", double_tid_cluster_hits_counter)
+    print("Number of clusters where tid already exists, that are accounted for:", corr_double_tid_cluster_counter)
+    print("Correctly associated out of all hits: ", tot_corr_counter/(np.sum(total_hits_counter)/100),"%")
+    print("Correctly associated out of all hits in clusters: ", tot_corr_counter/(cluster_hits_counter/100),"%")
+    print("Incorrectly associated out of all hits: ", tot_uncorr_counter/(np.sum(total_hits_counter)/100),"%")
+    print("Incorrectly associated out of all hits in clusters: ", tot_uncorr_counter/(cluster_hits_counter/100),"%")
+   
+    return frac_corr_frame, frac_corr_clusters_frame, frac_uncorr_frame, tot_corr_counter
+
 
 ###########################
 #returns fraction of number of hits in cluster and total number of hits
@@ -201,7 +353,7 @@ def get_hits_not_in_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles
         if cluster_type == None:
             clusters_frame = clump.spatial_cluster.build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector,frame, mask_type, rec_type)
         elif cluster_type == "time":
-            clusters_frame = clump.time_cluster.time_clustering_frame(ttree_mu3e, frame, printing = None)
+            clusters_frame = clump.time_cluster.time_clustering_frame_improv(ttree_mu3e, ttree_mu3e_mc, frame, time_threshold)
         elif cluster_type == "timethenspatial":
             clusters_frame = clump.three_dim_cluster.spatial_clustering_for_time_clusters(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, time_threshold, mask_type, rec_type)
         elif cluster_type == "timetheniterativespatial":

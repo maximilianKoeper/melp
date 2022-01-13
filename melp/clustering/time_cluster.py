@@ -12,7 +12,7 @@ from melp.src.cluster import Cluster
 
 #########################
 #simple threshold 1d time clustering 
-def time_clustering_frame(ttree_mu3e, frame, printing = None):
+def time_clustering_frame(ttree_mu3e, ttree_mu3e_mc, frame, printing = None):
     time_clusters = []
 
     #-------------------------------------------------------------
@@ -98,7 +98,7 @@ def add_hit_time_to_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles
     return time_spatial_clusters
 
 ################################
-def time_clustering_frame_improv(ttree_mu3e, frame: int, time_threshold: float = 2.) -> dict:
+def time_clustering_frame_improv(ttree_mu3e, ttree_mu3e_mc, frame: int, time_threshold: float = 2.) -> dict:
     indices = np.argsort(list(ttree_mu3e.tilehit_time))
     tilehit_times = np.asarray(list(ttree_mu3e.tilehit_time))[indices]
     tilehit_ids = np.asarray(list(ttree_mu3e.tilehit_tile))[indices]
@@ -118,7 +118,7 @@ def time_clustering_frame_improv(ttree_mu3e, frame: int, time_threshold: float =
                 index_start_track = index
                 tmp_time_reference = tilehit_times[index]
 
-        # fill up remaining event
+        #fill up remaining event
         if index_start_track != len(tilehit_times):
             clusters_dict[len(tilehit_times)] = [tilehit_ids[index_start_track:],
                                                 tilehit_primaries[index_start_track:],
@@ -130,17 +130,11 @@ def time_clustering_frame_improv(ttree_mu3e, frame: int, time_threshold: float =
         for key in clusters_dict.keys():
             cluster_tmp = []
             for i in range(len(clusters_dict[key][0])):
-                cluster_tmp.append(ClusterHit(tile_id=clusters_dict[key][0][i], frame_id=frame, primary=clusters_dict[key][1][i], time=clusters_dict[key][2][i]))
-            clusters.append(Cluster(id=key, frame_id=frame, master_id=cluster_tmp[0].tile_id, master_primary=cluster_tmp[0].primary, hits=cluster_tmp))
+                mc_i = clusters_dict[key][3][i]
+                ttree_mu3e_mc.GetEntry(mc_i)
+                tid = ttree_mu3e_mc.tid
+                cluster_tmp.append(ClusterHit(tile_id=clusters_dict[key][0][i], frame_id=frame, primary=clusters_dict[key][1][i], time=clusters_dict[key][2][i], mc_i=clusters_dict[key][3][i], tid = tid))                
+            clusters.append(Cluster(id=key, frame_id=frame, master_id=cluster_tmp[0].tile_id, master_primary=cluster_tmp[0].primary, master_tid = cluster_tmp[0].tid, hits=cluster_tmp))
 
     return clusters
     
-def get_tid_frame(ttree_mu3e, ttree_mu3e_mc):
-    tid = {}
-    for i in range(len(ttree_mu3e.tilehit_tile)):
-        tile = ttree_mu3e.tilehit_tile[i]
-        mc_i = ttree_mu3e.tilehit_mc_i[i]
-        ttree_mu3e_mc.GetEntry(mc_i)
-        tid[tile] = ttree_mu3e_mc.tid
-
-    return tid

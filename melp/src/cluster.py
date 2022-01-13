@@ -35,6 +35,7 @@ class Cluster:
     frame_id: int
     master_id: int
     master_primary: int = 0
+    master_tid: int = 0
     hits: list = dataclasses.field(default_factory=list)
     
     # -----------------------------------------
@@ -43,7 +44,11 @@ class Cluster:
 
     #returns True if the two clusters are the same
     def __eq__(self, other):
-        return self.id == other.id
+        if len(self.hits) == len(other.hits) and self.frame_id == other.frame_id and self.get_tile_ids() == other.get_tile_ids():
+            return True
+        else:
+            return False
+        #return self.id == other.id
 
     #returns the cluster id and the number of hits in the cluster
     #def __str__(self):
@@ -74,12 +79,26 @@ class Cluster:
             times.append(hit.time)
         return times
 
+    #returns all tids in cluster
+    def get_tids(self):
+        tids = []
+        for hit in self.hits:
+            tids.append(hit.tid)
+        return tids
+
     #return all frame ids in cluster
     def get_frame_ids(self):
         frame_ids = []
         for hit in self.hits:
             frame_ids.append(hit.frame_id)
         return frame_ids
+    
+    #return all mcis in cluster
+    def get_mcis(self):
+        mcis = []
+        for hit in self.hits:
+            mcis.append(hit.mc_i)
+        return mcis
 
     #return the value and index of hit with smallest time in cluster
     def get_min_time(self):

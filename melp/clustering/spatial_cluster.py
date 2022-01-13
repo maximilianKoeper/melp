@@ -60,24 +60,46 @@ def build_truth_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  m
     hit_tiles_frame = []
     primaries_frame = []
     times_frame     = []
+    mcis_frame      = []
+    tids_frame      = []
     for hit_tile_index in range(ttree_mu3e.Ntilehit):
         hit_tiles_frame.append(ttree_mu3e.tilehit_tile[hit_tile_index])
         primaries_frame.append(ttree_mu3e.tilehit_primary[hit_tile_index])
         times_frame.append(ttree_mu3e.tilehit_time[hit_tile_index])
+        mcis_frame.append(ttree_mu3e.tilehit_mc_i[hit_tile_index])
+    
+    for mc_i in mcis_frame:
+        ttree_mu3e_mc.GetEntry(mc_i)
+        tids_frame.append(ttree_mu3e_mc.tid)
 
     #---------------------------------------------
     #sort hits with same primary into same cluster
     #---------------------------------------------
+    #clusters = []
+    #added_primaries = []
+    #for i in range(len(primaries_frame)):
+    #    cluster_tmp = []
+    #    for j in range(len(primaries_frame)):
+    #        if primaries_frame[j] == primaries_frame[i] and primaries_frame[i] not in added_primaries:
+    #            cluster_tmp.append(ClusterHit(tile_id = hit_tiles_frame[j], frame_id = frame, primary = primaries_frame[j], tid = tids_frame[j], time = times_frame[j]))
+    #    added_primaries.append(primaries_frame[i])
+
+    #    if len(cluster_tmp) > 0:
+    #        clusters.append(Cluster(id=i, master_id=i, master_primary = primaries_frame[i], master_tid = tids_frame[i], frame_id = frame, hits = cluster_tmp))
+
+    #---------------------------------------------
+    #sort hits with same tid into same cluster
+    #---------------------------------------------
     clusters = []
-    added_primaries = []
-    for i in range(len(primaries_frame)):
+    added_tids = []
+    for i in range(len(tids_frame)):
         cluster_tmp = []
-        for j in range(len(primaries_frame)):
-            if primaries_frame[j] == primaries_frame[i] and primaries_frame[i] not in added_primaries:
-                cluster_tmp.append(ClusterHit(tile_id = hit_tiles_frame[j], frame_id = frame, primary = primaries_frame[j], time = times_frame[j]))
-        added_primaries.append(primaries_frame[i])
+        for j in range(len(tids_frame)):
+            if tids_frame[j] == tids_frame[i] and tids_frame[i] not in added_tids:
+                cluster_tmp.append(ClusterHit(tile_id = hit_tiles_frame[j], frame_id = frame, primary = primaries_frame[j], tid = tids_frame[j], time = times_frame[j]))
+        added_tids.append(tids_frame[i])
 
         if len(cluster_tmp) > 0:
-            clusters.append(Cluster(id=i, master_id=i, master_primary = primaries_frame[i], frame_id = frame, hits = cluster_tmp))
+            clusters.append(Cluster(id=i, master_id=i, master_primary = primaries_frame[i], master_tid = tids_frame[i], frame_id = frame, hits = cluster_tmp))
 
     return clusters
