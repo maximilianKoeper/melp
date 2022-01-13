@@ -189,3 +189,56 @@ def plot_correction_function(cal_function, popt1, popt2):
     plot2 = ax.imshow(cal_function((x2, y2), *popt2) - cal_function((0, 0), *popt2), cmap="magma")
     fig.colorbar(plot2, ax=ax)
     plt.show()
+
+
+############################################
+# TODO: for testing
+
+def plot_calibration_Abs(mu3e_detector):
+    f_size = 15
+    # ---------------------------------------
+    # get data
+    # ---------------------------------------
+    grid_relative_1 = np.zeros((52, 56))
+    grid_relative_2 = np.zeros((52, 56))
+
+    for tile_id in mu3e_detector.TileDetector.tile:
+        tile = mu3e_detector.TileDetector.tile[tile_id]
+        y = tile.row()
+        x = tile.column()
+
+        if tile.id >= 300000:
+            grid_relative_2[x][y] = float(tile.dt_cal_abs - tile.dt_truth_abs) + mu3e_detector.TileDetector.tile[300000].dt_truth
+        if tile.id < 300000:
+            grid_relative_1[x][y] = float(tile.dt_cal_abs - tile.dt_truth_abs) + mu3e_detector.TileDetector.tile[200000].dt_truth
+
+    # ---------------------------------------
+    # Plotting
+    # ---------------------------------------
+    fig, ax_arr = plt.subplots(1, 2, figsize=(20, 10))
+
+    # plot truth offsets
+    ax = ax_arr[0]
+    heatplot_truth = ax.imshow(grid_relative_1.T, cmap='magma')
+    ax.set_title("error station 1", fontsize=f_size)
+    ax.set_ylabel("phi (column)", fontsize=f_size)
+    ax.set_xlabel("z", fontsize=f_size)
+    fig.colorbar(heatplot_truth, ax=ax)
+
+    # plot calibrated offsets
+    ax = ax_arr[1]
+    heatplot_calibrated = ax.imshow(grid_relative_2.T, cmap='magma')
+    ax.set_title("error station 2", fontsize=f_size)
+    ax.set_ylabel("phi (column)", fontsize=f_size)
+    ax.set_xlabel("z", fontsize=f_size)
+    fig.colorbar(heatplot_calibrated, ax=ax)
+
+    plt.show()
+
+    min1 = np.min(grid_relative_1)
+    max1 = np.max(grid_relative_1)
+    print("Station 1: max error: ", np.round(max1, 5), " min error: ", np.round(min1, 5))
+
+    min2 = np.min(grid_relative_2)
+    max2 = np.max(grid_relative_2)
+    print("Station 2: max error: ", np.round(max2, 5), " min error: ", np.round(min2, 5))

@@ -4,6 +4,7 @@
 import dataclasses
 import warnings
 import math
+import random
 from functools import lru_cache
 
 
@@ -22,6 +23,8 @@ class Tile:
     dir: list
     dt_truth: float = 0.
     dt_cal: float = 0.
+    dt_truth_abs = 0.
+    dt_cal_abs = 0.
 
     hits: list = dataclasses.field(default_factory=list)
 
@@ -231,3 +234,11 @@ class TileDetector:
             raise ValueError("expected row < 56 and column < 52")
 
         return tile_id
+
+    # -----------------------------------------
+    # generate Time Misalignment
+    def generate_misal(self, **kwargs):
+        for tileid in self.tile:
+            self.tile[tileid].dt_truth = random.gauss(mu=0.0, sigma=kwargs["sigma"])
+
+        self.tilemisal = True

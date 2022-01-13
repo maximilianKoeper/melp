@@ -90,7 +90,7 @@ def calibrate(**kwargs):
     align_timings(dt_phi_rel, dt_z_rel, 200000)
     align_timings(dt_phi_rel, dt_z_rel, 300000)
     # ------------------------------------------------------
-
+    #correct_z_loops(300000)
     # ------------------------------------------------------
     # correcting tof with cosmic data (z - direction)
     # cosmic_correction_z(__detector__, **kwargs)
@@ -518,6 +518,107 @@ def check_cal_z(cal_data, station):
 
     return cal
 
+
 # --------------------------------------------------------
 # ---------------------    UNUSED    ---------------------
 # --------------------------------------------------------
+
+import scipy.optimize as opt
+# from melp.taft.corrections.global_fit import *
+import melp.taft.corrections.global_fit as glfit
+
+
+def correct_z_loops(station_offset: int):
+    print("z - correction")
+    a, b = correct_z_loops_data(station_offset)
+    print("DEBUG: data length: ", len(a))
+
+    args = np.zeros(4 * 2) #+ 0.0001
+    popt, cov = opt.curve_fit(glfit.fit_func, b, a, p0=args, method="lm")
+    print(popt)
+
+
+def correct_z_loops_data(station_offset: int):
+    global __detector__
+
+    TileDetector = __detector__.TileDetector
+    Tiles = TileDetector.tile
+
+    time_offset = []
+    position_1_column = []
+    position_1_row = []
+    position_2_column = []
+    position_2_row = []
+
+    for i in range(0, 55, 1):  # phi - dir
+        for j in range(0, 52, 3):  # z - dir (module)
+            tile_id1_tmp = TileDetector.id_from_row_col(row=i, column=j, station_offset=station_offset)
+            tile_id2_tmp = TileDetector.id_from_row_col(row=i + 1, column=j, station_offset=station_offset)
+
+            dt_phi_begin = Tiles[tile_id1_tmp].dt_cal_abs - Tiles[tile_id2_tmp].dt_cal_abs
+
+            dt_1 = 0.
+            dt_2 = 0.
+
+            for k in range(j, 51):
+                tile_id1_tmp = TileDetector.id_from_row_col(row=i, column=k, station_offset=station_offset)
+                tile_id2_tmp = TileDetector.id_from_row_col(row=i, column=k + 1, station_offset=station_offset)
+
+                tile_id3_tmp = TileDetector.id_from_row_col(row=i + 1, column=k, station_offset=station_offset)
+                tile_id4_tmp = TileDetector.id_from_row_col(row=i + 1, column=k + 1, station_offset=station_offset)
+
+                dt_1 += Tiles[tile_id1_tmp].dt_cal_abs - Tiles[tile_id2_tmp].dt_cal_abs
+                dt_2 += Tiles[tile_id3_tmp].dt_cal_abs - Tiles[tile_id4_tmp].dt_cal_abs
+
+                if k % 3:
+                    tile_id1_tmp = TileDetector.id_from_row_col(row=i, column=k + 1, station_offset=station_offset)
+                    tile_id2_tmp = TileDetector.id_from_row_col(row=i + 1, column=k + 1, station_offset=station_offset)
+
+                    dt_phi_end = Tiles[tile_id1_tmp].dt_cal_abs - Tiles[tile_id2_tmp].dt_cal_abs
+
+                    position_1_row.append(i)
+                    position_1_column.append(j)
+                    position_2_row.append(i)
+                    position_2_column.append(k+1)
+
+                    time_offset_tmp = (dt_1 - dt_2 + dt_phi_begin - dt_phi_end)/2
+
+                    time_offset.append(time_offset_tmp)
+        """
+        for j in range(51, -1, -3):  # z - dir (module)
+            tile_id1_tmp = TileDetector.id_from_row_col(row=i, column=j, station_offset=station_offset)
+            tile_id2_tmp = TileDetector.id_from_row_col(row=i + 1, column=j, station_offset=station_offset)
+
+            dt_phi_begin = Tiles[tile_id1_tmp].dt_cal_abs - Tiles[tile_id2_tmp].dt_cal_abs
+
+            dt_1 = 0
+            dt_2 = 0
+
+            for k in range(j, 0, -1):
+                tile_id1_tmp = TileDetector.id_from_row_col(row=i, column=k, station_offset=station_offset)
+                tile_id2_tmp = TileDetector.id_from_row_col(row=i, column=k - 1, station_offset=station_offset)
+
+                tile_id3_tmp = TileDetector.id_from_row_col(row=i + 1, column=k, station_offset=station_offset)
+                tile_id4_tmp = TileDetector.id_from_row_col(row=i + 1, column=k - 1, station_offset=station_offset)
+
+                dt_1 += Tiles[tile_id1_tmp].dt_cal_abs - Tiles[tile_id2_tmp].dt_cal_abs
+                dt_2 += Tiles[tile_id3_tmp].dt_cal_abs - Tiles[tile_id4_tmp].dt_cal_abs
+
+                if k % 2:
+                    tile_id1_tmp = TileDetector.id_from_row_col(row=i + 1, column=k, station_offset=station_offset)
+                    tile_id2_tmp = TileDetector.id_from_row_col(row=i + 1, column=k - 1, station_offset=station_offset)
+
+                    dt_phi_end = Tiles[tile_id1_tmp].dt_cal_abs - Tiles[tile_id2_tmp].dt_cal_abs
+
+                    position_1_row.append(i)
+                    position_1_column.append(j)
+                    position_2_row.append(i)
+                    position_2_column.append(k-1)
+
+                    time_offset_tmp = dt_1 - dt_2 + dt_phi_begin - dt_phi_end
+
+                    time_offset_between_modules.append(time_offset_tmp/2)
+        """
+    position_tuple = (position_1_column, position_1_row, position_2_column, position_2_row)
+
+    return time_offset, position_tuple
