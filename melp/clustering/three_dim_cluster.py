@@ -107,7 +107,6 @@ def iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_senso
     #-----------------------------------------------
     #use time cluster as first rough cut / reference
     #-----------------------------------------------
-    #time_clusters = clump.time_cluster.time_clustering_frame(ttree_mu3e, frame, printing = None)
     time_clusters = clump.time_cluster.time_clustering_frame_improv(ttree_mu3e, ttree_mu3e_mc, frame, time_threshold)
 
     #-----------------------------------------------------------------------
@@ -166,9 +165,9 @@ def iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_senso
             if len(cluster_tmp) != 0:
                 new_clusters.append(Cluster(id = time_cluster.master_id, master_id = time_cluster.master_id, master_primary = master_primary_mask, master_tid = master_tid_mask, frame_id = frame, hits = cluster_tmp))
 
-    #--------------------------------------------------------------------------------------
+    #----------------------------------------------------------------------------------------------
     #Apply more sensitive time cut (0.2ns) for the new clusters from tile to the neighbouring tiles
-    #--------------------------------------------------------------------------------------
+    #----------------------------------------------------------------------------------------------
     new_clusters_2 = []
     for n in range(len(new_clusters)):
         if len(new_clusters[n]) == 2:
@@ -187,40 +186,53 @@ def iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_senso
         else:
             new_clusters_2.append(new_clusters[n])
 
-    #-------------------------------------------
-    #limit the distance between hits in clusters
-    #-------------------------------------------
-    new_clusters_3 = []
+    """
+    #-----------------------------------------------------
+    #check for cluster constituents in neighbouring frames 
+    #-----------------------------------------------------
+    #get first and last cluster in time
+    min_times = []
+    max_times = []
+    for i in range(len(new_clusters_2)):
+        min_times.append(min(new_clusters_2[i].get_times()))
+        max_times.append(max(new_clusters_2[i].get_times()))
+
+    if len(min_times) > 0 and len(max_times) > 0:
+        min_time = min(min_times)
+        max_time = max(max_times)
+        cluster_min_time_index = min_times.index(min(min_times))
+        cluster_max_time_index = max_times.index(max(max_times))
+
+        #get clusters in frame-1 and frame+1
+        ttree_mu3e.GetEntry(frame-1)
+        time_clusters_minus = clump.time_cluster.time_clustering_frame_improv(ttree_mu3e, ttree_mu3e_mc, frame-1, time_threshold)
+        ttree_mu3e.GetEntry(frame+1)
+        time_clusters_plus = clump.time_cluster.time_clustering_frame_improv(ttree_mu3e, ttree_mu3e_mc, frame+1, time_threshold)
+        ttree_mu3e.GetEntry(frame)
+
+        #check if the maximum time of frame-1 is close to the min time of frame 0
+        max_times_minus = []
+        for i in range(len(time_clusters_minus)):
+            max_times_minus.append(max(time_clusters_minus[i].get_times()))
+        max_time_minus = max(max_times_minus)
+        cluster_max_time_minus_index = max_times_minus.index(max(max_times_minus))
+
+        #check if the minimum time of frame+1 is close to the max time of frame 0
+        min_times_plus = []
+        for i in range(len(time_clusters_plus)):
+            min_times_plus.append(min(time_clusters_plus[i].get_times()))
+        min_time_plus = min(min_times_plus)
+        cluster_min_time_plus_index = min_times_plus.index(min(min_times_plus))
+
+        #testing
+        test = abs(abs(min_time - max_time_minus) - 0)
+        if test < 0.3:
+            print("Frame -1:", test)
+
+        test2 = abs(abs(max_time - min_time_plus) - 0)
+        if test2 < 0.3:
+            print("Frame +1:", test2)
+    """
     
-
-
-
-
-    #######################################
-    if frame < 100:
-        cluster_hits_counter = 0
-        for cluster in new_clusters:
-            cluster_hits_counter += cluster.__len__()
-        if cluster_hits_counter > len(hit_tiles_frame):
-            print("Frame:", frame, "#Total hits:", len(hit_tiles_frame), "#Cluster hits:", cluster_hits_counter)
-    
-        
-
-        #double_hit_counter = 0
-        #all_hits_clusters = []
-        #double_hits = []
-        #for cluster in new_clusters:
-        #    for hit in cluster.hits:
-        #        all_hits_clusters.append(hit)
-        #for i in all_hits_clusters:
-        #    if all_hits_clusters.count(i) > 1:
-        #        double_hit_counter +=1
-        #        double_hits.append(i)
-        
-        #test_clusters = [Cluster(id = 0, master_id = 0, master_primary = 0, frame_id = frame, hits = double_hits)]
-        #if double_hit_counter != 0:
-        #    print("Frame:", frame, "#Total hits:", len(hit_tiles_frame), "#Double hits:", double_hit_counter, "\n")
-    ###########################################
-
     return new_clusters_2
 

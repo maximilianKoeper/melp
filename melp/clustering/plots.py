@@ -170,7 +170,8 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
 
 ######################
 #compares tid of the cluster hits to that of the cluster master and therefore provides efficiency data
-def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, time_threshold, mask_type, number_of_frames = None, rec_type = None, cluster_type = None):
+#@blockPrinting
+def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, time_threshold, threshold_cluster_width, mask_type, number_of_frames = None, rec_type = None, cluster_type = None):
     frac_corr_frame            = []
     frac_corr_clusters_frame   = []
     frac_uncorr_frame          = []
@@ -284,7 +285,7 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_d
                             pos_first_cluster = mu3e_detector.TileDetector.tile[min_times_clusters[index_first_cluster].hits[0].tile_id].pos
                             pos_double_cluster = mu3e_detector.TileDetector.tile[min_times_clusters[k].hits[0].tile_id].pos
                             distance = np.sqrt((pos_first_cluster[0] - pos_double_cluster[0]) ** 2 + (pos_first_cluster[1] - pos_double_cluster[1]) ** 2 + (pos_first_cluster[2] - pos_double_cluster[2]) ** 2) #mm
-                            if distance < 30: #mm
+                            if distance < threshold_cluster_width: #mm
                                 corr_counter   -= len(min_times_clusters[k])
                                 uncorr_counter += len(min_times_clusters[k])
 
@@ -318,7 +319,7 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_d
     print("Incorrectly associated out of all hits: ", tot_uncorr_counter/(np.sum(total_hits_counter)/100),"%")
     print("Incorrectly associated out of all hits in clusters: ", tot_uncorr_counter/(cluster_hits_counter/100),"%")
    
-    return frac_corr_frame, frac_corr_clusters_frame, frac_uncorr_frame, tot_corr_counter
+    return frac_corr_frame, frac_corr_clusters_frame, frac_uncorr_frame, tot_corr_counter, total_hits_counter
 
 
 ###########################
@@ -555,3 +556,26 @@ def compare_to_primary_3_frames(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_t
     print("Incorrectly associated out of all hits in clusters", tot_uncorr_counter/(cluster_hits_counter/100),"%")
         
     return frac_corr_frame, frac_corr_clusters_frame, frac_uncorr_frame, tot_corr_counter
+
+
+###########################################
+#Gives the efficiency as function of maximum cluster width (clusters with same tid that have been identified as seperate clusters aren't counted as wrongly identified if they are further apart then the given threshold)
+def efficiency_as_function_of_cluster_width(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, time_threshold, mask_type, number_of_frames = None, rec_type = None, cluster_type = None):
+    threshold_cluster_width_array = np.arange(10,100,2)
+    efficiency = []
+    finished = 0
+    for threshold_cluster_width in threshold_cluster_width_array:
+        #print status info
+        print("Progress: ", finished,"of ", len(threshold_cluster_width_array), " thresholds at", number_of_frames, "frames each", end='\r')
+
+        #get efficiency for the threshold
+        with HiddenPrints():
+            __, __, __, tot_corr_counter, total_hits_counter = compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, time_threshold, threshold_cluster_width, mask_type, number_of_frames, rec_type, cluster_type)
+        efficiency.append(tot_corr_counter/(np.sum(total_hits_counter)/100))
+        finished += 1
+
+        print("Progress: ", len(threshold_cluster_width_array),"of ", len(threshold_cluster_width_array), " thresholds at", number_of_frames, "frames each")
+    
+    return efficiency, threshold_cluster_width_array
+
+

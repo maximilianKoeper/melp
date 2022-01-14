@@ -137,4 +137,3 @@ def time_clustering_frame_improv(ttree_mu3e, ttree_mu3e_mc, frame: int, time_thr
             clusters.append(Cluster(id=key, frame_id=frame, master_id=cluster_tmp[0].tile_id, master_primary=cluster_tmp[0].primary, master_tid = cluster_tmp[0].tid, hits=cluster_tmp))
 
     return clusters
-    
