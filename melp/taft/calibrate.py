@@ -91,6 +91,7 @@ def calibrate(**kwargs):
     align_timings(dt_phi_rel, dt_z_rel, 300000)
     # ------------------------------------------------------
     #correct_z_loops(300000)
+    correct_z_error_prop(dt_z_rel)
     # ------------------------------------------------------
     # correcting tof with cosmic data (z - direction)
     # cosmic_correction_z(__detector__, **kwargs)
@@ -523,6 +524,52 @@ def check_cal_z(cal_data, station):
 # ---------------------    UNUSED    ---------------------
 # --------------------------------------------------------
 
+
+def correct_z_error_prop(dt_z):
+    global __detector__
+
+    Tile = __detector__.TileDetector.tile
+    time_diff = Tile[202856].dt_cal - Tile[200000].dt_cal
+
+    Tile_ids_row = __detector__.TileDetector.row_ids(0, 200000)
+    tmp_time_diff = 0
+    for ids in Tile_ids_row:
+        try:
+            tmp_time_diff += dt_z[ids]
+        except:
+            pass
+
+    time_diff_to_correct = time_diff - tmp_time_diff
+    time_diff_to_correct /= 52
+
+    for z_pos in range(52):
+        for phi_pos in __detector__.TileDetector.column_ids(z_pos, 200000):
+            __detector__.TileDetector.tile[phi_pos].dt_cal -= time_diff_to_correct * z_pos
+
+    print("Correcting accumulated z-error: ", np.round(time_diff, 4), " >> ", np.round(tmp_time_diff, 4))
+
+    time_diff = Tile[302856].dt_cal - Tile[300000].dt_cal
+
+    Tile_ids_row = __detector__.TileDetector.row_ids(0, 300000)
+    tmp_time_diff = 0
+    for ids in Tile_ids_row:
+        try:
+            tmp_time_diff += dt_z[ids]
+        except:
+            pass
+
+    time_diff_to_correct = time_diff - tmp_time_diff
+    time_diff_to_correct /= 52
+
+    for z_pos in range(52):
+        for phi_pos in __detector__.TileDetector.column_ids(z_pos, 300000):
+            __detector__.TileDetector.tile[phi_pos].dt_cal -= time_diff_to_correct * z_pos
+
+    print("Correcting accumulated z-error: ", np.round(time_diff,4), " >> ", np.round(tmp_time_diff,4))
+
+
+
+"""
 import scipy.optimize as opt
 # from melp.taft.corrections.global_fit import *
 import melp.taft.corrections.global_fit as glfit
@@ -584,7 +631,7 @@ def correct_z_loops_data(station_offset: int):
                     time_offset_tmp = (dt_1 - dt_2 + dt_phi_begin - dt_phi_end)/2
 
                     time_offset.append(time_offset_tmp)
-        """
+        
         for j in range(51, -1, -3):  # z - dir (module)
             tile_id1_tmp = TileDetector.id_from_row_col(row=i, column=j, station_offset=station_offset)
             tile_id2_tmp = TileDetector.id_from_row_col(row=i + 1, column=j, station_offset=station_offset)
@@ -618,7 +665,9 @@ def correct_z_loops_data(station_offset: int):
                     time_offset_tmp = dt_1 - dt_2 + dt_phi_begin - dt_phi_end
 
                     time_offset_between_modules.append(time_offset_tmp/2)
-        """
+        
     position_tuple = (position_1_column, position_1_row, position_2_column, position_2_row)
 
     return time_offset, position_tuple
+    
+"""
