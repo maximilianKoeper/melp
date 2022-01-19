@@ -574,7 +574,7 @@ def efficiency_as_function_of_cluster_width(ttree_mu3e, ttree_mu3e_mc, ttree_sen
         efficiency.append(tot_corr_counter/(np.sum(total_hits_counter)/100))
         finished += 1
 
-        print("Progress: ", len(threshold_cluster_width_array),"of ", len(threshold_cluster_width_array), " thresholds at", number_of_frames, "frames each")
+    print("Progress: ", len(threshold_cluster_width_array),"of ", len(threshold_cluster_width_array), " thresholds at", number_of_frames, "frames each")
     
     return efficiency, threshold_cluster_width_array
 
