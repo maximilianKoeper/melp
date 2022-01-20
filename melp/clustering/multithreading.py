@@ -215,7 +215,7 @@ def compare_to_tid_filename(filename, time_threshold, threshold_cluster_width, m
     long_time_between_cluster_hits_counter = 0
 
 
-    for frame in range(1000):#(ttree_mu3e.GetEntries()):
+    for frame in range(ttree_mu3e.GetEntries()):
         ttree_mu3e.GetEntry(frame)
 
         #count total hits
