@@ -345,6 +345,27 @@ def compare_to_tid_filename(filename, time_threshold, threshold_cluster_width, m
     np.savetxt("./melp/clustering/results/frac_uncorr_frame_tid_"+str(filename)[-8:-5]+".txt", np.array(frac_uncorr_frame))
 
 
+def efficiency_as_function_of_cluster_width_filename(threshold_cluster_width, filename, time_threshold, mask_type, number_of_frames = None, rec_type = None, cluster_type = None):
+    #get file
+    file = ROOT.TFile(filename)
+    ttree_mu3e = file.Get("mu3e")
+    ttree_mu3e_mc = file.Get("mu3e_mchits")
+    ttree_sensor = file.Get("alignment/sensors")
+    ttree_tiles = file.Get("alignment/tiles")
+
+    with HiddenPrints():
+        mu3e_detector = Detector.initFromROOT(filename)
+
+    efficiency = -1  
+    with HiddenPrints():
+        __, __, __, tot_corr_counter, total_hits_counter = clump.plots.compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, time_threshold, threshold_cluster_width, mask_type, number_of_frames, rec_type, cluster_type)
+    efficiency = tot_corr_counter/(np.sum(total_hits_counter)/100)
+
+    #write efficiency to txt file 
+    if efficiency != -1:
+        np.savetxt("./melp/clustering/results/efficiency_vs_cluster_width_"+str(threshold_cluster_width)+".txt", np.array([efficiency, threshold_cluster_width]))
+
+
 #########################
 def mt_compare_to_primary(input_files, time_threshold, mask_type, rec_type, cluster_type, i):
     print("read file ", i+1)
@@ -359,8 +380,14 @@ def mt_compare_to_tid(input_files, time_threshold, threshold_cluster_width, mask
     compare_to_tid_filename(input_files[0][i], time_threshold, threshold_cluster_width, mask_type, rec_type, cluster_type) 
 
 
+########################
+def mt_efficiency_as_function_of_cluster_width(threshold_cluster_width_array, filename, time_threshold, mask_type, number_of_frames, rec_type, cluster_type, i):
+    print("started thread ", i+1)
+    efficiency_as_function_of_cluster_width_filename(threshold_cluster_width_array[i], filename, time_threshold, mask_type, number_of_frames, rec_type, cluster_type)
+
+
 ##########
-def run_mt(function_str, src, args):
+def run_mt(function_str, src, args, cluster_width_array = None):
     #function_str: pass function as str, src: directory of root files to analyse, args: arguments for parallelized function
     # set used threads
     unused_threads = 2 #set the number of threads you don't want to use
@@ -382,6 +409,9 @@ def run_mt(function_str, src, args):
     elif function_str == "mt_compare_to_tid":
         func = partial(mt_compare_to_tid, input_files, *args)
         pool.map(func, [i for i in range(len(input_files[0]))])
+    elif function_str == "mt_efficiency_as_function_of_cluster_width":
+        func = partial(mt_efficiency_as_function_of_cluster_width, cluster_width_array, *args)
+        pool.map(func, [i for i in range(len(cluster_width_array))])
     else:
         raise ValueError("Function not found")
 
