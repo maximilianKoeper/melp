@@ -366,6 +366,54 @@ def efficiency_as_function_of_cluster_width_filename(threshold_cluster_width, fi
         np.savetxt("./melp/clustering/results/efficiency_vs_cluster_width_"+str(threshold_cluster_width)+".txt", np.array([efficiency, threshold_cluster_width]))
 
 
+####################################
+def frac_truth_cluster_size_filename(threshold_cluster_width, filename, mask_type, number_of_frames = None, rec_type = None):
+    #get file
+    file = ROOT.TFile(filename)
+    ttree_mu3e = file.Get("mu3e")
+    ttree_mu3e_mc = file.Get("mu3e_mchits")
+    ttree_sensor = file.Get("alignment/sensors")
+    ttree_tiles = file.Get("alignment/tiles")
+
+    #get Detector
+    with HiddenPrints():
+        mu3e_detector = Detector.initFromROOT(filename)
+
+    max_distances = []
+
+    #set frame number
+    if number_of_frames == None:
+        frames_to_analyze = ttree_mu3e.GetEntries()
+    else:
+        frames_to_analyze = number_of_frames
+
+    for frame in range(frames_to_analyze):
+        ttree_mu3e.GetEntry(frame)
+
+        #get truth clusters
+        truth_clusters = clump.spatial_cluster.build_truth_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
+
+        #find cluster hits that are furthest apart
+        for truth_cluster in truth_clusters:
+            tmp_distances = []
+            for i in range(len(truth_cluster)):
+                pos1 = mu3e_detector.TileDetector.tile[truth_cluster.hits[i].tile_id].pos
+                for j in range(len(truth_cluster)):
+                    pos2 = mu3e_detector.TileDetector.tile[truth_cluster.hits[j].tile_id].pos
+                    distance = np.sqrt((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2 + (pos1[2] - pos2[2]) ** 2) #mm
+                    tmp_distances.append(distance)
+            max_distances.append(max(tmp_distances))
+
+    counter_over_threshold = 0
+    for distance in max_distances:
+        if distance > threshold_cluster_width:
+            counter_over_threshold += 1
+    
+    frac_over_threshold = counter_over_threshold/(len(max_distances)/100) #%
+    
+    np.savetxt("./melp/clustering/results/frac_truth_Cluster_size_"+str(threshold_cluster_width)+".txt", np.array([frac_over_threshold, threshold_cluster_width]))
+
+
 #########################
 def mt_compare_to_primary(input_files, time_threshold, mask_type, rec_type, cluster_type, i):
     print("read file ", i+1)
@@ -373,17 +421,23 @@ def mt_compare_to_primary(input_files, time_threshold, mask_type, rec_type, clus
     compare_to_primary_filename(input_files[0][i], time_threshold, mask_type, rec_type, cluster_type)   
 
 
-#########################
+#####################
 def mt_compare_to_tid(input_files, time_threshold, threshold_cluster_width, mask_type, rec_type, cluster_type, i):
     print("read file ", i+1)
     print("started thread ", i+1)
     compare_to_tid_filename(input_files[0][i], time_threshold, threshold_cluster_width, mask_type, rec_type, cluster_type) 
 
 
-########################
+##############################################
 def mt_efficiency_as_function_of_cluster_width(threshold_cluster_width_array, filename, time_threshold, mask_type, number_of_frames, rec_type, cluster_type, i):
     print("started thread ", i+1)
     efficiency_as_function_of_cluster_width_filename(threshold_cluster_width_array[i], filename, time_threshold, mask_type, number_of_frames, rec_type, cluster_type)
+
+
+#######################
+def mt_frac_truth_cluster_size_filename(threshold_cluster_width_array, filename, mask_type, number_of_frames, rec_type, i):
+    print("started thread ", i+1)
+    frac_truth_cluster_size_filename(threshold_cluster_width_array[i], filename, mask_type, number_of_frames, rec_type)
 
 
 ##########
@@ -411,6 +465,9 @@ def run_mt(function_str, src, args, cluster_width_array = None):
         pool.map(func, [i for i in range(len(input_files[0]))])
     elif function_str == "mt_efficiency_as_function_of_cluster_width":
         func = partial(mt_efficiency_as_function_of_cluster_width, cluster_width_array, *args)
+        pool.map(func, [i for i in range(len(cluster_width_array))])
+    elif function_str == "mt_frac_truth_cluster_size_filename":
+        func = partial(mt_frac_truth_cluster_size_filename, cluster_width_array, *args)
         pool.map(func, [i for i in range(len(cluster_width_array))])
     else:
         raise ValueError("Function not found")

@@ -103,3 +103,42 @@ def build_truth_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  m
             clusters.append(Cluster(id=i, master_id=i, master_primary = primaries_frame[i], master_tid = tids_frame[i], frame_id = frame, hits = cluster_tmp))
 
     return clusters
+
+
+############################
+def truth_cluster_size(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, mask_type, number_of_frames = None, rec_type = None):
+    max_distances = []
+
+    #set frame number
+    if number_of_frames == None:
+        frames_to_analyze = ttree_mu3e.GetEntries()
+    else:
+        frames_to_analyze = number_of_frames
+
+    for frame in range(frames_to_analyze):
+        ttree_mu3e.GetEntry(frame)
+        #Printing status info
+        if frame % 5000 == 0:
+            print("Progress: ", np.round(frame / frames_to_analyze * 100), " %","of ", frames_to_analyze, " frames", end='\r')
+
+
+        #get truth clusters
+        truth_clusters = build_truth_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
+
+        #find cluster hits that are furthest apart
+        for truth_cluster in truth_clusters:
+            tmp_distances = []
+            for i in range(len(truth_cluster)):
+                pos1 = mu3e_detector.TileDetector.tile[truth_cluster.hits[i].tile_id].pos
+                for j in range(len(truth_cluster)):
+                    pos2 = mu3e_detector.TileDetector.tile[truth_cluster.hits[j].tile_id].pos
+                    distance = np.sqrt((pos1[0] - pos2[0]) ** 2 + (pos1[1] - pos2[1]) ** 2 + (pos1[2] - pos2[2]) ** 2) #mm
+                    #tmp_distances[distance] = [truth_cluster.hits[i], truth_cluster.hits[j]]
+                    tmp_distances.append(distance)
+            max_distances.append(max(tmp_distances))
+
+    print("Progress: 100 %","of ", frames_to_analyze, " frames")
+
+    return max_distances
+
+
