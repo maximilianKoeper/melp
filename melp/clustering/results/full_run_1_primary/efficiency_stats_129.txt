@@ -1,0 +1,6 @@
+Number of analyzed frames:  199841 Number of correct counter fractions:  199837
+Total #hits in frames/#hits in clusters =  1.0000041915141507
+Correctly associated out of all hits:  74.90697698787771 %
+Correctly associated out of all hits in clusters:  74.90729096153174 %
+Incorrectly associated out of all hits:  25.092603862464102 %
+Incorrectly associated out of all hits in clusters:  25.092709038468268 %

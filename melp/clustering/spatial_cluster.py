@@ -62,11 +62,13 @@ def build_truth_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  m
     times_frame     = []
     mcis_frame      = []
     tids_frame      = []
+    edep_frame      = []
     for hit_tile_index in range(ttree_mu3e.Ntilehit):
         hit_tiles_frame.append(ttree_mu3e.tilehit_tile[hit_tile_index])
         primaries_frame.append(ttree_mu3e.tilehit_primary[hit_tile_index])
         times_frame.append(ttree_mu3e.tilehit_time[hit_tile_index])
         mcis_frame.append(ttree_mu3e.tilehit_mc_i[hit_tile_index])
+        edep_frame.append(ttree_mu3e.tilehit_edep[hit_tile_index])
     
     for mc_i in mcis_frame:
         ttree_mu3e_mc.GetEntry(mc_i)
@@ -96,7 +98,7 @@ def build_truth_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  m
         cluster_tmp = []
         for j in range(len(tids_frame)):
             if tids_frame[j] == tids_frame[i] and tids_frame[i] not in added_tids:
-                cluster_tmp.append(ClusterHit(tile_id = hit_tiles_frame[j], frame_id = frame, primary = primaries_frame[j], tid = tids_frame[j], time = times_frame[j]))
+                cluster_tmp.append(ClusterHit(tile_id = hit_tiles_frame[j], frame_id = frame, primary = primaries_frame[j], tid = tids_frame[j], time = times_frame[j], edep = edep_frame[j]))
         added_tids.append(tids_frame[i])
 
         if len(cluster_tmp) > 0:
