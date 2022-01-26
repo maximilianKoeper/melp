@@ -144,11 +144,11 @@ def station_station_timing(filename: str, detector, **kwargs):
 
                 # first and last hit used for timing information
                 tilehit_times_2, tilehit_ids_2 = (list(t) for t in zip(*sorted(zip(tmp_time_arr_2, tmp_id_arr_2))))
-                tmp_time_2 = tilehit_times_2[0] + 5
+                tmp_time_2 = tilehit_times_2[0]
                 #tmp_time_2 += detector.TileDetector.tile[tilehit_ids_2[0]].get_offset()
 
                 tilehit_times_1, tilehit_ids_1 = (list(t) for t in zip(*sorted(zip(tmp_time_arr_1, tmp_id_arr_1))))
-                tmp_time_1 = tilehit_times_1[0] - 5
+                tmp_time_1 = tilehit_times_1[0]
                 #tmp_time_1 += detector.TileDetector.tile[tilehit_ids_1[0]].get_offset()
 
                 # tof = 0.
@@ -160,22 +160,13 @@ def station_station_timing(filename: str, detector, **kwargs):
                 tof = (dist / 299792458) * (10 ** 9)
 
                 if kwargs["tof"]:
-                    #if (tmp_time_1 - tmp_time_2) < -10:
-                    #    time_dist_betw_stations.append(((tmp_time_1 - tmp_time_2) + tof))
-                    #else:
-                    #    time_dist_betw_stations.append(((tmp_time_1 - tmp_time_2) - tof))
-                    if detector.TileDetector.tile[tilehit_ids_1[0]].pos[1] < detector.TileDetector.tile[tilehit_ids_2[0]].pos[2]:
-                        time_dist_betw_stations.append((abs(tmp_time_1 - tmp_time_2) - tof))  # abs not needed ?
-                    else:
-                        time_dist_betw_stations.append((abs(tmp_time_2 - tmp_time_1) - tof))
+                    time_dist_betw_stations.append(((tmp_time_1 - tmp_time_2) - tof))
                 else:
-                    # time_offset_between_hits.append((abs(tmp_time_2 - tmp_time_1) - tof))  # abs not needed ?
-                    if detector.TileDetector.tile[tilehit_ids_1[0]].pos[1] > detector.TileDetector.tile[tilehit_ids_2[0]].pos[2]:
+                    if detector.TileDetector.tile[tilehit_ids_1[0]].pos[1] < detector.TileDetector.tile[tilehit_ids_2[0]].pos[1]:
                         time_dist_betw_stations.append(((tmp_time_1 - tmp_time_2)))  # abs not needed ?
                     else:
                         time_dist_betw_stations.append(((tmp_time_2 - tmp_time_1)))  # abs not needed ?
                     # time_dist_betw_stations.append((tmp_time_1 - tmp_time_2))
-
                 # trajectories.append(Trajectory(tile1_pos=pos1, tile2_pos=pos2))
 
         it += 1

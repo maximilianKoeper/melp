@@ -62,11 +62,14 @@ def tof_correction_z(__detector__, dt_z_rel: dict, station_offset: int, tof_mode
                     dt_tmp -= tof_time
             # TOF simple
             elif tof_mode == "simple":
-                tof_time = 0.009
+                tof_time = 0.008
                 if station_offset == 200000:
                     dt_tmp += tof_time
-                else:
+                elif station_offset == 300000:
+                    tof_time = 0.014
                     dt_tmp -= tof_time
+                else:
+                    print("test")
             # No TOF correction
             else:
                 warnings.warn("No TOF correction applied")
