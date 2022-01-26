@@ -176,6 +176,7 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_d
     frac_corr_clusters_frame   = []
     frac_uncorr_frame          = []
     total_hits_counter         = []
+    number_of_tids             = []
     cluster_hits_counter       = 0
     tot_corr_counter           = 0
     tot_uncorr_counter         = 0
@@ -236,6 +237,21 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_d
             if max_time - min_time > 0.5:
                 long_time_between_cluster_hits_counter_tmp +=1
         long_time_between_cluster_hits_counter += long_time_between_cluster_hits_counter_tmp
+
+        #-----------------------------------------
+        #Count number of different tids in cluster
+        #-----------------------------------------
+        number_of_tids_tmp = []
+        for i in range(len(clusters)):
+            tids = clusters[i].get_tids()
+            tids_checked = []
+            diff_tid_counter = 0
+            for tid in tids:
+                if tid not in tids_checked:
+                    diff_tid_counter += 1
+                    tids_checked.append(tid)
+            number_of_tids_tmp.append(diff_tid_counter)
+        number_of_tids.extend(number_of_tids_tmp)
 
         #--------------------------
         #comparison hits in cluster
@@ -319,7 +335,7 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_d
     print("Incorrectly associated out of all hits: ", tot_uncorr_counter/(np.sum(total_hits_counter)/100),"%")
     print("Incorrectly associated out of all hits in clusters: ", tot_uncorr_counter/(cluster_hits_counter/100),"%")
    
-    return frac_corr_frame, frac_corr_clusters_frame, frac_uncorr_frame, tot_corr_counter, total_hits_counter
+    return frac_corr_frame, frac_corr_clusters_frame, frac_uncorr_frame, tot_corr_counter, total_hits_counter, number_of_tids
 
 
 ###########################
@@ -570,7 +586,7 @@ def efficiency_as_function_of_cluster_width(ttree_mu3e, ttree_mu3e_mc, ttree_sen
 
         #get efficiency for the threshold
         with HiddenPrints():
-            __, __, __, tot_corr_counter, total_hits_counter = compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, time_threshold, threshold_cluster_width, mask_type, number_of_frames, rec_type, cluster_type)
+            __, __, __, tot_corr_counter, total_hits_counter, __ = compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, time_threshold, threshold_cluster_width, mask_type, number_of_frames, rec_type, cluster_type)
         efficiency.append(tot_corr_counter/(np.sum(total_hits_counter)/100))
         finished += 1
 

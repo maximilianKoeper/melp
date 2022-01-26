@@ -143,4 +143,3 @@ def truth_cluster_size(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
 
     return max_distances
 
-

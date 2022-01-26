@@ -200,18 +200,17 @@ def compare_to_tid_filename(filename, time_threshold, threshold_cluster_width, m
         mu3e_detector = Detector.initFromROOT(filename)
 
     #define counters and arrays
-    frac_corr_frame            = []
-    frac_corr_clusters_frame   = []
-    frac_uncorr_frame          = []
-    total_hits_counter         = []
-    cluster_hits_counter       = 0
-    tot_corr_counter           = 0
-    tot_uncorr_counter         = 0
-
-    tot_cluster_counter        = 0
-    double_tid_cluster_counter = 0
-    double_tid_cluster_hits_counter = 0
-    corr_double_tid_cluster_counter = 0
+    frac_corr_frame                        = []
+    frac_corr_clusters_frame               = []
+    frac_uncorr_frame                      = []
+    total_hits_counter                     = []
+    cluster_hits_counter                   = 0
+    tot_corr_counter                       = 0
+    tot_uncorr_counter                     = 0
+    tot_cluster_counter                    = 0
+    double_tid_cluster_counter             = 0
+    double_tid_cluster_hits_counter        = 0
+    corr_double_tid_cluster_counter        = 0
     long_time_between_cluster_hits_counter = 0
 
 
@@ -233,7 +232,7 @@ def compare_to_tid_filename(filename, time_threshold, threshold_cluster_width, m
             clusters = clump.three_dim_cluster.spatial_clustering_for_time_clusters(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, time_threshold, mask_type, rec_type)
         elif cluster_type == "timetheniterativespatial":
             clusters = clump.three_dim_cluster.iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, time_threshold, mask_type, rec_type)
-        else:
+        elif cluster_type == "spatial":
             clusters = clump.spatial_cluster.build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
         
         #----------------------
@@ -243,7 +242,6 @@ def compare_to_tid_filename(filename, time_threshold, threshold_cluster_width, m
         for i in range(len(clusters)):
             cluster_hits_counter_tmp += clusters[i].__len__()
         cluster_hits_counter += cluster_hits_counter_tmp
-
 
         #---------------------------------------------------
         #count clusters with hits that are far apart in time
@@ -323,7 +321,7 @@ def compare_to_tid_filename(filename, time_threshold, threshold_cluster_width, m
             frac_corr_frame.append(corr_counter/total_hits_frame)
             
     #write overall stats to txt file 
-    f = open("./melp/clustering/results/efficiency_stats_tid_"+str(filename)[-8:-5]+".txt", "w")
+    f = open("./melp/clustering/results/efficiency_stats_tid_"+str(filename)[-8:-5]+"_"+str(cluster_type)+".txt", "w")
     print("Number of analyzed frames: ", len(total_hits_counter), "Number of correct counter fractions: ", len(frac_corr_frame), file = f)
     print("Total number of hits =",np.sum(total_hits_counter), ", Identified correctly + identified incorrectly =", tot_corr_counter + tot_uncorr_counter, file = f)
     print("Identified correctly:", tot_corr_counter, file = f)
@@ -340,9 +338,9 @@ def compare_to_tid_filename(filename, time_threshold, threshold_cluster_width, m
     f.close()
 
     #save info as txt file
-    np.savetxt("./melp/clustering/results/frac_corr_frame_tid_"+str(filename)[-8:-5]+".txt", np.array(frac_corr_frame))
-    np.savetxt("./melp/clustering/results/frac_corr_clusters_frame_tid_"+str(filename)[-8:-5]+".txt", np.array(frac_corr_clusters_frame))
-    np.savetxt("./melp/clustering/results/frac_uncorr_frame_tid_"+str(filename)[-8:-5]+".txt", np.array(frac_uncorr_frame))
+    np.savetxt("./melp/clustering/results/frac_corr_frame_tid_"+str(filename)[-8:-5]+"_"+str(cluster_type)+".txt", np.array(frac_corr_frame))
+    np.savetxt("./melp/clustering/results/frac_corr_clusters_frame_tid_"+str(filename)[-8:-5]+"_"+str(cluster_type)+".txt", np.array(frac_corr_clusters_frame))
+    np.savetxt("./melp/clustering/results/frac_uncorr_frame_tid_"+str(filename)[-8:-5]+"_"+str(cluster_type)+".txt", np.array(frac_uncorr_frame))
 
 
 def efficiency_as_function_of_cluster_width_filename(threshold_cluster_width, filename, time_threshold, mask_type, number_of_frames = None, rec_type = None, cluster_type = None):
@@ -363,7 +361,7 @@ def efficiency_as_function_of_cluster_width_filename(threshold_cluster_width, fi
 
     #write efficiency to txt file 
     if efficiency != -1:
-        np.savetxt("./melp/clustering/results/efficiency_vs_cluster_width_"+str(threshold_cluster_width)+".txt", np.array([efficiency, threshold_cluster_width]))
+        np.savetxt("./melp/clustering/results/efficiency_vs_cluster_width_"+str(threshold_cluster_width)+"_"+str(cluster_type)+".txt", np.array([efficiency, threshold_cluster_width]))
 
 
 ####################################

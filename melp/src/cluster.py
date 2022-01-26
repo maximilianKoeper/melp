@@ -100,6 +100,13 @@ class Cluster:
             mcis.append(hit.mc_i)
         return mcis
 
+    #returns all edeps in cluster
+    def get_edeps(self):
+        edeps = []
+        for hit in self.hits:
+            edeps.append(hit.edep)
+        return edeps
+
     #return the value and index of hit with smallest time in cluster
     def get_min_time(self):
         times = []
