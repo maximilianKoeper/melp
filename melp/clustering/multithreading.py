@@ -234,6 +234,8 @@ def compare_to_tid_filename(filename, time_threshold, threshold_cluster_width, m
             clusters = clump.three_dim_cluster.iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, time_threshold, mask_type, rec_type)
         elif cluster_type == "spatial":
             clusters = clump.spatial_cluster.build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
+        elif cluster_type == "iterativespatial":
+            clusters = clump.spatial_cluster.iterative_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
         
         #----------------------
         #count hits in clusters
@@ -249,10 +251,11 @@ def compare_to_tid_filename(filename, time_threshold, threshold_cluster_width, m
         long_time_between_cluster_hits_counter_tmp = 0
         for i in range(len(clusters)):
             times = clusters[i].get_times()
-            min_time = min(times)
-            max_time = max(times)
-            if max_time - min_time > 0.5:
-                long_time_between_cluster_hits_counter_tmp +=1
+            if len(times) > 0:
+                min_time = min(times)
+                max_time = max(times)
+                if max_time - min_time > 0.5:
+                    long_time_between_cluster_hits_counter_tmp +=1
         long_time_between_cluster_hits_counter += long_time_between_cluster_hits_counter_tmp
 
         #--------------------------
@@ -320,22 +323,23 @@ def compare_to_tid_filename(filename, time_threshold, threshold_cluster_width, m
         if total_hits_frame != 0:
             frac_corr_frame.append(corr_counter/total_hits_frame)
             
-    #write overall stats to txt file 
-    f = open("./melp/clustering/results/efficiency_stats_tid_"+str(filename)[-8:-5]+"_"+str(cluster_type)+".txt", "w")
-    print("Number of analyzed frames: ", len(total_hits_counter), "Number of correct counter fractions: ", len(frac_corr_frame), file = f)
-    print("Total number of hits =",np.sum(total_hits_counter), ", Identified correctly + identified incorrectly =", tot_corr_counter + tot_uncorr_counter, file = f)
-    print("Identified correctly:", tot_corr_counter, file = f)
-    print("Identified incorrectly:", tot_uncorr_counter, file = f)
-    print("Total #hits in frames/#hits in clusters = ", np.sum(total_hits_counter)/cluster_hits_counter, file = f)
-    print("Total number of clusters:",tot_cluster_counter, ", Hits:",np.sum(total_hits_counter), file = f)
-    print("Number of clusters with hits that are far apart in time:", long_time_between_cluster_hits_counter, file = f)
-    print("Number of clusters where tid already exists:",double_tid_cluster_counter, ", Hits:", double_tid_cluster_hits_counter, file = f)
-    print("Number of clusters where tid already exists, that are accounted for:", corr_double_tid_cluster_counter, file = f)
-    print("Correctly associated out of all hits: ", tot_corr_counter/(np.sum(total_hits_counter)/100),"%", file = f)
-    print("Correctly associated out of all hits in clusters: ", tot_corr_counter/(cluster_hits_counter/100),"%", file = f)
-    print("Incorrectly associated out of all hits: ", tot_uncorr_counter/(np.sum(total_hits_counter)/100),"%", file = f)
-    print("Incorrectly associated out of all hits in clusters: ", tot_uncorr_counter/(cluster_hits_counter/100),"%", file = f)
-    f.close()
+    #write overall stats to txt file
+    if cluster_hits_counter > 0:
+        f = open("./melp/clustering/results/efficiency_stats_tid_"+str(filename)[-8:-5]+"_"+str(cluster_type)+".txt", "w")
+        print("Number of analyzed frames: ", len(total_hits_counter), "Number of correct counter fractions: ", len(frac_corr_frame), file = f)
+        print("Total number of hits =",np.sum(total_hits_counter), ", Identified correctly + identified incorrectly =", tot_corr_counter + tot_uncorr_counter, file = f)
+        print("Identified correctly:", tot_corr_counter, file = f)
+        print("Identified incorrectly:", tot_uncorr_counter, file = f)
+        print("Total #hits in frames/#hits in clusters = ", np.sum(total_hits_counter)/cluster_hits_counter, file = f)
+        print("Total number of clusters:",tot_cluster_counter, ", Hits:",np.sum(total_hits_counter), file = f)
+        print("Number of clusters with hits that are far apart in time:", long_time_between_cluster_hits_counter, file = f)
+        print("Number of clusters where tid already exists:",double_tid_cluster_counter, ", Hits:", double_tid_cluster_hits_counter, file = f)
+        print("Number of clusters where tid already exists, that are accounted for:", corr_double_tid_cluster_counter, file = f)
+        print("Correctly associated out of all hits: ", tot_corr_counter/(np.sum(total_hits_counter)/100),"%", file = f)
+        print("Correctly associated out of all hits in clusters: ", tot_corr_counter/(cluster_hits_counter/100),"%", file = f)
+        print("Incorrectly associated out of all hits: ", tot_uncorr_counter/(np.sum(total_hits_counter)/100),"%", file = f)
+        print("Incorrectly associated out of all hits in clusters: ", tot_uncorr_counter/(cluster_hits_counter/100),"%", file = f)
+        f.close()
 
     #save info as txt file
     np.savetxt("./melp/clustering/results/frac_corr_frame_tid_"+str(filename)[-8:-5]+"_"+str(cluster_type)+".txt", np.array(frac_corr_frame))
@@ -356,7 +360,7 @@ def efficiency_as_function_of_cluster_width_filename(threshold_cluster_width, fi
 
     efficiency = -1  
     with HiddenPrints():
-        __, __, __, tot_corr_counter, total_hits_counter = clump.plots.compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, time_threshold, threshold_cluster_width, mask_type, number_of_frames, rec_type, cluster_type)
+        __, __, __, tot_corr_counter, total_hits_counter, __ = clump.plots.compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, time_threshold, threshold_cluster_width, mask_type, number_of_frames, rec_type, cluster_type)
     efficiency = tot_corr_counter/(np.sum(total_hits_counter)/100)
 
     #write efficiency to txt file 

@@ -143,3 +143,57 @@ def truth_cluster_size(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
 
     return max_distances
 
+
+###################
+def iterative_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, frame, mask_type, rec_type = None):
+    #-----------------------------------------------------------------------
+    #get all tiles that have been hit in frame and their primaries and times
+    #-----------------------------------------------------------------------
+    hit_tiles_frame = []
+    primaries_frame = []
+    times_frame     = []
+    mcis_frame      = []
+    tids_frame      = []
+    edep_frame      = []
+    for hit_tile_index in range(ttree_mu3e.Ntilehit):
+        hit_tiles_frame.append(ttree_mu3e.tilehit_tile[hit_tile_index])
+        primaries_frame.append(ttree_mu3e.tilehit_primary[hit_tile_index])
+        times_frame.append(ttree_mu3e.tilehit_time[hit_tile_index])
+        mcis_frame.append(ttree_mu3e.tilehit_mc_i[hit_tile_index])
+        edep_frame.append(ttree_mu3e.tilehit_edep[hit_tile_index])
+    
+    for mc_i in mcis_frame:
+        ttree_mu3e_mc.GetEntry(mc_i)
+        tids_frame.append(ttree_mu3e_mc.tid)
+
+    #-------------------------
+    #build iterative masks
+    #-------------------------
+    new_clusters = []
+    added_hits = [] #just tile_ids
+    for i in range(len(hit_tiles_frame)):  #loop over all hits in frame
+        cluster_tmp = []  
+        if hit_tiles_frame[i] not in added_hits:
+            mask_tmp, master_primary_mask, master_tid_mask = clump.masks.build_mask_single_hit(ClusterHit(tile_id=hit_tiles_frame[i], mc_i=mcis_frame[i], tid=tids_frame[i], frame_id=frame, primary=primaries_frame[i], time=times_frame[i], edep=edep_frame[i]), ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector, frame, mask_type, rec_type = None)
+            for j in range(len(hit_tiles_frame)):
+                if hit_tiles_frame[j] in mask_tmp and hit_tiles_frame[j] not in added_hits: 
+                    cluster_tmp.append(ClusterHit(tile_id=hit_tiles_frame[j], mc_i=mcis_frame[j], tid=tids_frame[j], frame_id=frame, primary=primaries_frame[j], time=times_frame[j], edep=edep_frame[j]))
+                    added_hits.append(hit_tiles_frame[j])
+        #build mask around hits in first cluster
+        if len(cluster_tmp) != 0:
+            for hit_tmp in cluster_tmp:
+                next_mask_tmp, __, __ = clump.masks.build_mask_single_hit(hit_tmp, ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector, frame, mask_type, rec_type = None)
+                for m in range(len(hit_tiles_frame)):
+                    if hit_tiles_frame[m] in next_mask_tmp and hit_tiles_frame[m] not in added_hits: 
+                        cluster_tmp.append(ClusterHit(tile_id=hit_tiles_frame[m], mc_i=mcis_frame[m], tid=tids_frame[m], frame_id=frame, primary=primaries_frame[m], time=times_frame[m], edep=edep_frame[m]))
+                        added_hits.append(hit_tiles_frame[m])
+        
+        #use first hit as master
+        if len(cluster_tmp) != 0:
+            new_cluster_tmp = Cluster(id=0, master_id=0, master_primary = master_primary_mask, master_tid = master_tid_mask, frame_id = frame, hits = cluster_tmp)
+            __, index_min_time = new_cluster_tmp.get_min_time()
+
+        if len(cluster_tmp) != 0:
+            new_clusters.append(Cluster(id = cluster_tmp[index_min_time].tile_id, master_id = cluster_tmp[index_min_time].tile_id, master_primary = cluster_tmp[index_min_time].primary, master_tid = cluster_tmp[index_min_time].tid, frame_id = frame, hits = cluster_tmp))
+
+    return new_clusters

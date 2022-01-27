@@ -1,0 +1,13 @@
+Number of analyzed frames:  199841 Number of correct counter fractions:  199839
+Total number of hits = 6201027 , Identified correctly + identified incorrectly = 6200986
+Identified correctly: 5319001
+Identified incorrectly: 881985
+Total #hits in frames/#hits in clusters =  1.0000066118517281
+Total number of clusters: 0 , Hits: 6201027
+Number of clusters with hits that are far apart in time: 167799
+Number of clusters where tid already exists: 0 , Hits: 0
+Number of clusters where tid already exists, that are accounted for: 0
+Correctly associated out of all hits:  85.77613030873758 %
+Correctly associated out of all hits in clusters:  85.77669744779298 %
+Incorrectly associated out of all hits:  14.223208510461252 %
+Incorrectly associated out of all hits in clusters:  14.22330255220702 %

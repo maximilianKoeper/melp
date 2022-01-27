@@ -232,10 +232,11 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_d
         long_time_between_cluster_hits_counter_tmp = 0
         for i in range(len(clusters)):
             times = clusters[i].get_times()
-            min_time = min(times)
-            max_time = max(times)
-            if max_time - min_time > 0.5:
-                long_time_between_cluster_hits_counter_tmp +=1
+            if len(times) > 0:
+                min_time = min(times)
+                max_time = max(times)
+                if max_time - min_time > 0.5:
+                    long_time_between_cluster_hits_counter_tmp +=1
         long_time_between_cluster_hits_counter += long_time_between_cluster_hits_counter_tmp
 
         #-----------------------------------------
@@ -320,20 +321,20 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_d
             
 
     print("Progress: 100 %","of ", frames_to_analyze, " frames")
-
-    print("Number of analyzed frames: ", len(total_hits_counter), "Number of correct counter fractions: ", len(frac_corr_frame))
-    print("Total number of hits =",np.sum(total_hits_counter), ", Identified correctly + identified incorrectly =", tot_corr_counter + tot_uncorr_counter)
-    print("Identified correctly:", tot_corr_counter)
-    print("Identified incorrectly:", tot_uncorr_counter)
-    print("Total #hits in frames/#hits in clusters = ", np.sum(total_hits_counter)/cluster_hits_counter)
-    print("Total number of clusters:",tot_cluster_counter, ", Hits:",np.sum(total_hits_counter))
-    print("Number of clusters with hits that are far apart in time:", long_time_between_cluster_hits_counter)
-    print("Number of clusters where tid already exists:",double_tid_cluster_counter, ", Hits:", double_tid_cluster_hits_counter)
-    print("Number of clusters where tid already exists, that are accounted for:", corr_double_tid_cluster_counter)
-    print("Correctly associated out of all hits: ", tot_corr_counter/(np.sum(total_hits_counter)/100),"%")
-    print("Correctly associated out of all hits in clusters: ", tot_corr_counter/(cluster_hits_counter/100),"%")
-    print("Incorrectly associated out of all hits: ", tot_uncorr_counter/(np.sum(total_hits_counter)/100),"%")
-    print("Incorrectly associated out of all hits in clusters: ", tot_uncorr_counter/(cluster_hits_counter/100),"%")
+    if cluster_hits_counter > 0:
+        print("Number of analyzed frames: ", len(total_hits_counter), "Number of correct counter fractions: ", len(frac_corr_frame))
+        print("Total number of hits =",np.sum(total_hits_counter), ", Identified correctly + identified incorrectly =", tot_corr_counter + tot_uncorr_counter)
+        print("Identified correctly:", tot_corr_counter)
+        print("Identified incorrectly:", tot_uncorr_counter)
+        print("Total #hits in frames/#hits in clusters = ", np.sum(total_hits_counter)/cluster_hits_counter)
+        print("Total number of clusters:",tot_cluster_counter, ", Hits:",np.sum(total_hits_counter))
+        print("Number of clusters with hits that are far apart in time:", long_time_between_cluster_hits_counter)
+        print("Number of clusters where tid already exists:",double_tid_cluster_counter, ", Hits:", double_tid_cluster_hits_counter)
+        print("Number of clusters where tid already exists, that are accounted for:", corr_double_tid_cluster_counter)
+        print("Correctly associated out of all hits: ", tot_corr_counter/(np.sum(total_hits_counter)/100),"%")
+        print("Correctly associated out of all hits in clusters: ", tot_corr_counter/(cluster_hits_counter/100),"%")
+        print("Incorrectly associated out of all hits: ", tot_uncorr_counter/(np.sum(total_hits_counter)/100),"%")
+        print("Incorrectly associated out of all hits in clusters: ", tot_uncorr_counter/(cluster_hits_counter/100),"%")
    
     return frac_corr_frame, frac_corr_clusters_frame, frac_uncorr_frame, tot_corr_counter, total_hits_counter, number_of_tids
 
