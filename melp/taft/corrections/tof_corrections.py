@@ -10,7 +10,8 @@ import numpy as np
 
 def alpha_from_z(z: float) -> float:
     # TODO: This is only approximated!
-    return np.pi - (((25 / 328.8) * abs(z)) / 180) * np.pi
+    # 25/328.8
+    return (((25 / 328.8) * (z)) / 180) * np.pi
     # return np.pi + (((25 / 328.8) * z) / 180) * np.pi
 
 
@@ -33,6 +34,28 @@ def tof_z_new(xyz: list) -> float:
     length_z = (tile_length / 2) * (np.cos(alpha))
     tof = - (length_z / c) * (10 ** 9)  # ns
     return tof
+
+
+def tof_z_new_better(xyz: list) -> float:
+    tile_height = 5. * (10 ** (-3))  # m
+    tile_length = 6.3 * (10 ** (-3))  # m
+    c = 299792458  # m/s
+    beta = (19 / 180) * np.pi  # deg
+    alpha = alpha_from_z(xyz[2])
+
+    length_z = (tile_height / 2) * (np.cos(alpha))
+    length_phi = (tile_length / 2) * (np.tan(beta))
+
+    length_total = np.sqrt(length_z ** 2 + length_phi ** 2)
+
+    tof = (length_total/c) * (10 ** 9)  # ns
+
+    return tof
+
+
+
+
+
 
 
 # ---------------------------------------
