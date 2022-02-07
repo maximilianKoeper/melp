@@ -230,10 +230,10 @@ def getHitAngle(tileID=-1, rec_type="Truth", hit_type="primary", angle="phi", pa
             #############
             if hit_type == "primary":
                 # only primary hit gets analyzed
-                if hit.hid != 1:
+                if abs(hit.hid) != 1:
                     continue
             elif hit_type == "secondary":
-                if hit.hid != 1:
+                if abs(hit.hid) != 2:
                     continue
             elif hit_type == "all":
                 pass
