@@ -9,20 +9,22 @@ import numpy as np
 # --> 7.1 in Bachelor Thesis
 
 def alpha_from_z(z: float) -> float:
-    # TODO: This is only approximated!
-    # 25/328.8
-    return (((25 / 328.8) * (z)) / 180) * np.pi
+    # Fit approximated from angle distribution
+    if z > 0:
+        return (((0.07744 * (z) + 94.689)-90) / 180) * np.pi
+    if z < 0:
+        return (((-0.018995 * (z) + 64.49)-90) / 180) * np.pi
     # return np.pi + (((25 / 328.8) * z) / 180) * np.pi
 
 
 def tof_z_graf(z: list) -> float:
     tile_length = 5. * (10 ** (-3))  # m
     c = 299792458  # m/s
-    beta = (19 / 180) * np.pi  # deg
+    beta = (21 / 180) * np.pi  # deg
     alpha = alpha_from_z(z[2])
 
     time = (tile_length / (2 * c)) * (1 + np.tan(alpha) ** 2 + np.tan(beta) ** 2)
-    return time * (10 ** 9)
+    return time * (10 ** 9) #ps
 
 
 def tof_z_new(xyz: list) -> float:
