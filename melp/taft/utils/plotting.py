@@ -4,7 +4,8 @@ import numpy as np
 
 # --------------------------------------------------------
 def plot_station_calibration(mu3e_detector, station: int):
-    f_size = 15
+    f_size = 25
+    plt.rcParams.update({'font.size': f_size})
 
     if station == 1:
         station_offset = 200000
@@ -46,33 +47,37 @@ def plot_station_calibration(mu3e_detector, station: int):
     ax = ax_arr[0][0]
     heatplot_truth = ax.imshow(grid_truth.T, cmap='magma', vmin=min, vmax=max)
     ax.set_title("truth offset", fontsize=f_size)
-    ax.set_ylabel("phi (column)", fontsize=f_size)
+    ax.set_ylabel("phi", fontsize=f_size)
     ax.set_xlabel("z", fontsize=f_size)
-    fig.colorbar(heatplot_truth, ax=ax)
+    cbar = fig.colorbar(heatplot_truth, ax=ax)
+    cbar.set_label("[ns]")
 
     # plot calibrated offsets
     ax = ax_arr[0][1]
     heatplot_calibrated = ax.imshow(grid_calibrated.T, cmap='magma', vmin=min, vmax=max)
     ax.set_title("calibrated offset", fontsize=f_size)
-    ax.set_ylabel("phi (column)", fontsize=f_size)
+    ax.set_ylabel("phi", fontsize=f_size)
     ax.set_xlabel("z", fontsize=f_size)
-    fig.colorbar(heatplot_calibrated, ax=ax)
+    cbar = fig.colorbar(heatplot_truth, ax=ax)
+    cbar.set_label("[ns]")
 
     # plot deviation
     ax = ax_arr[1][0]
     heatplot_relative = ax.imshow(grid_relative.T, cmap='magma')
     ax.set_title("relative error to truth", fontsize=f_size)
-    ax.set_ylabel("phi (column)", fontsize=f_size)
+    ax.set_ylabel("phi", fontsize=f_size)
     ax.set_xlabel("z", fontsize=f_size)
-    fig.colorbar(heatplot_relative, ax=ax)
+    cbar = fig.colorbar(heatplot_truth, ax=ax)
+    cbar.set_label("[ns]")
 
     # plot deviation with same range as offsets
     ax = ax_arr[1][1]
     heatplot_calibrated = ax.imshow(grid_relative.T, cmap='magma', vmin=min, vmax=max)
-    ax.set_title("relative error from truth (same scaling as offsets)", fontsize=f_size)
-    ax.set_ylabel("phi (column)", fontsize=f_size)
+    ax.set_title("relative error from truth \n(same scaling as offsets)", fontsize=f_size)
+    ax.set_ylabel("phi", fontsize=f_size)
     ax.set_xlabel("z", fontsize=f_size)
-    fig.colorbar(heatplot_calibrated, ax=ax)
+    cbar = fig.colorbar(heatplot_truth, ax=ax)
+    cbar.set_label("[ns]")
 
     plt.show()
 
