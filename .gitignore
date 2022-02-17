@@ -9,6 +9,7 @@ test_mt.py
 **\root_files
 *.npz
 *.txt
+**\melp\clustering\results
 
 
 !/testdata/**
