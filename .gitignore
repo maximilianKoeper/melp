@@ -8,6 +8,7 @@ test_mt.py
 **\.ipynb_checkpoints
 **\root_files
 *.npz
+*.txt
 
 
 !/testdata/**
