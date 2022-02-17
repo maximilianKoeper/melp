@@ -124,7 +124,7 @@ def station_station_timing(filename: str, detector, **kwargs):
 
         for key in test_dict:
             tmp_ids = test_dict[key][0]
-            if any(y > 300000 for y in tmp_ids) and any(y < 300000 for y in tmp_ids):
+            if any(y >= 300000 for y in tmp_ids) and any(y < 300000 for y in tmp_ids):
                 # print(test_dict[key][0])
                 tmp_time_arr_2 = []
                 tmp_id_arr_2 = []
@@ -142,14 +142,17 @@ def station_station_timing(filename: str, detector, **kwargs):
                 # tmp_time_1 = sum(tmp_time_arr_1) / len(tmp_time_arr_1)
                 # tmp_time_2 = sum(tmp_time_arr_2) / len(tmp_time_arr_2)
 
+                if (max(tmp_time_arr_2) - min(tmp_time_arr_2)) > 0.5 or (max(tmp_time_arr_1) - min(tmp_time_arr_1)) > 0.5:
+                    continue
+
                 # first and last hit used for timing information
                 tilehit_times_2, tilehit_ids_2 = (list(t) for t in zip(*sorted(zip(tmp_time_arr_2, tmp_id_arr_2))))
-                tmp_time_2 = tilehit_times_2[0]
-                #tmp_time_2 += detector.TileDetector.tile[tilehit_ids_2[0]].get_offset()
+                tmp_time_2 = tilehit_times_2[0] #+ kwargs["offset"]/2
+                tmp_time_2 += detector.TileDetector.tile[tilehit_ids_2[0]].get_offset()
 
                 tilehit_times_1, tilehit_ids_1 = (list(t) for t in zip(*sorted(zip(tmp_time_arr_1, tmp_id_arr_1))))
-                tmp_time_1 = tilehit_times_1[0]
-                #tmp_time_1 += detector.TileDetector.tile[tilehit_ids_1[0]].get_offset()
+                tmp_time_1 = tilehit_times_1[0] #- kwargs["offset"]/2
+                tmp_time_1 += detector.TileDetector.tile[tilehit_ids_1[0]].get_offset()
 
                 # tof = 0.
                 pos1 = detector.TileDetector.tile[tilehit_ids_1[0]].pos
@@ -159,10 +162,21 @@ def station_station_timing(filename: str, detector, **kwargs):
                 dist *= 0.001  # m
                 tof = (dist / 299792458) * (10 ** 9)
 
-                if kwargs["tof"]:
-                    time_dist_betw_stations.append(((tmp_time_1 - tmp_time_2) - tof))
-                else:
+                if kwargs["mode"] == "tof":
                     if detector.TileDetector.tile[tilehit_ids_1[0]].pos[1] < detector.TileDetector.tile[tilehit_ids_2[0]].pos[1]:
+                        time_dist_betw_stations.append(((tmp_time_1 - tmp_time_2)) - tof)  # abs not needed ?
+                    else:
+                        time_dist_betw_stations.append(((tmp_time_2 - tmp_time_1)) - tof)  # abs not needed ?
+                elif kwargs["mode"] == "test":
+                        time_dist_betw_stations.append(((tmp_time_1 - tmp_time_2)))  # abs not needed ?
+                elif kwargs["mode"] == "test tof":
+                    if detector.TileDetector.tile[tilehit_ids_1[0]].pos[1] < detector.TileDetector.tile[tilehit_ids_2[0]].pos[1]:
+                        time_dist_betw_stations.append(((tmp_time_1 - tmp_time_2)) - tof)  # abs not needed ?
+                    else:
+                        time_dist_betw_stations.append(((tmp_time_1 - tmp_time_2)) + tof)  # abs not needed ?
+                else:
+                    if detector.TileDetector.tile[tilehit_ids_1[0]].pos[1] < \
+                            detector.TileDetector.tile[tilehit_ids_2[0]].pos[1]:
                         time_dist_betw_stations.append(((tmp_time_1 - tmp_time_2)))  # abs not needed ?
                     else:
                         time_dist_betw_stations.append(((tmp_time_2 - tmp_time_1)))  # abs not needed ?
@@ -344,7 +358,11 @@ def get_single_tracks_primary_mc(tilehit_ids: list, tilehit_times: list, tilehit
     tmp_primary_reference = tilehit_primaries[0]
     index_start_track = 0
     for index in range(len(tilehit_times)):
-        if tilehit_primaries[index] != tmp_primary_reference:
+        # do not use events with primary < 0!!!!
+        if tilehit_primaries[index] < 0 and index < len(tilehit_times)-1:
+            tmp_primary_reference = tilehit_primaries[index+1]
+            index_start_track = index + 1
+        elif tilehit_primaries[index] != tmp_primary_reference:
             single_events[index] = [tilehit_ids[index_start_track:index], tilehit_times[index_start_track:index]]
             index_start_track = index
             tmp_primary_reference = tilehit_primaries[index]
