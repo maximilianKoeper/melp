@@ -273,7 +273,7 @@ def compare_to_tid_filename(filename, time_threshold, threshold_cluster_width, m
         #comparison of different clusters
         #--------------------------------
         #define which cluster_types should be analyzed by this part of the algorithm
-        sel_cluster_types = ["time", "timethenspatial", "timetheniterativespatial"]
+        sel_cluster_types = ["time", "timethenspatial", "timetheniterativespatial", "iterativespatial"]
         if cluster_type in sel_cluster_types:
             #count number of clusters that have same master_tid as other cluster
             for i in range(len(clusters)):
@@ -306,9 +306,22 @@ def compare_to_tid_filename(filename, time_threshold, threshold_cluster_width, m
                             pos_first_cluster = mu3e_detector.TileDetector.tile[min_times_clusters[index_first_cluster].hits[0].tile_id].pos
                             pos_double_cluster = mu3e_detector.TileDetector.tile[min_times_clusters[k].hits[0].tile_id].pos
                             distance = np.sqrt((pos_first_cluster[0] - pos_double_cluster[0]) ** 2 + (pos_first_cluster[1] - pos_double_cluster[1]) ** 2 + (pos_first_cluster[2] - pos_double_cluster[2]) ** 2) #mm
-                            if distance < threshold_cluster_width: #mm
-                                corr_counter   -= len(min_times_clusters[k])
-                                uncorr_counter += len(min_times_clusters[k])
+                            #applying size threshold
+                            if cluster_type == "time":
+                                #count hits in clusters that don't contain first hit with same tid
+                                same_tid_counter_tmp = 0
+                                for hit in min_times_clusters[k].hits:
+                                    if hit.tid == master_tid_1:
+                                        corr_counter   -= 1
+                                        uncorr_counter += 1
+                            else:
+                                if distance < threshold_cluster_width: #mm
+                                    #count hits in clusters that don't contain first hit with same tid
+                                    same_tid_counter_tmp = 0
+                                    for hit in min_times_clusters[k].hits:
+                                        if hit.tid == master_tid_1:
+                                            corr_counter   -= 1
+                                            uncorr_counter += 1
 
         #-------------------------------------
         #add to total corr and uncorr counters

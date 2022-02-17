@@ -108,9 +108,9 @@ def iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_senso
     #use time cluster as first rough cut / reference
     #-----------------------------------------------
     #without energy cut
-    #time_clusters = clump.time_cluster.time_clustering_frame_improv(ttree_mu3e, ttree_mu3e_mc, frame, time_threshold)
+    time_clusters = clump.time_cluster.time_clustering_frame_improv(ttree_mu3e, ttree_mu3e_mc, frame, time_threshold)
     #with energy cut
-    time_clusters = clump.time_cluster.time_clustering_frame_improv_energy_cut(ttree_mu3e, ttree_mu3e_mc, frame, time_threshold)
+    #time_clusters = clump.time_cluster.time_clustering_frame_improv_energy_cut(ttree_mu3e, ttree_mu3e_mc, frame, time_threshold)
 
     #-----------------------------------------------------------------------
     #get all tiles that have been hit in frame and their primaries and times
@@ -136,10 +136,11 @@ def iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_senso
     #build iterative masks
     #-------------------------
     new_clusters = []
-    added_hits = [] #just tile_ids
     for time_cluster in time_clusters:  #loop over all clusters
+        added_hits = [] #just tile_ids
         for i in range(len(time_cluster.hits)):  #loop over all hits in cluster  
             cluster_tmp = []  
+            remaining_hits = []
             if time_cluster.hits[i].tile_id not in added_hits:
                 mask_tmp, master_primary_mask, master_tid_mask = clump.masks.build_mask_single_hit(time_cluster.hits[i], ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector, frame, mask_type, rec_type = None)
                 for j in range(len(time_cluster.hits)):
@@ -156,6 +157,7 @@ def iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_senso
                             cluster_tmp.append(ClusterHit(tile_id = time_cluster.hits[m].tile_id, frame_id = frame, primary = time_cluster.hits[m].primary, time = time_cluster.hits[m].time, mc_i = time_cluster.hits[m].mc_i, tid = time_cluster.hits[m].tid, edep = time_cluster.hits[m].edep))
                             cluster_tmp_2.append(ClusterHit(tile_id = time_cluster.hits[m].tile_id, frame_id = frame, primary = time_cluster.hits[m].primary, time = time_cluster.hits[m].time, mc_i = time_cluster.hits[m].mc_i, tid = time_cluster.hits[m].tid, edep = time_cluster.hits[m].edep))
                             added_hits.append(time_cluster.hits[m].tile_id)
+
             #build mask around hits in second iteration clusters
             #cluster_tmp_3 = []
             #if len(cluster_tmp_2) != 0:
@@ -168,8 +170,14 @@ def iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_senso
             #                added_hits.append(time_cluster.hits[m].tile_id)
 
             if len(cluster_tmp) != 0:
-                new_clusters.append(Cluster(id = time_cluster.master_id, master_id = time_cluster.master_id, master_primary = master_primary_mask, master_tid = master_tid_mask, frame_id = frame, hits = cluster_tmp))
+                cluster_tmp_times = []
+                for hit in cluster_tmp:
+                    cluster_tmp_times.append(hit.time)
+                index_min_time = np.argmin(cluster_tmp_times)
+                new_clusters.append(Cluster(id = cluster_tmp[index_min_time].tile_id, master_id = cluster_tmp[index_min_time].tile_id, master_primary = cluster_tmp[index_min_time].primary, master_tid = cluster_tmp[index_min_time].tid, frame_id = frame, hits = cluster_tmp))
 
+
+    """
     #----------------------------------------------------------------------------------------------
     #Apply more sensitive time cut (0.2ns) for the new clusters from tile to the neighbouring tiles
     #----------------------------------------------------------------------------------------------
@@ -190,6 +198,7 @@ def iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_senso
                 new_clusters_2.append(new_clusters[n])
         else:
             new_clusters_2.append(new_clusters[n])
+    """
 
     """
     #-----------------------------------------------------
@@ -239,5 +248,5 @@ def iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_senso
             print("Frame +1:", test2)
     """
     
-    return new_clusters_2
+    return new_clusters
 

@@ -138,12 +138,6 @@ def compare_to_primary(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu
                             old_corr_cluster_flags.append(i)
                             old_corr_cluster_flags_check.append(i)
 
-            ####################################
-            if len(old_corr_cluster_flags_check) != 0:
-                print("Found a sneaky bastard")
-            ####################################
-            
-
         #-------------------------------------
         #add to total corr and uncorr counters
         #-------------------------------------
@@ -176,7 +170,7 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_d
     frac_corr_clusters_frame   = []
     frac_uncorr_frame          = []
     total_hits_counter         = []
-    number_of_tids             = []
+    number_of_tids_0             = []
     cluster_hits_counter       = 0
     tot_corr_counter           = 0
     tot_uncorr_counter         = 0
@@ -216,6 +210,8 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_d
             clusters = clump.three_dim_cluster.iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, time_threshold, mask_type, rec_type)
         elif cluster_type == "iterativespatial":
             clusters = clump.spatial_cluster.iterative_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
+        elif cluster_type == "truth":
+            clusters = clump.spatial_cluster.build_truth_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
         else:
             clusters = clump.spatial_cluster.build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
         
@@ -224,9 +220,9 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_d
         #----------------------
         cluster_hits_counter_tmp = 0
         for i in range(len(clusters)):
-            cluster_hits_counter_tmp += clusters[i].__len__()
+            tot_cluster_counter += 1
+            cluster_hits_counter_tmp += len(clusters[i])
         cluster_hits_counter += cluster_hits_counter_tmp
-
 
         #---------------------------------------------------
         #count clusters with hits that are far apart in time
@@ -244,7 +240,7 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_d
         #-----------------------------------------
         #Count number of different tids in cluster
         #-----------------------------------------
-        number_of_tids_tmp = []
+        number_of_tids_tmp_0 = []
         for i in range(len(clusters)):
             tids = clusters[i].get_tids()
             tids_checked = []
@@ -253,8 +249,8 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_d
                 if tid not in tids_checked:
                     diff_tid_counter += 1
                     tids_checked.append(tid)
-            number_of_tids_tmp.append(diff_tid_counter)
-        number_of_tids.extend(number_of_tids_tmp)
+            number_of_tids_tmp_0.append(diff_tid_counter)
+        number_of_tids_0.extend(number_of_tids_tmp_0)
 
         #--------------------------
         #comparison hits in cluster
@@ -266,16 +262,15 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_d
                     corr_counter += 1
                 else:
                     uncorr_counter += 1
-
+        
         #--------------------------------
         #comparison of different clusters
         #--------------------------------
         #define which cluster_types should be analyzed by this part of the algorithm
-        sel_cluster_types = ["time", "timethenspatial", "timetheniterativespatial"]
+        sel_cluster_types = ["time", "timethenspatial", "timetheniterativespatial", "iterativespatial"]
         if cluster_type in sel_cluster_types:
             #count number of clusters that have same master_tid as other cluster
             for i in range(len(clusters)):
-                tot_cluster_counter += 1
                 master_tid_1 = clusters[i].master_tid
                 for j in range(len(clusters)):
                     master_tid_2 = clusters[j].master_tid
@@ -304,10 +299,96 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_d
                             pos_first_cluster = mu3e_detector.TileDetector.tile[min_times_clusters[index_first_cluster].hits[0].tile_id].pos
                             pos_double_cluster = mu3e_detector.TileDetector.tile[min_times_clusters[k].hits[0].tile_id].pos
                             distance = np.sqrt((pos_first_cluster[0] - pos_double_cluster[0]) ** 2 + (pos_first_cluster[1] - pos_double_cluster[1]) ** 2 + (pos_first_cluster[2] - pos_double_cluster[2]) ** 2) #mm
-                            if distance < threshold_cluster_width: #mm
-                                corr_counter   -= len(min_times_clusters[k])
-                                uncorr_counter += len(min_times_clusters[k])
+                            #applying size threshold
+                            if cluster_type == "time":
+                                #count hits in clusters that don't contain first hit with same tid
+                                same_tid_counter_tmp = 0
+                                for hit in min_times_clusters[k].hits:
+                                    if hit.tid == master_tid_1:
+                                        corr_counter   -= 1
+                                        uncorr_counter += 1
+                            else:
+                                if distance < threshold_cluster_width: #mm
+                                    #count hits in clusters that don't contain first hit with same tid
+                                    same_tid_counter_tmp = 0
+                                    for hit in min_times_clusters[k].hits:
+                                        if hit.tid == master_tid_1:
+                                            corr_counter   -= 1
+                                            uncorr_counter += 1
+                                    #corr_counter   -= len(min_times_clusters[k])
+                                    #uncorr_counter += len(min_times_clusters[k])
 
+
+        """
+        #--------------------------------------------------------
+        #comparison of different clusters from primary comparison
+        #--------------------------------------------------------
+        #define which cluster_types should be analyzed by this part of the algorithm
+        sel_cluster_types = ["time", "timethenspatial", "timetheniterativespatial"]
+        if cluster_type in sel_cluster_types:
+            new_corr_cluster_flags = []
+            old_corr_cluster_flags = []
+            checked_tids = []
+            for i in range(len(clusters)):
+                if clusters[i].master_tid not in checked_tids:
+                    number_of_tids = 0
+                    for hit in clusters[i].hits:
+                        if hit.tid == clusters[i].master_tid:
+                            number_of_tids += 1
+                    checked_tids.append(clusters[i].master_tid)
+                else:
+                    continue
+                for j in range(len(clusters)):
+                    number_of_tids_comp = 0
+                    if j != i and j not in new_corr_cluster_flags:
+                        for k in range(len(clusters[j])):
+                            if clusters[j].hits[k].tid == clusters[i].master_tid:
+                                number_of_tids_comp += 1
+                        if number_of_tids_comp == 0: #if master tid of cluster i isn't found in cluster j do nothing
+                            continue
+                        elif number_of_tids_comp <= number_of_tids: #if correctly identified constituents are more in cluster i simply add cluster j as wrongly identified
+                            #TODO: maybe split into < and = and decide for the correct cluster either via the smallest timestamp or by amount of wrong hits in cluster
+                            corr_counter -= number_of_tids_comp
+                            uncorr_counter += number_of_tids_comp
+                        elif number_of_tids_comp > number_of_tids: #if cluster j has more correct primaries flag it as correct cluster and add cluster i to the incorrect counter
+                            corr_counter -= number_of_tids
+                            uncorr_counter += number_of_tids
+                            new_corr_cluster_flags.append(j)
+                            old_corr_cluster_flags.append(i)
+            
+                       
+            #loop over old correct cluster flags
+            checked_tids_2 = []
+            old_corr_cluster_flags_check = []
+            for i in old_corr_cluster_flags:
+                master_tid = clusters[i].master_tid
+                if master_tid not in checked_tids_2:
+                    number_of_tids = 0
+                    for hit in clusters[i].hits:
+                        if hit.tid == master_tid:
+                            number_of_tids += 1
+                    checked_tids_2.append(master_tid)
+                else:
+                    continue
+                for j in range(len(clusters)):
+                    number_of_tids_comp = 0
+                    if j != i and j not in new_corr_cluster_flags:
+                        for k in range(len(clusters[j])):
+                            if clusters[j].hits[k].tid == master_tid:
+                                number_of_tids_comp += 1
+                        if number_of_tids_comp == 0: #if master tid of cluster i isn't found in cluster j do nothing
+                            continue
+                        elif number_of_tids_comp <= number_of_tids: #if correctly identified constituents are more in cluster i simply add cluster j as wrongly identified
+                            #TODO: maybe split into < and = and decide for the correct cluster either via the smallest timestamp or by amount of wrong hits in cluster
+                            corr_counter -= number_of_tids_comp
+                            uncorr_counter += number_of_tids_comp
+                        elif number_of_tids_comp > number_of_tids: #if cluster j has more correct primaries flag it as correct cluster and add cluster i to the incorrect counter
+                            corr_counter -= number_of_tids
+                            uncorr_counter += number_of_tids
+                            new_corr_cluster_flags.append(j)
+                            old_corr_cluster_flags.append(i)
+                            old_corr_cluster_flags_check.append(i)
+        """
         #-------------------------------------
         #add to total corr and uncorr counters
         #-------------------------------------
@@ -338,7 +419,7 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_d
         print("Incorrectly associated out of all hits: ", tot_uncorr_counter/(np.sum(total_hits_counter)/100),"%")
         print("Incorrectly associated out of all hits in clusters: ", tot_uncorr_counter/(cluster_hits_counter/100),"%")
    
-    return frac_corr_frame, frac_corr_clusters_frame, frac_uncorr_frame, tot_corr_counter, total_hits_counter, number_of_tids
+    return frac_corr_frame, frac_corr_clusters_frame, frac_uncorr_frame, tot_corr_counter, total_hits_counter, number_of_tids_0
 
 
 ###########################

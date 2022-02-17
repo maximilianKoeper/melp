@@ -197,3 +197,45 @@ def iterative_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_
             new_clusters.append(Cluster(id = cluster_tmp[index_min_time].tile_id, master_id = cluster_tmp[index_min_time].tile_id, master_primary = cluster_tmp[index_min_time].primary, master_tid = cluster_tmp[index_min_time].tid, frame_id = frame, hits = cluster_tmp))
 
     return new_clusters
+
+
+################
+def hits_per_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, mask_type, number_of_frames = None, rec_type = None):
+    number_of_hits_per_tid = []
+    #max_hits_per_tid = []
+
+    #set frame number
+    if number_of_frames == None:
+        frames_to_analyze = ttree_mu3e.GetEntries()
+    else:
+        frames_to_analyze = number_of_frames
+
+    for frame in range(frames_to_analyze):
+        ttree_mu3e.GetEntry(frame)
+        #Printing status info
+        if frame % 5000 == 0:
+            print("Progress: ", np.round(frame / frames_to_analyze * 100), " %","of ", frames_to_analyze, " frames", end='\r')
+
+
+        #get truth clusters
+        truth_clusters = build_truth_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
+
+        #count number of hits in every cluster
+        for truth_cluster in truth_clusters:
+            number_of_hits_per_tid.append(len(truth_cluster))
+
+    print("Progress: 100 %","of ", frames_to_analyze, " frames")
+
+    #calculate ratio of different hit counts
+    max_hits_per_tid = np.max(number_of_hits_per_tid)
+    ratios = {}
+    percentages = {}
+    for i in range(1, max_hits_per_tid + 1):
+        if number_of_hits_per_tid.count(i) != 0:
+            ratio = number_of_hits_per_tid.count(i)/len(number_of_hits_per_tid)
+            percentage = number_of_hits_per_tid.count(i)/(len(number_of_hits_per_tid)/100)
+            ratios[i] = ratio
+            percentages[i] = percentage
+
+    return ratios, percentages, number_of_hits_per_tid, max_hits_per_tid
+
