@@ -237,5 +237,11 @@ def hits_per_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_det
             ratios[i] = ratio
             percentages[i] = percentage
 
+    #print mean
+    mean = np.sum(number_of_hits_per_tid)/len(number_of_hits_per_tid)
+    mean_mult_hits = (np.sum(number_of_hits_per_tid)-number_of_hits_per_tid.count(1))/(len(number_of_hits_per_tid)-number_of_hits_per_tid.count(1))
+    print("Mean number of hits per tid:", mean)
+    print("Mean number of hits per tid without single hit clusters:", mean_mult_hits)
+
     return ratios, percentages, number_of_hits_per_tid, max_hits_per_tid
 

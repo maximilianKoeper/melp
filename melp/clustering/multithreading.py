@@ -307,21 +307,13 @@ def compare_to_tid_filename(filename, time_threshold, threshold_cluster_width, m
                             pos_double_cluster = mu3e_detector.TileDetector.tile[min_times_clusters[k].hits[0].tile_id].pos
                             distance = np.sqrt((pos_first_cluster[0] - pos_double_cluster[0]) ** 2 + (pos_first_cluster[1] - pos_double_cluster[1]) ** 2 + (pos_first_cluster[2] - pos_double_cluster[2]) ** 2) #mm
                             #applying size threshold
-                            if cluster_type == "time":
+                            if distance < threshold_cluster_width: #mm
                                 #count hits in clusters that don't contain first hit with same tid
                                 same_tid_counter_tmp = 0
                                 for hit in min_times_clusters[k].hits:
                                     if hit.tid == master_tid_1:
                                         corr_counter   -= 1
                                         uncorr_counter += 1
-                            else:
-                                if distance < threshold_cluster_width: #mm
-                                    #count hits in clusters that don't contain first hit with same tid
-                                    same_tid_counter_tmp = 0
-                                    for hit in min_times_clusters[k].hits:
-                                        if hit.tid == master_tid_1:
-                                            corr_counter   -= 1
-                                            uncorr_counter += 1
 
         #-------------------------------------
         #add to total corr and uncorr counters
@@ -338,7 +330,7 @@ def compare_to_tid_filename(filename, time_threshold, threshold_cluster_width, m
             
     #write overall stats to txt file
     if cluster_hits_counter > 0:
-        f = open("./melp/clustering/results/efficiency_stats_tid_"+str(filename)[-8:-5]+"_"+str(cluster_type)+".txt", "w")
+        f = open("./melp/clustering/results/efficiency_stats_tid_"+str(filename)[-8:-5]+"_"+str(cluster_type)+"_"+str(threshold_cluster_width)+".txt", "w")
         print("Number of analyzed frames: ", len(total_hits_counter), "Number of correct counter fractions: ", len(frac_corr_frame), file = f)
         print("Total number of hits =",np.sum(total_hits_counter), ", Identified correctly + identified incorrectly =", tot_corr_counter + tot_uncorr_counter, file = f)
         print("Identified correctly:", tot_corr_counter, file = f)
@@ -355,9 +347,9 @@ def compare_to_tid_filename(filename, time_threshold, threshold_cluster_width, m
         f.close()
 
     #save info as txt file
-    np.savetxt("./melp/clustering/results/frac_corr_frame_tid_"+str(filename)[-8:-5]+"_"+str(cluster_type)+".txt", np.array(frac_corr_frame))
-    np.savetxt("./melp/clustering/results/frac_corr_clusters_frame_tid_"+str(filename)[-8:-5]+"_"+str(cluster_type)+".txt", np.array(frac_corr_clusters_frame))
-    np.savetxt("./melp/clustering/results/frac_uncorr_frame_tid_"+str(filename)[-8:-5]+"_"+str(cluster_type)+".txt", np.array(frac_uncorr_frame))
+    np.savetxt("./melp/clustering/results/frac_corr_frame_tid_"+str(filename)[-8:-5]+"_"+str(cluster_type)+"_"+str(threshold_cluster_width)+".txt", np.array(frac_corr_frame))
+    np.savetxt("./melp/clustering/results/frac_corr_clusters_frame_tid_"+str(filename)[-8:-5]+"_"+str(cluster_type)+"_"+str(threshold_cluster_width)+".txt", np.array(frac_corr_clusters_frame))
+    np.savetxt("./melp/clustering/results/frac_uncorr_frame_tid_"+str(filename)[-8:-5]+"_"+str(cluster_type)+"_"+str(threshold_cluster_width)+".txt", np.array(frac_uncorr_frame))
 
 
 def efficiency_as_function_of_cluster_width_filename(threshold_cluster_width, filename, time_threshold, mask_type, number_of_frames = None, rec_type = None, cluster_type = None):

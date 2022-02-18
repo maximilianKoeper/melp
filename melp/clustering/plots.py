@@ -300,23 +300,15 @@ def compare_to_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_d
                             pos_double_cluster = mu3e_detector.TileDetector.tile[min_times_clusters[k].hits[0].tile_id].pos
                             distance = np.sqrt((pos_first_cluster[0] - pos_double_cluster[0]) ** 2 + (pos_first_cluster[1] - pos_double_cluster[1]) ** 2 + (pos_first_cluster[2] - pos_double_cluster[2]) ** 2) #mm
                             #applying size threshold
-                            if cluster_type == "time":
+                            if distance < threshold_cluster_width: #mm
                                 #count hits in clusters that don't contain first hit with same tid
                                 same_tid_counter_tmp = 0
                                 for hit in min_times_clusters[k].hits:
                                     if hit.tid == master_tid_1:
                                         corr_counter   -= 1
                                         uncorr_counter += 1
-                            else:
-                                if distance < threshold_cluster_width: #mm
-                                    #count hits in clusters that don't contain first hit with same tid
-                                    same_tid_counter_tmp = 0
-                                    for hit in min_times_clusters[k].hits:
-                                        if hit.tid == master_tid_1:
-                                            corr_counter   -= 1
-                                            uncorr_counter += 1
-                                    #corr_counter   -= len(min_times_clusters[k])
-                                    #uncorr_counter += len(min_times_clusters[k])
+                                #corr_counter   -= len(min_times_clusters[k])
+                                #uncorr_counter += len(min_times_clusters[k])
 
 
         """
