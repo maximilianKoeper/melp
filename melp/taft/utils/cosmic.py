@@ -102,7 +102,7 @@ def cosmic_linear_correction(filename: str, detector, **kwargs):
 
 # --------------------------------------
 def station_station_timing(filename: str, detector, **kwargs):
-    warnings.warn("NOT WORKING")
+    warnings.warn("INEFFICIENT")
     # trajectories = []
 
     root_file = ROOT.TFile.Open(filename, "READ")
@@ -147,12 +147,18 @@ def station_station_timing(filename: str, detector, **kwargs):
 
                 # first and last hit used for timing information
                 tilehit_times_2, tilehit_ids_2 = (list(t) for t in zip(*sorted(zip(tmp_time_arr_2, tmp_id_arr_2))))
-                tmp_time_2 = tilehit_times_2[0] #+ kwargs["offset"]/2
-                tmp_time_2 += detector.TileDetector.tile[tilehit_ids_2[0]].get_offset()
+                tmp_time_2 = tilehit_times_2[0]
+                if kwargs["offset_mode"] == "constant":
+                    tmp_time_2 += kwargs["offset"]/2
+                else:
+                    tmp_time_2 += detector.TileDetector.tile[tilehit_ids_2[0]].get_offset()
 
                 tilehit_times_1, tilehit_ids_1 = (list(t) for t in zip(*sorted(zip(tmp_time_arr_1, tmp_id_arr_1))))
-                tmp_time_1 = tilehit_times_1[0] #- kwargs["offset"]/2
-                tmp_time_1 += detector.TileDetector.tile[tilehit_ids_1[0]].get_offset()
+                tmp_time_1 = tilehit_times_1[0]
+                if kwargs["offset_mode"] == "constant":
+                    tmp_time_1 -= kwargs["offset"]/2
+                else:
+                    tmp_time_1 += detector.TileDetector.tile[tilehit_ids_1[0]].get_offset()
 
                 # tof = 0.
                 pos1 = detector.TileDetector.tile[tilehit_ids_1[0]].pos
