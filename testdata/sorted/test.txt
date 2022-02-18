@@ -1,0 +1,2355 @@
+{
+//========= Macro generated from object: {
+    "sim": {
+        "version": ""
+    },
+    "detector": {
+        "_comment": "units are mm, ns, MeV, Hz, Tesla",
+        "world": {
+            "length": "3200",
+            "width": "1500",
+            "height": "1500"
+        },
+        "phase_options": {
+            "0": "phase 1a",
+            "1": "phase 1b",
+            "2": "phase 2"
+        },
+        "phase": "1",
+        "target": {
+            "shape_options": {
+                "0": "double cone",
+                "1": "plane",
+                "2": "garland",
+                "3": "reverse garland",
+                "4": "two-turn garland",
+                "5": "reverse two-turn garland",
+                "6": "no target"
+            },
+            "shape": "0",
+            "thickness1": "0.075",
+            "thickness2": "0.085",
+            "length": "50.0",
+            "radius": "19.0",
+            "offset": {
+                "x": "0",
+                "y": "0",
+                "z": "0"
+            },
+            "material_options": {
+                "Al": "Al",
+                "Si": "Si",
+                "Fe": "Fe",
+                "Cu": "Cu",
+                "Au": "Au",
+                "Pb": "Pb",
+                "Kapton": "Kapton",
+                "Mylar": "Mylar"
+            },
+            "material": "Mylar",
+            "MottScattering": {
+                "placeBall": "0",
+                "ballRadius": "5",
+                "ballZOffset": "-30"
+            }
+        },
+        "pixels": {
+            "small": {
+                "length": "20.66",
+                "width": "23.18",
+                "thickness": "0.05",
+                "deadWidth": "3.0",
+                "inactiveFrameSize": "0.09",
+                "pixelSize": "0.08",
+                "nLayers": "2",
+                "nZSensors": "6",
+                "zSpacing": "0.04"
+            },
+            "large": {
+                "length": "20.66",
+                "width": "23.18",
+                "thickness": "0.05",
+                "deadWidth": "3.0",
+                "inactiveFrameSize": "0.09",
+                "pixelSize": "0.08",
+                "nLayers": "2",
+                "nZSensors3": "17",
+                "nZSensors4": "18",
+                "zSpacing": "0.04"
+            },
+            "nPhiSensors": {
+                "layer1": "8",
+                "layer2": "10",
+                "layer3": "24",
+                "layer4": "28"
+            },
+            "kapton": {
+                "thickness": "0.025",
+                "fpOverlengthInner": "1.0",
+                "extLengthInner": "10.65",
+                "fpOverlengthOuter": "3.8",
+                "extLengthOuter": "2.0"
+            },
+            "mylarCondom": {
+                "thickness_inner": "0.002",
+                "thickness_outer": "0.002"
+            },
+            "conductor": {
+                "thickness": "0.015",
+                "width": "5.0"
+            }
+        },
+        "fibres": {
+            "square": "false",
+            "diameter": "0.250",
+            "length": "287.75",
+            "alCoating": "0.000",
+            "refractiveIndex": "1.59",
+            "deadWidth": "0.005",
+            "nLayers": "3",
+            "maxFibresPerLayer": "126",
+            "ribbons": {
+                "n": "12",
+                "pitch": "0.18",
+                "geometry_options": {
+                    "0": "zigzag",
+                    "1": "trapezium"
+                },
+                "geometry": "0",
+                "rOffset": "0.0"
+            },
+            "mppcs": {
+                "width": "32.0",
+                "height": "1.6",
+                "thickness": "0.3",
+                "epoxy": {
+                    "thickness": "0.1"
+                },
+                "pcb": {
+                    "thickness": "1.0"
+                }
+            }
+        },
+        "tiles": {
+            "nPhi": "56",
+            "nZ": "52",
+            "nModules": "7",
+            "stationLength": "342.32",
+            "stationActiveLength": "335.12",
+            "tile": {
+                "height": "5.0",
+                "gapPhi": "0.2",
+                "gapZ": "0.2",
+                "matrixGapPhi": "0.165",
+                "matrixGapZ": "0.15"
+            },
+            "radius": {
+                "inner": "47.0",
+                "outer": "62.5",
+                "matrixInner": "57.328",
+                "supportInner": "49.287",
+                "endringInner": "49.0"
+            },
+            "sipms": {
+                "thickness": "1.45",
+                "width": "3.4",
+                "PCBthickness": "0.7"
+            },
+            "mutrig": {
+                "thickness": "1.5",
+                "width": "15.0"
+            },
+            "tmb": {
+                "thickness": "0.8",
+                "width": "44.6"
+            },
+            "support": {
+                "width": "46.5",
+                "height": "7.31",
+                "endring": "3.5",
+                "pipeID": "2.0",
+                "pipeOD": "2.5",
+                "pipePitch": "13"
+            }
+        },
+        "magnet": {
+            "length": "3000.0",
+            "radius": {
+                "inner": "500.0",
+                "outer": "550.0"
+            },
+            "field": {
+                "strength": "-1.0",
+                "configuration_options": {
+                    "0": "none",
+                    "1": "constant Bz",
+                    "2": "COBRA",
+                    "3": "solenoid with spin tracking",
+                    "4": "solenoid",
+                    "5": "realistic thin solenoid, including radial components",
+                    "6": "field map",
+                    "7": "solenoid plus optional transport solenoid from current loops",
+                    "8": "solenoid with compensation plus optional transport solenoid from current loops"
+                },
+                "configuration": "6",
+                "map": "\/home\/user\/host\/mu3e\/run\/cryogenics.bin",
+                "transportFieldStrength": "0.0",
+                "compensationCoilScale": "0.9"
+            }
+        },
+        "beampipe": {
+            "radius": {
+                "outer": "33.0",
+                "inner": "30.0"
+            },
+            "endpoint_us": "93.13",
+            "endpoint_ds": "109.13",
+            "window": {
+                "thickness": "0.035",
+                "z": "6.0"
+            },
+            "collimators": {
+                "1": {
+                    "z": "-406.13",
+                    "r": "22",
+                    "t": "20.0"
+                }
+            },
+            "degraders": {
+                "1": {
+                    "zOffset": "0.0",
+                    "thickness": "0.6"
+                }
+            }
+        }
+    },
+    "digi": {
+        "_comment": "units are mm, ns, MeV, Hz, Tesla",
+        "frameLength": "64.0",
+        "muon": {
+            "rate": "2.466e8",
+            "polarization": "1.0",
+            "decay": {
+                "signalBF": "0.0",
+                "overlapMode": "s",
+                "overlapMode_comment": "Produce (overlap) decays at same vertex",
+                "overlapMode_options*": {
+                    "m": "michel",
+                    "s": "signal",
+                    "r": "radiative",
+                    "i": "internal conversion",
+                    "e": "secondary electron"
+                },
+                "mode": "0",
+                "mode_options": {
+                    "0": "normal",
+                    "1": "one signal decay per frame",
+                    "2": "overlap decay (see overlapMode)",
+                    "121": "one (guaranteed) radiative decay with internal conversion per frame, weighted events",
+                    "23": "two Michel decays and one secondary electron",
+                    "24": "one Michel decay and one Michel+Secondary Electron from same vertex",
+                    "25": "one guaranteed Michel with immediate Bhabha scattering per frame",
+                    "26": "For signal decays using the matrix element by Kuno",
+                    "27": "muon decay in familon + positron",
+                    "28": "one Michel decay and one Michel+Secondary Electron from same vertex, add up to muon mass(netMomentum)",
+                    "30": "cosmics",
+                    "31": "photons",
+                    "32": "dark-radiative decay with prompt dark photon decay",
+                    "33": "dark-radiative decay with invisible dark photon",
+                    "34": "dark-radiative decay with dark photon with lifetime",
+                    "35": "mu+ -> pi0",
+                    "40": "Electron beam for Mott scattering",
+                    "41": "Positron beam for Mott\/Bhabha scattering"
+                },
+                "signal": {
+                    "skimType": "0",
+                    "br": "1.0",
+                    "set": "0"
+                },
+                "internal": {
+                    "type": "0",
+                    "type_options": {
+                        "0": "cut on all three electrons",
+                        "1": "cut on at least one e+e- pair"
+                    },
+                    "cuts": {
+                        "cosTheta": "0.8",
+                        "eMin": "10",
+                        "eVis": "90",
+                        "mass": "0"
+                    }
+                },
+                "radiative": {
+                    "cuts": {
+                        "eGamma": "5.0"
+                    }
+                },
+                "secondaryElectron": {
+                    "cuts": {
+                        "p": "10",
+                        "pt": "10"
+                    },
+                    "exponent": "0.14"
+                },
+                "bhabha": {
+                    "cuts": {
+                        "eMin": "10"
+                    }
+                },
+                "photonGun": {
+                    "particle": "gamma",
+                    "eMin": "0.0",
+                    "eMax": "55.0",
+                    "pos": {
+                        "x": "0.0",
+                        "y": "0.0",
+                        "z": "0.0"
+                    }
+                },
+                "familon": {
+                    "famMass": "0.0",
+                    "famCoupling": "0.0"
+                },
+                "darkPhoton": {
+                    "file": "MG5\/unweighted_events_inv_pol_10MeV.lhe",
+                    "mass": "10.0",
+                    "lifetime": "0.0267"
+                },
+                "bhabhaPlusMichel": {
+                    "netMomentum": "13.0"
+                }
+            }
+        },
+        "beam_pencil": {
+            "size": {
+                "x": "0.1",
+                "y": "0.1"
+            },
+            "divergence": {
+                "x": "0",
+                "y": "0"
+            },
+            "pos": {
+                "x": "0.0",
+                "y": "0.0"
+            },
+            "direction": {
+                "x": "0",
+                "y": "0"
+            },
+            "momentum": {
+                "spread": "0.01",
+                "mean": "50"
+            },
+            "matrix": {
+                "00": "1",
+                "01": "0",
+                "02": "0",
+                "03": "0",
+                "11": "1",
+                "12": "0",
+                "13": "0",
+                "22": "0",
+                "23": "0",
+                "33": "1"
+            }
+        },
+        "beam": {
+            "size": {
+                "x": "7.8",
+                "y": "9.1"
+            },
+            "divergence": {
+                "x": "85",
+                "y": "30"
+            },
+            "pos": {
+                "x": "0.08",
+                "y": "-0.45"
+            },
+            "direction": {
+                "x": "-2.8",
+                "y": "-0.4"
+            },
+            "momentum": {
+                "spread": "0.77",
+                "mean": "27.86"
+            },
+            "matrix": {
+                "00": "1",
+                "01": "-0.0065",
+                "02": "0.714",
+                "03": "-0.2202",
+                "11": "0.99997887",
+                "12": "0.50885175",
+                "13": "-0.00143133",
+                "22": "0.48090945",
+                "23": "-0.59335259",
+                "33": "0.7742368"
+            },
+            "particle": "mu+"
+        },
+        "write": {
+            "truth_options": {
+                "0": "no truth info",
+                "1": "write trajectories and mc hits",
+                "2": "mc hits pos_{g\/l}_{x\/y\/z} and {p\/e}_{in\/out}"
+            },
+            "truth": "1",
+            "target": "1",
+            "pixels_options": {
+                "0": "no data",
+                "1": "digi (pixel id, time)",
+                "2": "+ truth (MCHit index)"
+            },
+            "pixels": "2",
+            "fibres_options": {
+                "0": "no data",
+                "1": "digi (mppc), asic hits if para mode is 4 (waveforms)",
+                "2": "+ truth",
+                "3": "+ detector hits and more statistics + mppc dose"
+            },
+            "fibres": "3",
+            "tiles_options": {
+                "0": "no data",
+                "1": "digitized E and t data",
+                "2": "+ truth E and t",
+                "3": "+ lots of truth info + mppc dose"
+            },
+            "tiles": "3",
+            "kaptonFlaps_options": {
+                "0": "no data",
+                "1": "dose data"
+            },
+            "kaptonFlaps": "1"
+        },
+        "tracker": {
+            "numLinks": {
+                "inner": "3",
+                "outer": "1"
+            },
+            "efficiency": "1.0",
+            "noiseRate": {
+                "inner": "0.0",
+                "outer": "0.0"
+            },
+            "threshold": "0.005",
+            "timeRes": "0.0",
+            "addTimeBits": "4",
+            "clusterSimulation": "0",
+            "readoutSimulation": "0",
+            "sortingDepth": "80"
+        },
+        "fibres": {
+            "timeRes": "0.75",
+            "timeRes_comment": "only used in mode 0",
+            "decaytime": "2.8",
+            "crosstalk": "0.02",
+            "pileUp": "2.5",
+            "threshold": "1",
+            "parametrisation": {
+                "mode": "3",
+                "mode_options": {
+                    "0": "parametrization in edep, z-Pos (), gaussian time with timeRes",
+                    "1": "No Parametrization, use given detection efficiencies (including SiPMs, no signal hight info)",
+                    "2": "scintillation and propagation simulation without sipm eff",
+                    "3": "scintillation and propagation simulation",
+                    "4": "like 3, with additional waveform simulation, WARN: 10 times slower fibre handling"
+                },
+                "attenuation": {
+                    "_comment": "Mean: N_{Photons} = (edep) * (TMath::Exp(6.899 - 0.046*d) + TMath::Exp(8.606-1.0016*d))",
+                    "square": {
+                        "direct": "0",
+                        "directConst": "0",
+                        "long": "0.003942",
+                        "longConst": "6.21"
+                    },
+                    "round": {
+                        "_comment": "Mean: N_{Photons} = (D0*exp((edep-D1)\/(2*d2))^2+edep) * (TMath::Exp(6.899 - 0.046*d) + TMath::Exp(8.606-1.0016*d))",
+                        "direct": "0",
+                        "directConst": "0",
+                        "long": "0.004254",
+                        "longConst": "6.47",
+                        "D0": "0.01026",
+                        "D1": "0.01293",
+                        "D2": "0.00539"
+                    },
+                    "sigma": {
+                        "_comment": "Sigma: N_{Photons} = edep * (TMath::Exp(4.4614 - 0.0263*d) + TMath::Exp(4.989-1.046*d)) + TMath::Exp(1.607-0.559*d) + TMath::Exp(0.918-0.018*d);",
+                        "A0": "0",
+                        "C0": "3.974",
+                        "A1": "0",
+                        "C1": "1e-10",
+                        "A2": "0.008",
+                        "C2": "0.248",
+                        "A3": "0",
+                        "C3": "1e-10"
+                    }
+                },
+                "pathlength": {
+                    "lower": "1.0",
+                    "upper": "1.13",
+                    "decrease": "0.84",
+                    "_comment": "A*pathlength+B [cm]",
+                    "begin": {
+                        "A": "1.0",
+                        "B": "0.0"
+                    },
+                    "end": {
+                        "A": "1.2",
+                        "B": "0.0"
+                    }
+                },
+                "eff": {
+                    "or": "1",
+                    "and": "0.8"
+                }
+            },
+            "photonDistribution": "1",
+            "photonDistribution_options": {
+                "0": "use geometry only",
+                "1": "250mum fibres, 200mum epoxy: scaled linear in fibre diameter",
+                "2": "250mum fibres, 150mum epoxy: scaled linear in fibre diameter",
+                "3": "250mum fibres, 100mum epoxy: scaled linear in fibre diameter",
+                "4": "250mum fibres, 050mum epoxy: scaled linear in fibre diameter",
+                "5": "250mum fibres, 025mum epoxy: scaled linear in fibre diameter",
+                "6": "250mum fibres, 010mum epoxy: scaled linear in fibre diameter"
+            },
+            "nphotons": "5.0",
+            "photonsForTiming": "1.0",
+            "nphotons_comment": "obsolete, used if para mode == 2, corresponds to mean number of photons at 15cm, mip",
+            "yield": "8000",
+            "yieldScale": "1.0",
+            "capture": "0.054",
+            "capture_comment": "used for para mode >= 3, corrected for attenuation (distance = 0)",
+            "attenuationLength": "1395",
+            "mppcs": {
+                "threshold": "0.5",
+                "dark": {
+                    "rate": "0.0",
+                    "exponential": "10"
+                },
+                "pde": "0.4",
+                "pileUp": "40",
+                "crosstalk": "0.04",
+                "pixelcrosstalk": "0.02",
+                "sptr": "0.085",
+                "arrays": {
+                    "mode": "1",
+                    "mode_options": {
+                        "0": "disabled (single fibre readout)",
+                        "1": "enabled (LHCb style)",
+                        "2": "Angela\/PSI style"
+                    },
+                    "offset": "0.00",
+                    "offsetNoise": "0.010",
+                    "cells": {
+                        "n": "128",
+                        "width": "0.230",
+                        "width_comment": "active",
+                        "pitch": "0.020"
+                    }
+                },
+                "waveform": {
+                    "_format": "time[ns], amplitude[1]\n (equidistributed points)",
+                    "file": "180fC_inputbias_4_dac_pole_50_p.csv"
+                }
+            },
+            "daq": {
+                "delay": "1.0",
+                "jitter": "0.3"
+            }
+        },
+        "tiles": {
+            "timeRes": "0.06",
+            "STICjitter": "0.03",
+            "energyRes": "0.12",
+            "deadtime": "150",
+            "deadtimeTDC": "40",
+            "promptTime": "0.1",
+            "eThresh": "0.1"
+        },
+        "mutrig": {
+            "addTimeBits": "10"
+        },
+        "trajectory": {
+            "momentumCutOff": "5"
+        },
+        "hits": {
+            "momentumCutOff": "0"
+        },
+        "scatteringModel": "1",
+        "scatteringModel_options": {
+            "0": "Single",
+            "1": "Urban",
+            "2": "Goudsmit",
+            "3": "Wentzel"
+        }
+    },
+    "detector": {
+        "_comment": "units are mm, ns, MeV, Hz, Tesla",
+        "world": {
+            "length": "3200",
+            "width": "1500",
+            "height": "1500"
+        },
+        "phase_options": {
+            "0": "phase 1a",
+            "1": "phase 1b",
+            "2": "phase 2"
+        },
+        "phase": "1",
+        "target": {
+            "shape_options": {
+                "0": "double cone",
+                "1": "plane",
+                "2": "garland",
+                "3": "reverse garland",
+                "4": "two-turn garland",
+                "5": "reverse two-turn garland",
+                "6": "no target"
+            },
+            "shape": "0",
+            "thickness1": "0.075",
+            "thickness2": "0.085",
+            "length": "50.0",
+            "radius": "19.0",
+            "offset": {
+                "x": "0",
+                "y": "0",
+                "z": "0"
+            },
+            "material_options": {
+                "Al": "Al",
+                "Si": "Si",
+                "Fe": "Fe",
+                "Cu": "Cu",
+                "Au": "Au",
+                "Pb": "Pb",
+                "Kapton": "Kapton",
+                "Mylar": "Mylar"
+            },
+            "material": "Mylar",
+            "MottScattering": {
+                "placeBall": "0",
+                "ballRadius": "5",
+                "ballZOffset": "-30"
+            }
+        },
+        "pixels": {
+            "small": {
+                "length": "20.66",
+                "width": "23.18",
+                "thickness": "0.05",
+                "deadWidth": "3.0",
+                "inactiveFrameSize": "0.09",
+                "pixelSize": "0.08",
+                "nLayers": "2",
+                "nZSensors": "6",
+                "zSpacing": "0.04"
+            },
+            "large": {
+                "length": "20.66",
+                "width": "23.18",
+                "thickness": "0.05",
+                "deadWidth": "3.0",
+                "inactiveFrameSize": "0.09",
+                "pixelSize": "0.08",
+                "nLayers": "2",
+                "nZSensors3": "17",
+                "nZSensors4": "18",
+                "zSpacing": "0.04"
+            },
+            "nPhiSensors": {
+                "layer1": "8",
+                "layer2": "10",
+                "layer3": "24",
+                "layer4": "28"
+            },
+            "kapton": {
+                "thickness": "0.025",
+                "fpOverlengthInner": "1.0",
+                "extLengthInner": "10.65",
+                "fpOverlengthOuter": "3.8",
+                "extLengthOuter": "2.0"
+            },
+            "mylarCondom": {
+                "thickness_inner": "0.002",
+                "thickness_outer": "0.002"
+            },
+            "conductor": {
+                "thickness": "0.015",
+                "width": "5.0"
+            }
+        },
+        "fibres": {
+            "square": "false",
+            "diameter": "0.250",
+            "length": "287.75",
+            "alCoating": "0.000",
+            "refractiveIndex": "1.59",
+            "deadWidth": "0.005",
+            "nLayers": "3",
+            "maxFibresPerLayer": "126",
+            "ribbons": {
+                "n": "12",
+                "pitch": "0.18",
+                "geometry_options": {
+                    "0": "zigzag",
+                    "1": "trapezium"
+                },
+                "geometry": "0",
+                "rOffset": "0.0"
+            },
+            "mppcs": {
+                "width": "32.0",
+                "height": "1.6",
+                "thickness": "0.3",
+                "epoxy": {
+                    "thickness": "0.1"
+                },
+                "pcb": {
+                    "thickness": "1.0"
+                }
+            }
+        },
+        "tiles": {
+            "nPhi": "56",
+            "nZ": "52",
+            "nModules": "7",
+            "stationLength": "342.32",
+            "stationActiveLength": "335.12",
+            "tile": {
+                "height": "5.0",
+                "gapPhi": "0.2",
+                "gapZ": "0.2",
+                "matrixGapPhi": "0.165",
+                "matrixGapZ": "0.15"
+            },
+            "radius": {
+                "inner": "47.0",
+                "outer": "62.5",
+                "matrixInner": "57.328",
+                "supportInner": "49.287",
+                "endringInner": "49.0"
+            },
+            "sipms": {
+                "thickness": "1.45",
+                "width": "3.4",
+                "PCBthickness": "0.7"
+            },
+            "mutrig": {
+                "thickness": "1.5",
+                "width": "15.0"
+            },
+            "tmb": {
+                "thickness": "0.8",
+                "width": "44.6"
+            },
+            "support": {
+                "width": "46.5",
+                "height": "7.31",
+                "endring": "3.5",
+                "pipeID": "2.0",
+                "pipeOD": "2.5",
+                "pipePitch": "13"
+            }
+        },
+        "magnet": {
+            "length": "3000.0",
+            "radius": {
+                "inner": "500.0",
+                "outer": "550.0"
+            },
+            "field": {
+                "strength": "-1.0",
+                "configuration_options": {
+                    "0": "none",
+                    "1": "constant Bz",
+                    "2": "COBRA",
+                    "3": "solenoid with spin tracking",
+                    "4": "solenoid",
+                    "5": "realistic thin solenoid, including radial components",
+                    "6": "field map",
+                    "7": "solenoid plus optional transport solenoid from current loops",
+                    "8": "solenoid with compensation plus optional transport solenoid from current loops"
+                },
+                "configuration": "6",
+                "map": "\/home\/user\/host\/mu3e\/run\/cryogenics.bin",
+                "transportFieldStrength": "0.0",
+                "compensationCoilScale": "0.9"
+            }
+        },
+        "beampipe": {
+            "radius": {
+                "outer": "33.0",
+                "inner": "30.0"
+            },
+            "endpoint_us": "93.13",
+            "endpoint_ds": "109.13",
+            "window": {
+                "thickness": "0.035",
+                "z": "6.0"
+            },
+            "collimators": {
+                "1": {
+                    "z": "-406.13",
+                    "r": "22",
+                    "t": "20.0"
+                }
+            },
+            "degraders": {
+                "1": {
+                    "zOffset": "0.0",
+                    "thickness": "0.6"
+                }
+            }
+        }
+    },
+    "digi": {
+        "_comment": "units are mm, ns, MeV, Hz, Tesla",
+        "frameLength": "64.0",
+        "muon": {
+            "rate": "2.466e8",
+            "polarization": "1.0",
+            "decay": {
+                "signalBF": "0.0",
+                "overlapMode": "s",
+                "overlapMode_comment": "Produce (overlap) decays at same vertex",
+                "overlapMode_options*": {
+                    "m": "michel",
+                    "s": "signal",
+                    "r": "radiative",
+                    "i": "internal conversion",
+                    "e": "secondary electron"
+                },
+                "mode": "0",
+                "mode_options": {
+                    "0": "normal",
+                    "1": "one signal decay per frame",
+                    "2": "overlap decay (see overlapMode)",
+                    "121": "one (guaranteed) radiative decay with internal conversion per frame, weighted events",
+                    "23": "two Michel decays and one secondary electron",
+                    "24": "one Michel decay and one Michel+Secondary Electron from same vertex",
+                    "25": "one guaranteed Michel with immediate Bhabha scattering per frame",
+                    "26": "For signal decays using the matrix element by Kuno",
+                    "27": "muon decay in familon + positron",
+                    "28": "one Michel decay and one Michel+Secondary Electron from same vertex, add up to muon mass(netMomentum)",
+                    "30": "cosmics",
+                    "31": "photons",
+                    "32": "dark-radiative decay with prompt dark photon decay",
+                    "33": "dark-radiative decay with invisible dark photon",
+                    "34": "dark-radiative decay with dark photon with lifetime",
+                    "35": "mu+ -> pi0",
+                    "40": "Electron beam for Mott scattering",
+                    "41": "Positron beam for Mott\/Bhabha scattering"
+                },
+                "signal": {
+                    "skimType": "0",
+                    "br": "1.0",
+                    "set": "0"
+                },
+                "internal": {
+                    "type": "0",
+                    "type_options": {
+                        "0": "cut on all three electrons",
+                        "1": "cut on at least one e+e- pair"
+                    },
+                    "cuts": {
+                        "cosTheta": "0.8",
+                        "eMin": "10",
+                        "eVis": "90",
+                        "mass": "0"
+                    }
+                },
+                "radiative": {
+                    "cuts": {
+                        "eGamma": "5.0"
+                    }
+                },
+                "secondaryElectron": {
+                    "cuts": {
+                        "p": "10",
+                        "pt": "10"
+                    },
+                    "exponent": "0.14"
+                },
+                "bhabha": {
+                    "cuts": {
+                        "eMin": "10"
+                    }
+                },
+                "photonGun": {
+                    "particle": "gamma",
+                    "eMin": "0.0",
+                    "eMax": "55.0",
+                    "pos": {
+                        "x": "0.0",
+                        "y": "0.0",
+                        "z": "0.0"
+                    }
+                },
+                "familon": {
+                    "famMass": "0.0",
+                    "famCoupling": "0.0"
+                },
+                "darkPhoton": {
+                    "file": "MG5\/unweighted_events_inv_pol_10MeV.lhe",
+                    "mass": "10.0",
+                    "lifetime": "0.0267"
+                },
+                "bhabhaPlusMichel": {
+                    "netMomentum": "13.0"
+                }
+            }
+        },
+        "beam_pencil": {
+            "size": {
+                "x": "0.1",
+                "y": "0.1"
+            },
+            "divergence": {
+                "x": "0",
+                "y": "0"
+            },
+            "pos": {
+                "x": "0.0",
+                "y": "0.0"
+            },
+            "direction": {
+                "x": "0",
+                "y": "0"
+            },
+            "momentum": {
+                "spread": "0.01",
+                "mean": "50"
+            },
+            "matrix": {
+                "00": "1",
+                "01": "0",
+                "02": "0",
+                "03": "0",
+                "11": "1",
+                "12": "0",
+                "13": "0",
+                "22": "0",
+                "23": "0",
+                "33": "1"
+            }
+        },
+        "beam": {
+            "size": {
+                "x": "7.8",
+                "y": "9.1"
+            },
+            "divergence": {
+                "x": "85",
+                "y": "30"
+            },
+            "pos": {
+                "x": "0.08",
+                "y": "-0.45"
+            },
+            "direction": {
+                "x": "-2.8",
+                "y": "-0.4"
+            },
+            "momentum": {
+                "spread": "0.77",
+                "mean": "27.86"
+            },
+            "matrix": {
+                "00": "1",
+                "01": "-0.0065",
+                "02": "0.714",
+                "03": "-0.2202",
+                "11": "0.99997887",
+                "12": "0.50885175",
+                "13": "-0.00143133",
+                "22": "0.48090945",
+                "23": "-0.59335259",
+                "33": "0.7742368"
+            },
+            "particle": "mu+"
+        },
+        "write": {
+            "truth_options": {
+                "0": "no truth info",
+                "1": "write trajectories and mc hits",
+                "2": "mc hits pos_{g\/l}_{x\/y\/z} and {p\/e}_{in\/out}"
+            },
+            "truth": "1",
+            "target": "1",
+            "pixels_options": {
+                "0": "no data",
+                "1": "digi (pixel id, time)",
+                "2": "+ truth (MCHit index)"
+            },
+            "pixels": "2",
+            "fibres_options": {
+                "0": "no data",
+                "1": "digi (mppc), asic hits if para mode is 4 (waveforms)",
+                "2": "+ truth",
+                "3": "+ detector hits and more statistics + mppc dose"
+            },
+            "fibres": "3",
+            "tiles_options": {
+                "0": "no data",
+                "1": "digitized E and t data",
+                "2": "+ truth E and t",
+                "3": "+ lots of truth info + mppc dose"
+            },
+            "tiles": "3",
+            "kaptonFlaps_options": {
+                "0": "no data",
+                "1": "dose data"
+            },
+            "kaptonFlaps": "1"
+        },
+        "tracker": {
+            "numLinks": {
+                "inner": "3",
+                "outer": "1"
+            },
+            "efficiency": "1.0",
+            "noiseRate": {
+                "inner": "0.0",
+                "outer": "0.0"
+            },
+            "threshold": "0.005",
+            "timeRes": "0.0",
+            "addTimeBits": "4",
+            "clusterSimulation": "0",
+            "readoutSimulation": "0",
+            "sortingDepth": "80"
+        },
+        "fibres": {
+            "timeRes": "0.75",
+            "timeRes_comment": "only used in mode 0",
+            "decaytime": "2.8",
+            "crosstalk": "0.02",
+            "pileUp": "2.5",
+            "threshold": "1",
+            "parametrisation": {
+                "mode": "3",
+                "mode_options": {
+                    "0": "parametrization in edep, z-Pos (), gaussian time with timeRes",
+                    "1": "No Parametrization, use given detection efficiencies (including SiPMs, no signal hight info)",
+                    "2": "scintillation and propagation simulation without sipm eff",
+                    "3": "scintillation and propagation simulation",
+                    "4": "like 3, with additional waveform simulation, WARN: 10 times slower fibre handling"
+                },
+                "attenuation": {
+                    "_comment": "Mean: N_{Photons} = (edep) * (TMath::Exp(6.899 - 0.046*d) + TMath::Exp(8.606-1.0016*d))",
+                    "square": {
+                        "direct": "0",
+                        "directConst": "0",
+                        "long": "0.003942",
+                        "longConst": "6.21"
+                    },
+                    "round": {
+                        "_comment": "Mean: N_{Photons} = (D0*exp((edep-D1)\/(2*d2))^2+edep) * (TMath::Exp(6.899 - 0.046*d) + TMath::Exp(8.606-1.0016*d))",
+                        "direct": "0",
+                        "directConst": "0",
+                        "long": "0.004254",
+                        "longConst": "6.47",
+                        "D0": "0.01026",
+                        "D1": "0.01293",
+                        "D2": "0.00539"
+                    },
+                    "sigma": {
+                        "_comment": "Sigma: N_{Photons} = edep * (TMath::Exp(4.4614 - 0.0263*d) + TMath::Exp(4.989-1.046*d)) + TMath::Exp(1.607-0.559*d) + TMath::Exp(0.918-0.018*d);",
+                        "A0": "0",
+                        "C0": "3.974",
+                        "A1": "0",
+                        "C1": "1e-10",
+                        "A2": "0.008",
+                        "C2": "0.248",
+                        "A3": "0",
+                        "C3": "1e-10"
+                    }
+                },
+                "pathlength": {
+                    "lower": "1.0",
+                    "upper": "1.13",
+                    "decrease": "0.84",
+                    "_comment": "A*pathlength+B [cm]",
+                    "begin": {
+                        "A": "1.0",
+                        "B": "0.0"
+                    },
+                    "end": {
+                        "A": "1.2",
+                        "B": "0.0"
+                    }
+                },
+                "eff": {
+                    "or": "1",
+                    "and": "0.8"
+                }
+            },
+            "photonDistribution": "1",
+            "photonDistribution_options": {
+                "0": "use geometry only",
+                "1": "250mum fibres, 200mum epoxy: scaled linear in fibre diameter",
+                "2": "250mum fibres, 150mum epoxy: scaled linear in fibre diameter",
+                "3": "250mum fibres, 100mum epoxy: scaled linear in fibre diameter",
+                "4": "250mum fibres, 050mum epoxy: scaled linear in fibre diameter",
+                "5": "250mum fibres, 025mum epoxy: scaled linear in fibre diameter",
+                "6": "250mum fibres, 010mum epoxy: scaled linear in fibre diameter"
+            },
+            "nphotons": "5.0",
+            "photonsForTiming": "1.0",
+            "nphotons_comment": "obsolete, used if para mode == 2, corresponds to mean number of photons at 15cm, mip",
+            "yield": "8000",
+            "yieldScale": "1.0",
+            "capture": "0.054",
+            "capture_comment": "used for para mode >= 3, corrected for attenuation (distance = 0)",
+            "attenuationLength": "1395",
+            "mppcs": {
+                "threshold": "0.5",
+                "dark": {
+                    "rate": "0.0",
+                    "exponential": "10"
+                },
+                "pde": "0.4",
+                "pileUp": "40",
+                "crosstalk": "0.04",
+                "pixelcrosstalk": "0.02",
+                "sptr": "0.085",
+                "arrays": {
+                    "mode": "1",
+                    "mode_options": {
+                        "0": "disabled (single fibre readout)",
+                        "1": "enabled (LHCb style)",
+                        "2": "Angela\/PSI style"
+                    },
+                    "offset": "0.00",
+                    "offsetNoise": "0.010",
+                    "cells": {
+                        "n": "128",
+                        "width": "0.230",
+                        "width_comment": "active",
+                        "pitch": "0.020"
+                    }
+                },
+                "waveform": {
+                    "_format": "time[ns], amplitude[1]\n (equidistributed points)",
+                    "file": "180fC_inputbias_4_dac_pole_50_p.csv"
+                }
+            },
+            "daq": {
+                "delay": "1.0",
+                "jitter": "0.3"
+            }
+        },
+        "tiles": {
+            "timeRes": "0.06",
+            "STICjitter": "0.03",
+            "energyRes": "0.12",
+            "deadtime": "150",
+            "deadtimeTDC": "40",
+            "promptTime": "0.1",
+            "eThresh": "0.1"
+        },
+        "mutrig": {
+            "addTimeBits": "10"
+        },
+        "trajectory": {
+            "momentumCutOff": "5"
+        },
+        "hits": {
+            "momentumCutOff": "0"
+        },
+        "scatteringModel": "1",
+        "scatteringModel_options": {
+            "0": "Single",
+            "1": "Urban",
+            "2": "Goudsmit",
+            "3": "Wentzel"
+        }
+    },
+    "sort": {
+        "version": "",
+        "skip": "80"
+    }
+}
+/Collectable string class
+//========= by ROOT version6.24/06
+//Primitive: {
+    "sim": {
+        "version": ""
+    },
+    "detector": {
+        "_comment": "units are mm, ns, MeV, Hz, Tesla",
+        "world": {
+            "length": "3200",
+            "width": "1500",
+            "height": "1500"
+        },
+        "phase_options": {
+            "0": "phase 1a",
+            "1": "phase 1b",
+            "2": "phase 2"
+        },
+        "phase": "1",
+        "target": {
+            "shape_options": {
+                "0": "double cone",
+                "1": "plane",
+                "2": "garland",
+                "3": "reverse garland",
+                "4": "two-turn garland",
+                "5": "reverse two-turn garland",
+                "6": "no target"
+            },
+            "shape": "0",
+            "thickness1": "0.075",
+            "thickness2": "0.085",
+            "length": "50.0",
+            "radius": "19.0",
+            "offset": {
+                "x": "0",
+                "y": "0",
+                "z": "0"
+            },
+            "material_options": {
+                "Al": "Al",
+                "Si": "Si",
+                "Fe": "Fe",
+                "Cu": "Cu",
+                "Au": "Au",
+                "Pb": "Pb",
+                "Kapton": "Kapton",
+                "Mylar": "Mylar"
+            },
+            "material": "Mylar",
+            "MottScattering": {
+                "placeBall": "0",
+                "ballRadius": "5",
+                "ballZOffset": "-30"
+            }
+        },
+        "pixels": {
+            "small": {
+                "length": "20.66",
+                "width": "23.18",
+                "thickness": "0.05",
+                "deadWidth": "3.0",
+                "inactiveFrameSize": "0.09",
+                "pixelSize": "0.08",
+                "nLayers": "2",
+                "nZSensors": "6",
+                "zSpacing": "0.04"
+            },
+            "large": {
+                "length": "20.66",
+                "width": "23.18",
+                "thickness": "0.05",
+                "deadWidth": "3.0",
+                "inactiveFrameSize": "0.09",
+                "pixelSize": "0.08",
+                "nLayers": "2",
+                "nZSensors3": "17",
+                "nZSensors4": "18",
+                "zSpacing": "0.04"
+            },
+            "nPhiSensors": {
+                "layer1": "8",
+                "layer2": "10",
+                "layer3": "24",
+                "layer4": "28"
+            },
+            "kapton": {
+                "thickness": "0.025",
+                "fpOverlengthInner": "1.0",
+                "extLengthInner": "10.65",
+                "fpOverlengthOuter": "3.8",
+                "extLengthOuter": "2.0"
+            },
+            "mylarCondom": {
+                "thickness_inner": "0.002",
+                "thickness_outer": "0.002"
+            },
+            "conductor": {
+                "thickness": "0.015",
+                "width": "5.0"
+            }
+        },
+        "fibres": {
+            "square": "false",
+            "diameter": "0.250",
+            "length": "287.75",
+            "alCoating": "0.000",
+            "refractiveIndex": "1.59",
+            "deadWidth": "0.005",
+            "nLayers": "3",
+            "maxFibresPerLayer": "126",
+            "ribbons": {
+                "n": "12",
+                "pitch": "0.18",
+                "geometry_options": {
+                    "0": "zigzag",
+                    "1": "trapezium"
+                },
+                "geometry": "0",
+                "rOffset": "0.0"
+            },
+            "mppcs": {
+                "width": "32.0",
+                "height": "1.6",
+                "thickness": "0.3",
+                "epoxy": {
+                    "thickness": "0.1"
+                },
+                "pcb": {
+                    "thickness": "1.0"
+                }
+            }
+        },
+        "tiles": {
+            "nPhi": "56",
+            "nZ": "52",
+            "nModules": "7",
+            "stationLength": "342.32",
+            "stationActiveLength": "335.12",
+            "tile": {
+                "height": "5.0",
+                "gapPhi": "0.2",
+                "gapZ": "0.2",
+                "matrixGapPhi": "0.165",
+                "matrixGapZ": "0.15"
+            },
+            "radius": {
+                "inner": "47.0",
+                "outer": "62.5",
+                "matrixInner": "57.328",
+                "supportInner": "49.287",
+                "endringInner": "49.0"
+            },
+            "sipms": {
+                "thickness": "1.45",
+                "width": "3.4",
+                "PCBthickness": "0.7"
+            },
+            "mutrig": {
+                "thickness": "1.5",
+                "width": "15.0"
+            },
+            "tmb": {
+                "thickness": "0.8",
+                "width": "44.6"
+            },
+            "support": {
+                "width": "46.5",
+                "height": "7.31",
+                "endring": "3.5",
+                "pipeID": "2.0",
+                "pipeOD": "2.5",
+                "pipePitch": "13"
+            }
+        },
+        "magnet": {
+            "length": "3000.0",
+            "radius": {
+                "inner": "500.0",
+                "outer": "550.0"
+            },
+            "field": {
+                "strength": "-1.0",
+                "configuration_options": {
+                    "0": "none",
+                    "1": "constant Bz",
+                    "2": "COBRA",
+                    "3": "solenoid with spin tracking",
+                    "4": "solenoid",
+                    "5": "realistic thin solenoid, including radial components",
+                    "6": "field map",
+                    "7": "solenoid plus optional transport solenoid from current loops",
+                    "8": "solenoid with compensation plus optional transport solenoid from current loops"
+                },
+                "configuration": "6",
+                "map": "\/home\/user\/host\/mu3e\/run\/cryogenics.bin",
+                "transportFieldStrength": "0.0",
+                "compensationCoilScale": "0.9"
+            }
+        },
+        "beampipe": {
+            "radius": {
+                "outer": "33.0",
+                "inner": "30.0"
+            },
+            "endpoint_us": "93.13",
+            "endpoint_ds": "109.13",
+            "window": {
+                "thickness": "0.035",
+                "z": "6.0"
+            },
+            "collimators": {
+                "1": {
+                    "z": "-406.13",
+                    "r": "22",
+                    "t": "20.0"
+                }
+            },
+            "degraders": {
+                "1": {
+                    "zOffset": "0.0",
+                    "thickness": "0.6"
+                }
+            }
+        }
+    },
+    "digi": {
+        "_comment": "units are mm, ns, MeV, Hz, Tesla",
+        "frameLength": "64.0",
+        "muon": {
+            "rate": "2.466e8",
+            "polarization": "1.0",
+            "decay": {
+                "signalBF": "0.0",
+                "overlapMode": "s",
+                "overlapMode_comment": "Produce (overlap) decays at same vertex",
+                "overlapMode_options*": {
+                    "m": "michel",
+                    "s": "signal",
+                    "r": "radiative",
+                    "i": "internal conversion",
+                    "e": "secondary electron"
+                },
+                "mode": "0",
+                "mode_options": {
+                    "0": "normal",
+                    "1": "one signal decay per frame",
+                    "2": "overlap decay (see overlapMode)",
+                    "121": "one (guaranteed) radiative decay with internal conversion per frame, weighted events",
+                    "23": "two Michel decays and one secondary electron",
+                    "24": "one Michel decay and one Michel+Secondary Electron from same vertex",
+                    "25": "one guaranteed Michel with immediate Bhabha scattering per frame",
+                    "26": "For signal decays using the matrix element by Kuno",
+                    "27": "muon decay in familon + positron",
+                    "28": "one Michel decay and one Michel+Secondary Electron from same vertex, add up to muon mass(netMomentum)",
+                    "30": "cosmics",
+                    "31": "photons",
+                    "32": "dark-radiative decay with prompt dark photon decay",
+                    "33": "dark-radiative decay with invisible dark photon",
+                    "34": "dark-radiative decay with dark photon with lifetime",
+                    "35": "mu+ -> pi0",
+                    "40": "Electron beam for Mott scattering",
+                    "41": "Positron beam for Mott\/Bhabha scattering"
+                },
+                "signal": {
+                    "skimType": "0",
+                    "br": "1.0",
+                    "set": "0"
+                },
+                "internal": {
+                    "type": "0",
+                    "type_options": {
+                        "0": "cut on all three electrons",
+                        "1": "cut on at least one e+e- pair"
+                    },
+                    "cuts": {
+                        "cosTheta": "0.8",
+                        "eMin": "10",
+                        "eVis": "90",
+                        "mass": "0"
+                    }
+                },
+                "radiative": {
+                    "cuts": {
+                        "eGamma": "5.0"
+                    }
+                },
+                "secondaryElectron": {
+                    "cuts": {
+                        "p": "10",
+                        "pt": "10"
+                    },
+                    "exponent": "0.14"
+                },
+                "bhabha": {
+                    "cuts": {
+                        "eMin": "10"
+                    }
+                },
+                "photonGun": {
+                    "particle": "gamma",
+                    "eMin": "0.0",
+                    "eMax": "55.0",
+                    "pos": {
+                        "x": "0.0",
+                        "y": "0.0",
+                        "z": "0.0"
+                    }
+                },
+                "familon": {
+                    "famMass": "0.0",
+                    "famCoupling": "0.0"
+                },
+                "darkPhoton": {
+                    "file": "MG5\/unweighted_events_inv_pol_10MeV.lhe",
+                    "mass": "10.0",
+                    "lifetime": "0.0267"
+                },
+                "bhabhaPlusMichel": {
+                    "netMomentum": "13.0"
+                }
+            }
+        },
+        "beam_pencil": {
+            "size": {
+                "x": "0.1",
+                "y": "0.1"
+            },
+            "divergence": {
+                "x": "0",
+                "y": "0"
+            },
+            "pos": {
+                "x": "0.0",
+                "y": "0.0"
+            },
+            "direction": {
+                "x": "0",
+                "y": "0"
+            },
+            "momentum": {
+                "spread": "0.01",
+                "mean": "50"
+            },
+            "matrix": {
+                "00": "1",
+                "01": "0",
+                "02": "0",
+                "03": "0",
+                "11": "1",
+                "12": "0",
+                "13": "0",
+                "22": "0",
+                "23": "0",
+                "33": "1"
+            }
+        },
+        "beam": {
+            "size": {
+                "x": "7.8",
+                "y": "9.1"
+            },
+            "divergence": {
+                "x": "85",
+                "y": "30"
+            },
+            "pos": {
+                "x": "0.08",
+                "y": "-0.45"
+            },
+            "direction": {
+                "x": "-2.8",
+                "y": "-0.4"
+            },
+            "momentum": {
+                "spread": "0.77",
+                "mean": "27.86"
+            },
+            "matrix": {
+                "00": "1",
+                "01": "-0.0065",
+                "02": "0.714",
+                "03": "-0.2202",
+                "11": "0.99997887",
+                "12": "0.50885175",
+                "13": "-0.00143133",
+                "22": "0.48090945",
+                "23": "-0.59335259",
+                "33": "0.7742368"
+            },
+            "particle": "mu+"
+        },
+        "write": {
+            "truth_options": {
+                "0": "no truth info",
+                "1": "write trajectories and mc hits",
+                "2": "mc hits pos_{g\/l}_{x\/y\/z} and {p\/e}_{in\/out}"
+            },
+            "truth": "1",
+            "target": "1",
+            "pixels_options": {
+                "0": "no data",
+                "1": "digi (pixel id, time)",
+                "2": "+ truth (MCHit index)"
+            },
+            "pixels": "2",
+            "fibres_options": {
+                "0": "no data",
+                "1": "digi (mppc), asic hits if para mode is 4 (waveforms)",
+                "2": "+ truth",
+                "3": "+ detector hits and more statistics + mppc dose"
+            },
+            "fibres": "3",
+            "tiles_options": {
+                "0": "no data",
+                "1": "digitized E and t data",
+                "2": "+ truth E and t",
+                "3": "+ lots of truth info + mppc dose"
+            },
+            "tiles": "3",
+            "kaptonFlaps_options": {
+                "0": "no data",
+                "1": "dose data"
+            },
+            "kaptonFlaps": "1"
+        },
+        "tracker": {
+            "numLinks": {
+                "inner": "3",
+                "outer": "1"
+            },
+            "efficiency": "1.0",
+            "noiseRate": {
+                "inner": "0.0",
+                "outer": "0.0"
+            },
+            "threshold": "0.005",
+            "timeRes": "0.0",
+            "addTimeBits": "4",
+            "clusterSimulation": "0",
+            "readoutSimulation": "0",
+            "sortingDepth": "80"
+        },
+        "fibres": {
+            "timeRes": "0.75",
+            "timeRes_comment": "only used in mode 0",
+            "decaytime": "2.8",
+            "crosstalk": "0.02",
+            "pileUp": "2.5",
+            "threshold": "1",
+            "parametrisation": {
+                "mode": "3",
+                "mode_options": {
+                    "0": "parametrization in edep, z-Pos (), gaussian time with timeRes",
+                    "1": "No Parametrization, use given detection efficiencies (including SiPMs, no signal hight info)",
+                    "2": "scintillation and propagation simulation without sipm eff",
+                    "3": "scintillation and propagation simulation",
+                    "4": "like 3, with additional waveform simulation, WARN: 10 times slower fibre handling"
+                },
+                "attenuation": {
+                    "_comment": "Mean: N_{Photons} = (edep) * (TMath::Exp(6.899 - 0.046*d) + TMath::Exp(8.606-1.0016*d))",
+                    "square": {
+                        "direct": "0",
+                        "directConst": "0",
+                        "long": "0.003942",
+                        "longConst": "6.21"
+                    },
+                    "round": {
+                        "_comment": "Mean: N_{Photons} = (D0*exp((edep-D1)\/(2*d2))^2+edep) * (TMath::Exp(6.899 - 0.046*d) + TMath::Exp(8.606-1.0016*d))",
+                        "direct": "0",
+                        "directConst": "0",
+                        "long": "0.004254",
+                        "longConst": "6.47",
+                        "D0": "0.01026",
+                        "D1": "0.01293",
+                        "D2": "0.00539"
+                    },
+                    "sigma": {
+                        "_comment": "Sigma: N_{Photons} = edep * (TMath::Exp(4.4614 - 0.0263*d) + TMath::Exp(4.989-1.046*d)) + TMath::Exp(1.607-0.559*d) + TMath::Exp(0.918-0.018*d);",
+                        "A0": "0",
+                        "C0": "3.974",
+                        "A1": "0",
+                        "C1": "1e-10",
+                        "A2": "0.008",
+                        "C2": "0.248",
+                        "A3": "0",
+                        "C3": "1e-10"
+                    }
+                },
+                "pathlength": {
+                    "lower": "1.0",
+                    "upper": "1.13",
+                    "decrease": "0.84",
+                    "_comment": "A*pathlength+B [cm]",
+                    "begin": {
+                        "A": "1.0",
+                        "B": "0.0"
+                    },
+                    "end": {
+                        "A": "1.2",
+                        "B": "0.0"
+                    }
+                },
+                "eff": {
+                    "or": "1",
+                    "and": "0.8"
+                }
+            },
+            "photonDistribution": "1",
+            "photonDistribution_options": {
+                "0": "use geometry only",
+                "1": "250mum fibres, 200mum epoxy: scaled linear in fibre diameter",
+                "2": "250mum fibres, 150mum epoxy: scaled linear in fibre diameter",
+                "3": "250mum fibres, 100mum epoxy: scaled linear in fibre diameter",
+                "4": "250mum fibres, 050mum epoxy: scaled linear in fibre diameter",
+                "5": "250mum fibres, 025mum epoxy: scaled linear in fibre diameter",
+                "6": "250mum fibres, 010mum epoxy: scaled linear in fibre diameter"
+            },
+            "nphotons": "5.0",
+            "photonsForTiming": "1.0",
+            "nphotons_comment": "obsolete, used if para mode == 2, corresponds to mean number of photons at 15cm, mip",
+            "yield": "8000",
+            "yieldScale": "1.0",
+            "capture": "0.054",
+            "capture_comment": "used for para mode >= 3, corrected for attenuation (distance = 0)",
+            "attenuationLength": "1395",
+            "mppcs": {
+                "threshold": "0.5",
+                "dark": {
+                    "rate": "0.0",
+                    "exponential": "10"
+                },
+                "pde": "0.4",
+                "pileUp": "40",
+                "crosstalk": "0.04",
+                "pixelcrosstalk": "0.02",
+                "sptr": "0.085",
+                "arrays": {
+                    "mode": "1",
+                    "mode_options": {
+                        "0": "disabled (single fibre readout)",
+                        "1": "enabled (LHCb style)",
+                        "2": "Angela\/PSI style"
+                    },
+                    "offset": "0.00",
+                    "offsetNoise": "0.010",
+                    "cells": {
+                        "n": "128",
+                        "width": "0.230",
+                        "width_comment": "active",
+                        "pitch": "0.020"
+                    }
+                },
+                "waveform": {
+                    "_format": "time[ns], amplitude[1]\n (equidistributed points)",
+                    "file": "180fC_inputbias_4_dac_pole_50_p.csv"
+                }
+            },
+            "daq": {
+                "delay": "1.0",
+                "jitter": "0.3"
+            }
+        },
+        "tiles": {
+            "timeRes": "0.06",
+            "STICjitter": "0.03",
+            "energyRes": "0.12",
+            "deadtime": "150",
+            "deadtimeTDC": "40",
+            "promptTime": "0.1",
+            "eThresh": "0.1"
+        },
+        "mutrig": {
+            "addTimeBits": "10"
+        },
+        "trajectory": {
+            "momentumCutOff": "5"
+        },
+        "hits": {
+            "momentumCutOff": "0"
+        },
+        "scatteringModel": "1",
+        "scatteringModel_options": {
+            "0": "Single",
+            "1": "Urban",
+            "2": "Goudsmit",
+            "3": "Wentzel"
+        }
+    },
+    "detector": {
+        "_comment": "units are mm, ns, MeV, Hz, Tesla",
+        "world": {
+            "length": "3200",
+            "width": "1500",
+            "height": "1500"
+        },
+        "phase_options": {
+            "0": "phase 1a",
+            "1": "phase 1b",
+            "2": "phase 2"
+        },
+        "phase": "1",
+        "target": {
+            "shape_options": {
+                "0": "double cone",
+                "1": "plane",
+                "2": "garland",
+                "3": "reverse garland",
+                "4": "two-turn garland",
+                "5": "reverse two-turn garland",
+                "6": "no target"
+            },
+            "shape": "0",
+            "thickness1": "0.075",
+            "thickness2": "0.085",
+            "length": "50.0",
+            "radius": "19.0",
+            "offset": {
+                "x": "0",
+                "y": "0",
+                "z": "0"
+            },
+            "material_options": {
+                "Al": "Al",
+                "Si": "Si",
+                "Fe": "Fe",
+                "Cu": "Cu",
+                "Au": "Au",
+                "Pb": "Pb",
+                "Kapton": "Kapton",
+                "Mylar": "Mylar"
+            },
+            "material": "Mylar",
+            "MottScattering": {
+                "placeBall": "0",
+                "ballRadius": "5",
+                "ballZOffset": "-30"
+            }
+        },
+        "pixels": {
+            "small": {
+                "length": "20.66",
+                "width": "23.18",
+                "thickness": "0.05",
+                "deadWidth": "3.0",
+                "inactiveFrameSize": "0.09",
+                "pixelSize": "0.08",
+                "nLayers": "2",
+                "nZSensors": "6",
+                "zSpacing": "0.04"
+            },
+            "large": {
+                "length": "20.66",
+                "width": "23.18",
+                "thickness": "0.05",
+                "deadWidth": "3.0",
+                "inactiveFrameSize": "0.09",
+                "pixelSize": "0.08",
+                "nLayers": "2",
+                "nZSensors3": "17",
+                "nZSensors4": "18",
+                "zSpacing": "0.04"
+            },
+            "nPhiSensors": {
+                "layer1": "8",
+                "layer2": "10",
+                "layer3": "24",
+                "layer4": "28"
+            },
+            "kapton": {
+                "thickness": "0.025",
+                "fpOverlengthInner": "1.0",
+                "extLengthInner": "10.65",
+                "fpOverlengthOuter": "3.8",
+                "extLengthOuter": "2.0"
+            },
+            "mylarCondom": {
+                "thickness_inner": "0.002",
+                "thickness_outer": "0.002"
+            },
+            "conductor": {
+                "thickness": "0.015",
+                "width": "5.0"
+            }
+        },
+        "fibres": {
+            "square": "false",
+            "diameter": "0.250",
+            "length": "287.75",
+            "alCoating": "0.000",
+            "refractiveIndex": "1.59",
+            "deadWidth": "0.005",
+            "nLayers": "3",
+            "maxFibresPerLayer": "126",
+            "ribbons": {
+                "n": "12",
+                "pitch": "0.18",
+                "geometry_options": {
+                    "0": "zigzag",
+                    "1": "trapezium"
+                },
+                "geometry": "0",
+                "rOffset": "0.0"
+            },
+            "mppcs": {
+                "width": "32.0",
+                "height": "1.6",
+                "thickness": "0.3",
+                "epoxy": {
+                    "thickness": "0.1"
+                },
+                "pcb": {
+                    "thickness": "1.0"
+                }
+            }
+        },
+        "tiles": {
+            "nPhi": "56",
+            "nZ": "52",
+            "nModules": "7",
+            "stationLength": "342.32",
+            "stationActiveLength": "335.12",
+            "tile": {
+                "height": "5.0",
+                "gapPhi": "0.2",
+                "gapZ": "0.2",
+                "matrixGapPhi": "0.165",
+                "matrixGapZ": "0.15"
+            },
+            "radius": {
+                "inner": "47.0",
+                "outer": "62.5",
+                "matrixInner": "57.328",
+                "supportInner": "49.287",
+                "endringInner": "49.0"
+            },
+            "sipms": {
+                "thickness": "1.45",
+                "width": "3.4",
+                "PCBthickness": "0.7"
+            },
+            "mutrig": {
+                "thickness": "1.5",
+                "width": "15.0"
+            },
+            "tmb": {
+                "thickness": "0.8",
+                "width": "44.6"
+            },
+            "support": {
+                "width": "46.5",
+                "height": "7.31",
+                "endring": "3.5",
+                "pipeID": "2.0",
+                "pipeOD": "2.5",
+                "pipePitch": "13"
+            }
+        },
+        "magnet": {
+            "length": "3000.0",
+            "radius": {
+                "inner": "500.0",
+                "outer": "550.0"
+            },
+            "field": {
+                "strength": "-1.0",
+                "configuration_options": {
+                    "0": "none",
+                    "1": "constant Bz",
+                    "2": "COBRA",
+                    "3": "solenoid with spin tracking",
+                    "4": "solenoid",
+                    "5": "realistic thin solenoid, including radial components",
+                    "6": "field map",
+                    "7": "solenoid plus optional transport solenoid from current loops",
+                    "8": "solenoid with compensation plus optional transport solenoid from current loops"
+                },
+                "configuration": "6",
+                "map": "\/home\/user\/host\/mu3e\/run\/cryogenics.bin",
+                "transportFieldStrength": "0.0",
+                "compensationCoilScale": "0.9"
+            }
+        },
+        "beampipe": {
+            "radius": {
+                "outer": "33.0",
+                "inner": "30.0"
+            },
+            "endpoint_us": "93.13",
+            "endpoint_ds": "109.13",
+            "window": {
+                "thickness": "0.035",
+                "z": "6.0"
+            },
+            "collimators": {
+                "1": {
+                    "z": "-406.13",
+                    "r": "22",
+                    "t": "20.0"
+                }
+            },
+            "degraders": {
+                "1": {
+                    "zOffset": "0.0",
+                    "thickness": "0.6"
+                }
+            }
+        }
+    },
+    "digi": {
+        "_comment": "units are mm, ns, MeV, Hz, Tesla",
+        "frameLength": "64.0",
+        "muon": {
+            "rate": "2.466e8",
+            "polarization": "1.0",
+            "decay": {
+                "signalBF": "0.0",
+                "overlapMode": "s",
+                "overlapMode_comment": "Produce (overlap) decays at same vertex",
+                "overlapMode_options*": {
+                    "m": "michel",
+                    "s": "signal",
+                    "r": "radiative",
+                    "i": "internal conversion",
+                    "e": "secondary electron"
+                },
+                "mode": "0",
+                "mode_options": {
+                    "0": "normal",
+                    "1": "one signal decay per frame",
+                    "2": "overlap decay (see overlapMode)",
+                    "121": "one (guaranteed) radiative decay with internal conversion per frame, weighted events",
+                    "23": "two Michel decays and one secondary electron",
+                    "24": "one Michel decay and one Michel+Secondary Electron from same vertex",
+                    "25": "one guaranteed Michel with immediate Bhabha scattering per frame",
+                    "26": "For signal decays using the matrix element by Kuno",
+                    "27": "muon decay in familon + positron",
+                    "28": "one Michel decay and one Michel+Secondary Electron from same vertex, add up to muon mass(netMomentum)",
+                    "30": "cosmics",
+                    "31": "photons",
+                    "32": "dark-radiative decay with prompt dark photon decay",
+                    "33": "dark-radiative decay with invisible dark photon",
+                    "34": "dark-radiative decay with dark photon with lifetime",
+                    "35": "mu+ -> pi0",
+                    "40": "Electron beam for Mott scattering",
+                    "41": "Positron beam for Mott\/Bhabha scattering"
+                },
+                "signal": {
+                    "skimType": "0",
+                    "br": "1.0",
+                    "set": "0"
+                },
+                "internal": {
+                    "type": "0",
+                    "type_options": {
+                        "0": "cut on all three electrons",
+                        "1": "cut on at least one e+e- pair"
+                    },
+                    "cuts": {
+                        "cosTheta": "0.8",
+                        "eMin": "10",
+                        "eVis": "90",
+                        "mass": "0"
+                    }
+                },
+                "radiative": {
+                    "cuts": {
+                        "eGamma": "5.0"
+                    }
+                },
+                "secondaryElectron": {
+                    "cuts": {
+                        "p": "10",
+                        "pt": "10"
+                    },
+                    "exponent": "0.14"
+                },
+                "bhabha": {
+                    "cuts": {
+                        "eMin": "10"
+                    }
+                },
+                "photonGun": {
+                    "particle": "gamma",
+                    "eMin": "0.0",
+                    "eMax": "55.0",
+                    "pos": {
+                        "x": "0.0",
+                        "y": "0.0",
+                        "z": "0.0"
+                    }
+                },
+                "familon": {
+                    "famMass": "0.0",
+                    "famCoupling": "0.0"
+                },
+                "darkPhoton": {
+                    "file": "MG5\/unweighted_events_inv_pol_10MeV.lhe",
+                    "mass": "10.0",
+                    "lifetime": "0.0267"
+                },
+                "bhabhaPlusMichel": {
+                    "netMomentum": "13.0"
+                }
+            }
+        },
+        "beam_pencil": {
+            "size": {
+                "x": "0.1",
+                "y": "0.1"
+            },
+            "divergence": {
+                "x": "0",
+                "y": "0"
+            },
+            "pos": {
+                "x": "0.0",
+                "y": "0.0"
+            },
+            "direction": {
+                "x": "0",
+                "y": "0"
+            },
+            "momentum": {
+                "spread": "0.01",
+                "mean": "50"
+            },
+            "matrix": {
+                "00": "1",
+                "01": "0",
+                "02": "0",
+                "03": "0",
+                "11": "1",
+                "12": "0",
+                "13": "0",
+                "22": "0",
+                "23": "0",
+                "33": "1"
+            }
+        },
+        "beam": {
+            "size": {
+                "x": "7.8",
+                "y": "9.1"
+            },
+            "divergence": {
+                "x": "85",
+                "y": "30"
+            },
+            "pos": {
+                "x": "0.08",
+                "y": "-0.45"
+            },
+            "direction": {
+                "x": "-2.8",
+                "y": "-0.4"
+            },
+            "momentum": {
+                "spread": "0.77",
+                "mean": "27.86"
+            },
+            "matrix": {
+                "00": "1",
+                "01": "-0.0065",
+                "02": "0.714",
+                "03": "-0.2202",
+                "11": "0.99997887",
+                "12": "0.50885175",
+                "13": "-0.00143133",
+                "22": "0.48090945",
+                "23": "-0.59335259",
+                "33": "0.7742368"
+            },
+            "particle": "mu+"
+        },
+        "write": {
+            "truth_options": {
+                "0": "no truth info",
+                "1": "write trajectories and mc hits",
+                "2": "mc hits pos_{g\/l}_{x\/y\/z} and {p\/e}_{in\/out}"
+            },
+            "truth": "1",
+            "target": "1",
+            "pixels_options": {
+                "0": "no data",
+                "1": "digi (pixel id, time)",
+                "2": "+ truth (MCHit index)"
+            },
+            "pixels": "2",
+            "fibres_options": {
+                "0": "no data",
+                "1": "digi (mppc), asic hits if para mode is 4 (waveforms)",
+                "2": "+ truth",
+                "3": "+ detector hits and more statistics + mppc dose"
+            },
+            "fibres": "3",
+            "tiles_options": {
+                "0": "no data",
+                "1": "digitized E and t data",
+                "2": "+ truth E and t",
+                "3": "+ lots of truth info + mppc dose"
+            },
+            "tiles": "3",
+            "kaptonFlaps_options": {
+                "0": "no data",
+                "1": "dose data"
+            },
+            "kaptonFlaps": "1"
+        },
+        "tracker": {
+            "numLinks": {
+                "inner": "3",
+                "outer": "1"
+            },
+            "efficiency": "1.0",
+            "noiseRate": {
+                "inner": "0.0",
+                "outer": "0.0"
+            },
+            "threshold": "0.005",
+            "timeRes": "0.0",
+            "addTimeBits": "4",
+            "clusterSimulation": "0",
+            "readoutSimulation": "0",
+            "sortingDepth": "80"
+        },
+        "fibres": {
+            "timeRes": "0.75",
+            "timeRes_comment": "only used in mode 0",
+            "decaytime": "2.8",
+            "crosstalk": "0.02",
+            "pileUp": "2.5",
+            "threshold": "1",
+            "parametrisation": {
+                "mode": "3",
+                "mode_options": {
+                    "0": "parametrization in edep, z-Pos (), gaussian time with timeRes",
+                    "1": "No Parametrization, use given detection efficiencies (including SiPMs, no signal hight info)",
+                    "2": "scintillation and propagation simulation without sipm eff",
+                    "3": "scintillation and propagation simulation",
+                    "4": "like 3, with additional waveform simulation, WARN: 10 times slower fibre handling"
+                },
+                "attenuation": {
+                    "_comment": "Mean: N_{Photons} = (edep) * (TMath::Exp(6.899 - 0.046*d) + TMath::Exp(8.606-1.0016*d))",
+                    "square": {
+                        "direct": "0",
+                        "directConst": "0",
+                        "long": "0.003942",
+                        "longConst": "6.21"
+                    },
+                    "round": {
+                        "_comment": "Mean: N_{Photons} = (D0*exp((edep-D1)\/(2*d2))^2+edep) * (TMath::Exp(6.899 - 0.046*d) + TMath::Exp(8.606-1.0016*d))",
+                        "direct": "0",
+                        "directConst": "0",
+                        "long": "0.004254",
+                        "longConst": "6.47",
+                        "D0": "0.01026",
+                        "D1": "0.01293",
+                        "D2": "0.00539"
+                    },
+                    "sigma": {
+                        "_comment": "Sigma: N_{Photons} = edep * (TMath::Exp(4.4614 - 0.0263*d) + TMath::Exp(4.989-1.046*d)) + TMath::Exp(1.607-0.559*d) + TMath::Exp(0.918-0.018*d);",
+                        "A0": "0",
+                        "C0": "3.974",
+                        "A1": "0",
+                        "C1": "1e-10",
+                        "A2": "0.008",
+                        "C2": "0.248",
+                        "A3": "0",
+                        "C3": "1e-10"
+                    }
+                },
+                "pathlength": {
+                    "lower": "1.0",
+                    "upper": "1.13",
+                    "decrease": "0.84",
+                    "_comment": "A*pathlength+B [cm]",
+                    "begin": {
+                        "A": "1.0",
+                        "B": "0.0"
+                    },
+                    "end": {
+                        "A": "1.2",
+                        "B": "0.0"
+                    }
+                },
+                "eff": {
+                    "or": "1",
+                    "and": "0.8"
+                }
+            },
+            "photonDistribution": "1",
+            "photonDistribution_options": {
+                "0": "use geometry only",
+                "1": "250mum fibres, 200mum epoxy: scaled linear in fibre diameter",
+                "2": "250mum fibres, 150mum epoxy: scaled linear in fibre diameter",
+                "3": "250mum fibres, 100mum epoxy: scaled linear in fibre diameter",
+                "4": "250mum fibres, 050mum epoxy: scaled linear in fibre diameter",
+                "5": "250mum fibres, 025mum epoxy: scaled linear in fibre diameter",
+                "6": "250mum fibres, 010mum epoxy: scaled linear in fibre diameter"
+            },
+            "nphotons": "5.0",
+            "photonsForTiming": "1.0",
+            "nphotons_comment": "obsolete, used if para mode == 2, corresponds to mean number of photons at 15cm, mip",
+            "yield": "8000",
+            "yieldScale": "1.0",
+            "capture": "0.054",
+            "capture_comment": "used for para mode >= 3, corrected for attenuation (distance = 0)",
+            "attenuationLength": "1395",
+            "mppcs": {
+                "threshold": "0.5",
+                "dark": {
+                    "rate": "0.0",
+                    "exponential": "10"
+                },
+                "pde": "0.4",
+                "pileUp": "40",
+                "crosstalk": "0.04",
+                "pixelcrosstalk": "0.02",
+                "sptr": "0.085",
+                "arrays": {
+                    "mode": "1",
+                    "mode_options": {
+                        "0": "disabled (single fibre readout)",
+                        "1": "enabled (LHCb style)",
+                        "2": "Angela\/PSI style"
+                    },
+                    "offset": "0.00",
+                    "offsetNoise": "0.010",
+                    "cells": {
+                        "n": "128",
+                        "width": "0.230",
+                        "width_comment": "active",
+                        "pitch": "0.020"
+                    }
+                },
+                "waveform": {
+                    "_format": "time[ns], amplitude[1]\n (equidistributed points)",
+                    "file": "180fC_inputbias_4_dac_pole_50_p.csv"
+                }
+            },
+            "daq": {
+                "delay": "1.0",
+                "jitter": "0.3"
+            }
+        },
+        "tiles": {
+            "timeRes": "0.06",
+            "STICjitter": "0.03",
+            "energyRes": "0.12",
+            "deadtime": "150",
+            "deadtimeTDC": "40",
+            "promptTime": "0.1",
+            "eThresh": "0.1"
+        },
+        "mutrig": {
+            "addTimeBits": "10"
+        },
+        "trajectory": {
+            "momentumCutOff": "5"
+        },
+        "hits": {
+            "momentumCutOff": "0"
+        },
+        "scatteringModel": "1",
+        "scatteringModel_options": {
+            "0": "Single",
+            "1": "Urban",
+            "2": "Goudsmit",
+            "3": "Wentzel"
+        }
+    },
+    "sort": {
+        "version": "",
+        "skip": "80"
+    }
+}
+/Collectable string class. You must implement TObjString::SavePrimitive
+}

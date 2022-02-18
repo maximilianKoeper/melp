@@ -101,7 +101,7 @@ def build_mask_detector_class(ttree_mu3e, mu3e_detector: melp.Detector, mask_typ
 
 ####################################
 #builds masks around every hit in frame with hid=1,-1 using the get neighbour function, which also works if hit is at the edge of the detector.
-def build_mask_around_cluster_master(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector: melp.Detector, frame, mask_type, rec_type = None):
+def build_mask_around_cluster_master(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, mu3e_detector: melp.Detector, frame, time_threshold, mask_type, rec_type = None):
     #-------------------------------------
     #select reconstruction/tracking method
     #-------------------------------------
@@ -110,7 +110,7 @@ def build_mask_around_cluster_master(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, tt
     elif rec_type == "pixelpixelcheck":
         mask_masters, cluster_master_primary = melp.clustering.tracking.get_mask_masters_hitAnglePixelRec_with_hid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles, matching="nearest")
     elif rec_type == "timethenspatial":
-        mask_masters, cluster_master_primary = clump.three_dim_cluster.get_cluster_master_of_time_clusters(ttree_mu3e, frame, printing = None)
+        mask_masters, cluster_master_primary = clump.three_dim_cluster.get_cluster_master_of_time_clusters(ttree_mu3e, ttree_mu3e_mc, frame, time_threshold, printing = None)
     else:
         mask_masters, cluster_master_primary = get_cluster_master_truth_frame(ttree_mu3e, ttree_mu3e_mc, frame)
 
@@ -315,6 +315,7 @@ def build_mask_single_hit(cluster_hit: ClusterHit, ttree_mu3e, ttree_mu3e_mc, tt
     #-----------------
     if mask_type == "small":
         master_primary     = cluster_hit.primary
+        master_tid         = cluster_hit.tid
         tile_centre        = cluster_hit.tile_id
         tile_centre_top    = mu3e_detector.TileDetector.getNeighbour(tile_centre, "up")
         tile_centre_bottom = mu3e_detector.TileDetector.getNeighbour(tile_centre, "down")
@@ -332,6 +333,7 @@ def build_mask_single_hit(cluster_hit: ClusterHit, ttree_mu3e, ttree_mu3e_mc, tt
     #------------------
     if mask_type == "medium":
         master_primary     = cluster_hit.primary
+        master_tid         = cluster_hit.tid
         tile_centre        = cluster_hit.tile_id
         tile_centre_top    = mu3e_detector.TileDetector.getNeighbour(tile_centre, "up")
         tile_centre_bottom = mu3e_detector.TileDetector.getNeighbour(tile_centre, "down")
@@ -353,8 +355,9 @@ def build_mask_single_hit(cluster_hit: ClusterHit, ttree_mu3e, ttree_mu3e_mc, tt
     #build big masks
     #---------------
     if mask_type == "big":
-        master_primary     = cluster_hit.primary
-        tile_centre        = cluster_hit.tile_id
+        master_primary         = cluster_hit.primary
+        master_tid             = cluster_hit.tid
+        tile_centre            = cluster_hit.tile_id
         tile_centre_top        = mu3e_detector.TileDetector.getNeighbour(tile_centre, "up")
         tile_centre_bottom     = mu3e_detector.TileDetector.getNeighbour(tile_centre, "down")
         tile_left_centre       = mu3e_detector.TileDetector.getNeighbour(tile_centre, "left")
@@ -387,4 +390,4 @@ def build_mask_single_hit(cluster_hit: ClusterHit, ttree_mu3e, ttree_mu3e_mc, tt
         if False in mask_tmp:
             mask_tmp = [x for x in mask_tmp if x != False]
 
-    return mask_tmp, master_primary
+    return mask_tmp, master_primary, master_tid

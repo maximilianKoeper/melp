@@ -1,7 +1,6 @@
 test.py
 test_mt.py
 *.root
-*.png
 *.pyc
 *.identifier
 **\__pycache__
@@ -9,6 +8,8 @@ test_mt.py
 **\.ipynb_checkpoints
 **\root_files
 *.npz
+*.txt
+**\melp\clustering\results
 
 
 !/testdata/**
