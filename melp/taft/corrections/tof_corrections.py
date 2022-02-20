@@ -11,9 +11,9 @@ import numpy as np
 def alpha_from_z(z: float) -> float:
     # Fit approximated from angle distribution
     if z > 0:
-        return (((0.07744 * (z) + 94.689)-90) / 180) * np.pi
+        return (((0.07744 * (z) + 94.689) - 90) / 180) * np.pi
     if z < 0:
-        return (((-0.018995 * (z) + 64.49)-90) / 180) * np.pi
+        return (((-0.018995 * (z) + 64.49) - 90) / 180) * np.pi
     # return np.pi + (((25 / 328.8) * z) / 180) * np.pi
 
 
@@ -24,7 +24,7 @@ def tof_z_graf(z: list) -> float:
     alpha = alpha_from_z(z[2])
 
     time = (tile_length / (2 * c)) * (1 + np.tan(alpha) ** 2 + np.tan(beta) ** 2)
-    return time * (10 ** 9) #ps
+    return time * (10 ** 9)  # ps
 
 
 def tof_z_new(xyz: list) -> float:
@@ -50,18 +50,14 @@ def tof_z_new_better(xyz: list) -> float:
 
     length_total = np.sqrt(length_z ** 2 + length_phi ** 2)
 
-    tof = (length_total/c) * (10 ** 9)  # ns
+    tof = (length_total / c) * (10 ** 9)  # ns
 
     return tof
 
 
-
-
-
-
-
 # ---------------------------------------
 def tof_correction_z(__detector__, dt_z_rel: dict, station_offset: int, tof_mode: str) -> dict:
+    print("*TOF correction")
     for phi in range(len(__detector__.TileDetector.column_ids(0, station_offset))):
         tile_ids = __detector__.TileDetector.row_ids(phi, station_offset)
 

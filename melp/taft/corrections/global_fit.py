@@ -4,9 +4,9 @@ from melp.taft.utils.cosmic import get_cosmic_data_from_file
 
 
 def correct_z_two_event(detector, cosmic_station, **kwargs) -> np.array:
-    print("Two event correction")
+    print("*Two event correction")
     a, b = get_cosmic_data_from_file(kwargs.get("cosmic_file"), detector, cosmic_station, **kwargs)
-    print("\nCosmic Muons: ", len(a))
+    print("\n  -> Cosmic Muons: ", len(a))
 
     args = np.zeros(kwargs["cosmic_n_modes"]*2) + 0.0001
     popt, cov = opt.curve_fit(fit_func, b, a, p0=args, method="lm")

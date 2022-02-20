@@ -7,7 +7,7 @@ from scipy.optimize import minimize
 from melp import Detector
 # fast index lookup
 from melp.libs.timer import Timer
-from melp.taft.corrections.misc_corrections import loop_correction_phi
+from melp.taft.corrections.misc_corrections import loop_correction_phi, loop_adv_correction_phi
 # different functions for calibration
 from melp.taft.corrections.tof_corrections import tof_correction_z
 from melp.taft.corrections.global_fit import correct_z_two_event
@@ -61,7 +61,7 @@ def calibrate(**kwargs):
     # reading data / preparing data
     histogram = read_histo(kwargs["hist_file"])
 
-    print("Using ", kwargs["dt_mode"])
+    print("*Using dt mode: ", kwargs["dt_mode"])
     if kwargs["dt_mode"] == "median":
         # calculate residuals to truth
         # and dt between tiles (median of the histogram)
@@ -80,8 +80,15 @@ def calibrate(**kwargs):
     loop_correction_phi(__detector__, dt_phi_rel, 200000)
     loop_correction_phi(__detector__, dt_phi_rel, 300000)
 
+    # ------------------------------------------------------
+    # correction relative dts
+    # correction for phi loops
+    loop_adv_correction_phi(__detector__, dt_phi_rel, dt_z_rel.copy(), 200000, penalties=kwargs["penalties"])
+    loop_adv_correction_phi(__detector__, dt_phi_rel, dt_z_rel.copy(), 300000, penalties=kwargs["penalties"])
+
+    # ------------------------------------------------------
     # correcting for tof in z direction
-    tof_correction_z(__detector__, dt_z_rel, 200000, kwargs["tof"])
+    tof_correction_z(__detector__, dt_z_rel, station_offset=200000, tof_mode=kwargs["tof"])
     tof_correction_z(__detector__, dt_z_rel, station_offset=300000, tof_mode=kwargs["tof"])
     # ------------------------------------------------------
 
@@ -90,7 +97,7 @@ def calibrate(**kwargs):
     align_timings(dt_phi_rel, dt_z_rel, 200000)
     align_timings(dt_phi_rel, dt_z_rel, 300000)
     # ------------------------------------------------------
-    correct_z_error_prop(dt_z_rel)
+    #correct_z_error_prop(dt_z_rel)
     # ------------------------------------------------------
     # correcting tof with cosmic data (z - direction)
     # cosmic_correction_z(__detector__, **kwargs)
@@ -188,7 +195,7 @@ def minimize_function_z(offset: float, dt_phi_rel: list, dt_z_rel: list, dt_phi_
 # prepares data for minimizer and applies result to detector
 def align_timings(dt_phi_rel: dict, dt_z_rel: dict, station_offset: int):
     global __detector__
-    print(f"Calculating absolute timing offsets to master tile: {station_offset}")
+    print(f"*Calculating absolute timing offsets to master tile: {station_offset}")
 
     result = {}
     # loop over all z - columns

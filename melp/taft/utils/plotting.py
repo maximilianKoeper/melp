@@ -4,7 +4,7 @@ import numpy as np
 
 # --------------------------------------------------------
 def plot_station_calibration(mu3e_detector, station: int):
-    f_size = 25
+    f_size = 20
     plt.rcParams.update({'font.size': f_size})
 
     if station == 1:

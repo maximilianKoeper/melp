@@ -214,7 +214,7 @@ def get_cosmic_data_from_file(filename: str, detector, cosmic_station: int, **kw
         #if it >= 500000:
         #    it = 100000000000001
         if it % 100000 == 0:
-            print(round(it / ttree_mu3e.GetEntries() * 100), " % | Total Frames: ", ttree_mu3e.GetEntries(),
+            print("  -> ", round(it / ttree_mu3e.GetEntries() * 100), " % | Total Frames: ", ttree_mu3e.GetEntries(),
                   end='\r')
 
         if kwargs["cosmic_mc_primary"] is False:
