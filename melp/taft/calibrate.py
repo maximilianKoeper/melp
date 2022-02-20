@@ -7,7 +7,7 @@ from scipy.optimize import minimize
 from melp import Detector
 # fast index lookup
 from melp.libs.timer import Timer
-from melp.taft.corrections.misc_corrections import loop_correction_phi, loop_adv_correction_phi
+from melp.taft.corrections.misc_corrections import loop_correction_phi, loop_adv_correction_phi, loop_adv_correction_z
 # different functions for calibration
 from melp.taft.corrections.tof_corrections import tof_correction_z
 from melp.taft.corrections.global_fit import correct_z_two_event
@@ -83,8 +83,16 @@ def calibrate(**kwargs):
     # ------------------------------------------------------
     # correction relative dts
     # correction for phi loops
-    loop_adv_correction_phi(__detector__, dt_phi_rel, dt_z_rel.copy(), 200000, penalties=kwargs["penalties"])
-    loop_adv_correction_phi(__detector__, dt_phi_rel, dt_z_rel.copy(), 300000, penalties=kwargs["penalties"])
+    if kwargs.get("phi_penalties") is not None:
+        loop_adv_correction_phi(__detector__, dt_phi_rel, dt_z_rel.copy(), 200000, penalties=kwargs["phi_penalties"])
+        loop_adv_correction_phi(__detector__, dt_phi_rel, dt_z_rel.copy(), 300000, penalties=kwargs["phi_penalties"])
+
+    # ------------------------------------------------------
+    # correction relative dts
+    # correction for z
+    if kwargs.get("z_penalties") is not None:
+        loop_adv_correction_z(__detector__, dt_phi_rel.copy(), dt_z_rel, 200000, penalties=kwargs["z_penalties"])
+        loop_adv_correction_z(__detector__, dt_phi_rel.copy(), dt_z_rel, 300000, penalties=kwargs["z_penalties"])
 
     # ------------------------------------------------------
     # correcting for tof in z direction
