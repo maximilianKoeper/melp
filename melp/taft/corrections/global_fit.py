@@ -19,7 +19,6 @@ def correct_z_two_event(detector, cosmic_station, **kwargs) -> np.array:
             current_tile_id = detector.TileDetector.id_from_row_col(row=row, column=column, station_offset=station_offset)
             timing_correction = calibration_correction_z((column, row), *popt)
             timing_correction -= calibration_correction_z((0, 0), *popt)
-
             detector.TileDetector.tile[current_tile_id].update_calibration(timing_correction)
 
     return popt

@@ -57,7 +57,7 @@ def tof_z_new_better(xyz: list) -> float:
 
 # ---------------------------------------
 def tof_correction_z(__detector__, dt_z_rel: dict, station_offset: int, tof_mode: str) -> dict:
-    print("*TOF correction")
+    print("*TOF correction | mode: ", tof_mode)
     for phi in range(len(__detector__.TileDetector.column_ids(0, station_offset))):
         tile_ids = __detector__.TileDetector.row_ids(phi, station_offset)
 

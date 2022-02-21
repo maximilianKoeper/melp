@@ -7,7 +7,7 @@ from scipy.optimize import minimize
 from melp import Detector
 # fast index lookup
 from melp.libs.timer import Timer
-from melp.taft.corrections.misc_corrections import loop_correction_phi, loop_adv_correction_phi, loop_adv_correction_z
+from melp.taft.corrections.misc_corrections import loop_correction_phi, loop_adv_correction_phi, loop_adv_correction_z, loop_adv_full_correction_phi
 # different functions for calibration
 from melp.taft.corrections.tof_corrections import tof_correction_z
 from melp.taft.corrections.global_fit import correct_z_two_event
@@ -57,6 +57,7 @@ def calibrate(**kwargs):
     # TODO: workaround (not all functions return residuals)
     resid_z, resid_phi = (None, None)
 
+    print("[start] Calibration")
     # ------------------------------------------------------
     # reading data / preparing data
     histogram = read_histo(kwargs["hist_file"])
@@ -84,8 +85,12 @@ def calibrate(**kwargs):
     # correction relative dts
     # correction for phi loops
     if kwargs.get("phi_penalties") is not None:
-        loop_adv_correction_phi(__detector__, dt_phi_rel, dt_z_rel.copy(), 200000, penalties=kwargs["phi_penalties"])
-        loop_adv_correction_phi(__detector__, dt_phi_rel, dt_z_rel.copy(), 300000, penalties=kwargs["phi_penalties"])
+        if kwargs.get("phi_multi") is True:
+            loop_adv_full_correction_phi(__detector__, dt_phi_rel, dt_z_rel, 200000, kwargs["phi_penalties"])
+            loop_adv_full_correction_phi(__detector__, dt_phi_rel, dt_z_rel, 300000, kwargs["phi_penalties"])
+        else:
+            loop_adv_correction_phi(__detector__, dt_phi_rel, dt_z_rel.copy(), 200000, penalties=kwargs["phi_penalties"])
+            loop_adv_correction_phi(__detector__, dt_phi_rel, dt_z_rel.copy(), 300000, penalties=kwargs["phi_penalties"])
 
     # ------------------------------------------------------
     # correction relative dts
@@ -127,7 +132,7 @@ def calibrate(**kwargs):
     __detector__.TileDetector.column_ids.cache_clear()
     __detector__.TileDetector.id_from_row_col.cache_clear()
 
-    print("Calibration finished")
+    print("[success] Calibration finished")
     t.print()
     # ------------------------------------------------------
     #

@@ -211,8 +211,8 @@ def get_cosmic_data_from_file(filename: str, detector, cosmic_station: int, **kw
     it = find_next_cosmic_event(ttree_mu3e, it=0, station=cosmic_station)
     while it != -1:
         # TODO: just for debugging
-        #if it >= 500000:
-        #    it = 100000000000001
+        if it >= 1000000:
+            it = 100000000000001
         if it % 100000 == 0:
             print("  -> ", round(it / ttree_mu3e.GetEntries() * 100), " % | Total Frames: ", ttree_mu3e.GetEntries(),
                   end='\r')
