@@ -122,11 +122,6 @@ def iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_senso
     tids_frame      = []
     edep_frame      = []
     pdgs_frame      = []
-    
-    traj_PID_frame      = []
-    traj_type_frame     = []
-    traj_tlhid_frame    = []
-    traj_ID_frame       = []
 
     for hit_tile_index in range(ttree_mu3e.Ntilehit):
         hit_tiles_frame.append(ttree_mu3e.tilehit_tile[hit_tile_index])
@@ -134,10 +129,6 @@ def iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_senso
         times_frame.append(ttree_mu3e.tilehit_time[hit_tile_index])
         mcis_frame.append(ttree_mu3e.tilehit_mc_i[hit_tile_index])
         edep_frame.append(ttree_mu3e.tilehit_edep[hit_tile_index])
-        traj_PID_frame.append(ttree_mu3e.traj_PID[hit_tile_index])
-        traj_type_frame.append(ttree_mu3e.traj_type[hit_tile_index])
-        traj_tlhid_frame.append(ttree_mu3e.traj_tlhid[hit_tile_index])
-        traj_ID_frame.append(ttree_mu3e.traj_ID[hit_tile_index])
     
     for mc_i in mcis_frame:
         ttree_mu3e_mc.GetEntry(mc_i)
@@ -160,9 +151,7 @@ def iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_senso
                     if time_cluster.hits[j].tile_id in mask_tmp and time_cluster.hits[j].tile_id not in added_hits: 
                         cluster_tmp.append(ClusterHit(tile_id = time_cluster.hits[j].tile_id, frame_id = frame, primary = time_cluster.hits[j].primary, 
                                                       time = time_cluster.hits[j].time, mc_i = time_cluster.hits[j].mc_i, tid = time_cluster.hits[j].tid, 
-                                                      pdg = time_cluster.hits[j].pdg ,edep = time_cluster.hits[j].edep, traj_PID = time_cluster.hits[j].traj_PID, 
-                                                      traj_type = time_cluster.hits[j].traj_type, traj_tlhid = time_cluster.hits[j].traj_tlhid, 
-                                                      traj_ID = time_cluster.hits[j].traj_ID))
+                                                      pdg = time_cluster.hits[j].pdg ,edep = time_cluster.hits[j].edep))
                         added_hits.append(time_cluster.hits[j].tile_id)
             #build mask around hits in first cluster
             cluster_tmp_2 = []
@@ -174,14 +163,10 @@ def iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_senso
                         if time_cluster.hits[m].tile_id in next_mask_tmp and time_cluster.hits[m].tile_id not in added_hits: 
                             cluster_tmp.append(ClusterHit(tile_id = time_cluster.hits[m].tile_id, frame_id = frame, primary = time_cluster.hits[m].primary, 
                                                           time = time_cluster.hits[m].time, mc_i = time_cluster.hits[m].mc_i, tid = time_cluster.hits[m].tid, 
-                                                          pdg = time_cluster.hits[m].pdg, edep = time_cluster.hits[m].edep, traj_PID = time_cluster.hits[m].traj_PID, 
-                                                          traj_type = time_cluster.hits[m].traj_type, traj_tlhid = time_cluster.hits[m].traj_tlhid, 
-                                                          traj_ID = time_cluster.hits[m].traj_ID))
+                                                          pdg = time_cluster.hits[m].pdg, edep = time_cluster.hits[m].edep))
                             cluster_tmp_2.append(ClusterHit(tile_id = time_cluster.hits[m].tile_id, frame_id = frame, primary = time_cluster.hits[m].primary, 
                                                             time = time_cluster.hits[m].time, mc_i = time_cluster.hits[m].mc_i, tid = time_cluster.hits[m].tid, 
-                                                            pdg = time_cluster.hits[m].pdg, edep = time_cluster.hits[m].edep, traj_PID = time_cluster.hits[m].traj_PID, 
-                                                            traj_type = time_cluster.hits[m].traj_type, traj_tlhid = time_cluster.hits[m].traj_tlhid, 
-                                                            traj_ID = time_cluster.hits[m].traj_ID))
+                                                            pdg = time_cluster.hits[m].pdg, edep = time_cluster.hits[m].edep))
                             added_hits.append(time_cluster.hits[m].tile_id)
 
             #build mask around hits in second iteration clusters
@@ -275,6 +260,6 @@ def iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_senso
         if test2 < 0.3:
             print("Frame +1:", test2)
     """
-    
+
     return new_clusters
 

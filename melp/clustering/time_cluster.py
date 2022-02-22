@@ -105,11 +105,6 @@ def time_clustering_frame_improv(ttree_mu3e, ttree_mu3e_mc, frame: int, time_thr
     tilehit_primaries = np.asarray(list(ttree_mu3e.tilehit_primary))[indices]
     tilehit_mcis      = np.asarray(list(ttree_mu3e.tilehit_mc_i))[indices]
     tilehit_edep      = np.asarray(list(ttree_mu3e.tilehit_edep))[indices]
-    traj_PID          = np.asarray(list(ttree_mu3e.traj_PID))[indices]
-    traj_type         = np.asarray(list(ttree_mu3e.traj_type))[indices]
-    traj_tlhid        = np.asarray(list(ttree_mu3e.traj_tlhid))[indices]
-    traj_ID           = np.asarray(list(ttree_mu3e.traj_ID))[indices]
-
 
     if len(tilehit_times) == 0:
         return [Cluster(id=-1, frame_id=frame, master_id=-1, master_primary=-1, hits=[])]
@@ -122,9 +117,7 @@ def time_clustering_frame_improv(ttree_mu3e, ttree_mu3e_mc, frame: int, time_thr
             if abs(tmp_time_reference - tilehit_times[index]) > time_threshold:
                 clusters_dict[index] = [tilehit_ids[index_start_track:index], tilehit_primaries[index_start_track:index], 
                                         tilehit_times[index_start_track:index], tilehit_mcis[index_start_track:index], 
-                                        tilehit_edep[index_start_track:index], traj_PID[index_start_track:index], 
-                                        traj_type[index_start_track:index], traj_tlhid[index_start_track:index], 
-                                        traj_ID[index_start_track:index]]
+                                        tilehit_edep[index_start_track:index]]
                 index_start_track = index
                 tmp_time_reference = tilehit_times[index]
 
@@ -134,11 +127,7 @@ def time_clustering_frame_improv(ttree_mu3e, ttree_mu3e_mc, frame: int, time_thr
                                                 tilehit_primaries[index_start_track:],
                                                 tilehit_times[index_start_track:],
                                                 tilehit_mcis[index_start_track:],
-                                                tilehit_edep[index_start_track:],
-                                                traj_PID[index_start_track:],
-                                                traj_type[index_start_track:],
-                                                traj_tlhid[index_start_track:],
-                                                traj_ID[index_start_track:]]
+                                                tilehit_edep[index_start_track:]]
 
         #convert to cluster object
         clusters = []
@@ -151,9 +140,7 @@ def time_clustering_frame_improv(ttree_mu3e, ttree_mu3e_mc, frame: int, time_thr
                 pdg = ttree_mu3e_mc.pdg
                 cluster_tmp.append(ClusterHit(tile_id=clusters_dict[key][0][i], frame_id=frame, primary=clusters_dict[key][1][i], 
                                               time=clusters_dict[key][2][i], mc_i=clusters_dict[key][3][i], tid = tid, pdg = pdg, 
-                                              edep = clusters_dict[key][4][i], traj_PID = clusters_dict[key][5][i], 
-                                              traj_type = clusters_dict[key][6][i], traj_tlhid = clusters_dict[key][7][i], 
-                                              traj_ID = clusters_dict[key][8][i]))                
+                                              edep = clusters_dict[key][4][i]))                
             clusters.append(Cluster(id=key, frame_id=frame, master_id=cluster_tmp[0].tile_id, master_primary=cluster_tmp[0].primary, 
                                     master_tid = cluster_tmp[0].tid, hits=cluster_tmp))
 
@@ -168,10 +155,6 @@ def time_clustering_frame_improv_energy_cut(ttree_mu3e, ttree_mu3e_mc, frame: in
     tilehit_primaries = np.asarray(list(ttree_mu3e.tilehit_primary))[indices]
     tilehit_mcis      = np.asarray(list(ttree_mu3e.tilehit_mc_i))[indices]
     tilehit_edep      = np.asarray(list(ttree_mu3e.tilehit_edep))[indices]
-    traj_PID          = np.asarray(list(ttree_mu3e.traj_PID))[indices]
-    traj_type         = np.asarray(list(ttree_mu3e.traj_type))[indices]
-    traj_tlhid        = np.asarray(list(ttree_mu3e.traj_tlhid))[indices]
-    traj_ID           = np.asarray(list(ttree_mu3e.traj_ID))[indices]
 
     if len(tilehit_times) == 0:
         return [Cluster(id=-1, frame_id=frame, master_id=-1, master_primary=-1, hits=[])]
@@ -186,11 +169,7 @@ def time_clustering_frame_improv_energy_cut(ttree_mu3e, ttree_mu3e_mc, frame: in
                                         tilehit_primaries[index_start_track:index], 
                                         tilehit_times[index_start_track:index], 
                                         tilehit_mcis[index_start_track:index], 
-                                        tilehit_edep[index_start_track:index],
-                                        traj_PID[index_start_track:index],
-                                        traj_type[index_start_track:index],
-                                        traj_tlhid[index_start_track:index],
-                                        traj_ID[index_start_track:index]]
+                                        tilehit_edep[index_start_track:index]]
                 index_start_track = index
                 tmp_time_reference = tilehit_times[index]
 
@@ -202,11 +181,7 @@ def time_clustering_frame_improv_energy_cut(ttree_mu3e, ttree_mu3e_mc, frame: in
                                                 tilehit_primaries[index_start_track:],
                                                 tilehit_times[index_start_track:],
                                                 tilehit_mcis[index_start_track:],
-                                                tilehit_edep[index_start_track:],
-                                                traj_PID[index_start_track:],
-                                                traj_type[index_start_track:],
-                                                traj_tlhid[index_start_track:],
-                                                traj_ID[index_start_track:]]
+                                                tilehit_edep[index_start_track:]]
 
         #-------------------------
         #convert to cluster object
@@ -221,9 +196,7 @@ def time_clustering_frame_improv_energy_cut(ttree_mu3e, ttree_mu3e_mc, frame: in
                 pdg = ttree_mu3e_mc.pdg
                 cluster_tmp.append(ClusterHit(tile_id=clusters_dict[key][0][i], frame_id=frame, primary=clusters_dict[key][1][i], 
                                               time=clusters_dict[key][2][i], mc_i=clusters_dict[key][3][i], tid = tid, pdg = pdg,
-                                              edep = clusters_dict[key][4][i],traj_PID = clusters_dict[key][5][i], 
-                                              traj_type = clusters_dict[key][6][i], traj_tlhid = clusters_dict[key][7][i], 
-                                              traj_ID = clusters_dict[key][8][i]))                
+                                              edep = clusters_dict[key][4][i]))                
             clusters.append(Cluster(id=key, frame_id=frame, master_id=cluster_tmp[0].tile_id, master_primary=cluster_tmp[0].primary, 
                                     master_tid = cluster_tmp[0].tid, hits=cluster_tmp))
 
@@ -234,7 +207,5 @@ def time_clustering_frame_improv_energy_cut(ttree_mu3e, ttree_mu3e_mc, frame: in
             for cluster_hit in cluster.hits:
                 if cluster_hit.edep < 0.3: #MeV
                     cluster.hits.remove(cluster_hit)
-
-
 
     return clusters
