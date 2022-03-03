@@ -209,3 +209,6 @@ def time_clustering_frame_improv_energy_cut(ttree_mu3e, ttree_mu3e_mc, frame: in
                     cluster.hits.remove(cluster_hit)
 
     return clusters
+
+
+
