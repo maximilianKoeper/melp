@@ -787,6 +787,7 @@ def delta_t_frames_truth(ttree_mu3e, ttree_mu3e_mc, number_of_frames):
 
     delta_ts_diff_tid = []
     delta_ts_same_tid = []
+    delta_ts_tot      = []
     #set frame number
     if number_of_frames == None:
         frames_to_analyze = ttree_mu3e.GetEntries()
@@ -813,6 +814,7 @@ def delta_t_frames_truth(ttree_mu3e, ttree_mu3e_mc, number_of_frames):
         for i in range(len(tilehit_times)-1):
             delta_t = tilehit_times[i+1]-tilehit_times[i]
             if delta_t != 0:
+                delta_ts_tot.append(delta_t)
                 if tids[i+1] == tids[i]:
                     delta_ts_same_tid.append(delta_t)
                 elif tids[i+1] != tids[i]:
@@ -820,4 +822,4 @@ def delta_t_frames_truth(ttree_mu3e, ttree_mu3e_mc, number_of_frames):
 
     print("Progress: 100 %","of ", frames_to_analyze, " frames")
 
-    return delta_ts_same_tid, delta_ts_diff_tid
+    return delta_ts_tot, delta_ts_same_tid, delta_ts_diff_tid
