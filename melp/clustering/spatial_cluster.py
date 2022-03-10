@@ -205,9 +205,11 @@ def iterative_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_
 
 
 ################
-def hits_per_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, mask_type, number_of_frames = None, rec_type = None):
-    number_of_hits_per_tid = []
-    #max_hits_per_tid = []
+#return number of hits per tid and per reconstructed cluster
+def hits_per_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, time_threshold, mask_type, number_of_frames = None, rec_type = None):
+    number_of_hits_per_tid     = []
+    number_of_hits_per_cluster = []
+    number_of_tids_per_frame   = []
 
     #set frame number
     if number_of_frames == None:
@@ -225,9 +227,19 @@ def hits_per_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_det
         #get truth clusters
         truth_clusters = build_truth_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
 
-        #count number of hits in every cluster
+        #get number of truth clusters / number of tids per frame
+        number_of_tids_per_frame.append(len(truth_clusters))
+
+        #count number of hits in every truth cluster
         for truth_cluster in truth_clusters:
             number_of_hits_per_tid.append(len(truth_cluster))
+
+        #get clusters
+        clusters = clump.three_dim_cluster.iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, time_threshold, mask_type, rec_type)
+
+        #count number of hits in every cluster
+        for cluster in clusters:
+            number_of_hits_per_cluster.append(len(cluster))
 
     print("Progress: 100 %","of ", frames_to_analyze, " frames")
 
@@ -245,8 +257,10 @@ def hits_per_tid(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_det
     #print mean
     mean = np.sum(number_of_hits_per_tid)/len(number_of_hits_per_tid)
     mean_mult_hits = (np.sum(number_of_hits_per_tid)-number_of_hits_per_tid.count(1))/(len(number_of_hits_per_tid)-number_of_hits_per_tid.count(1))
+    mean_tids_per_Frame = np.mean(number_of_tids_per_frame)
     print("Mean number of hits per tid:", mean)
     print("Mean number of hits per tid without single hit clusters:", mean_mult_hits)
+    print("Average number of TIDs per frame:", mean_tids_per_Frame)
 
-    return ratios, percentages, number_of_hits_per_tid, max_hits_per_tid
+    return ratios, percentages, number_of_hits_per_tid, max_hits_per_tid, number_of_hits_per_cluster
 

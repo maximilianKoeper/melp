@@ -211,4 +211,45 @@ def time_clustering_frame_improv_energy_cut(ttree_mu3e, ttree_mu3e_mc, frame: in
     return clusters
 
 
+#############################
+#returns average number of time cluster hits
+def average_number_of_cluster_hits(ttree_mu3e, ttree_mu3e_mc, number_of_frames: int, time_threshold: float = 0.4):
+    hits_in_clusters            = []
+    number_of_clusters_in_frame = []
+    number_of_hits_in_frame     = []
+    #set frame number
+    if number_of_frames == None:
+        frames_to_analyze = ttree_mu3e.GetEntries()
+    else:
+        frames_to_analyze = number_of_frames
+
+    for frame in np.arange(2, frames_to_analyze-2, 1):
+        ttree_mu3e.GetEntry(frame)
+        #Printing status info
+        if frame % 5000 == 0:
+            print("Progress: ", np.round(frame / frames_to_analyze * 100), " %","of ", frames_to_analyze, " frames", end='\r')
+
+        #get clusters
+        clusters = time_clustering_frame_improv(ttree_mu3e, ttree_mu3e_mc, frame, time_threshold)
+
+        #get number of clusters in frame
+        number_of_clusters_in_frame.append(len(clusters))
+
+        #get number of tile hits in frame
+        number_of_hits_in_frame.append(ttree_mu3e.Ntilehit)
+
+        #calculate number of hits
+        for cluster in clusters:
+            hits_in_clusters.append(len(cluster))
+
+    print("Progress: 100 %","of ", frames_to_analyze, " frames")
+
+    #calculate average number of hits and clusters
+    mean_cluster_hits   = np.mean(hits_in_clusters)
+    mean_clusters_frame = np.mean(number_of_clusters_in_frame)
+    mean_hits_frame     = np.mean(number_of_hits_in_frame)
+
+    return mean_cluster_hits, mean_clusters_frame, mean_hits_frame
+
+
 
