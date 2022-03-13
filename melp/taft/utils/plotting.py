@@ -3,8 +3,7 @@ import numpy as np
 
 
 # --------------------------------------------------------
-def plot_station_calibration(mu3e_detector, station: int):
-    f_size = 20
+def plot_station_calibration(mu3e_detector, station: int, f_size=25):
     plt.rcParams.update({'font.size': f_size})
 
     if station == 1:
@@ -33,23 +32,23 @@ def plot_station_calibration(mu3e_detector, station: int):
 
         grid_relative[x][y] = float(tile.get_offset() - mu3e_detector.TileDetector.tile[station_offset].dt_truth)
         grid_truth[x][y] = tile.get_truth_offset()
-        grid_calibrated[x][y] = tile.get_calibrated_offset() + mu3e_detector.TileDetector.tile[station_offset].dt_truth
+        grid_calibrated[x][y] = tile.get_calibrated_offset() #+ mu3e_detector.TileDetector.tile[station_offset].dt_truth
 
     # ---------------------------------------
     # Plotting
     # ---------------------------------------
     fig, ax_arr = plt.subplots(2, 2, figsize=(20, 20))
 
-    min = np.min(grid_truth)
-    max = np.max(grid_truth)
+    min = np.min(grid_calibrated)
+    max = np.max(grid_calibrated)
 
     # plot truth offsets
     ax = ax_arr[0][0]
-    heatplot_truth = ax.imshow(grid_truth.T, cmap='magma', vmin=min, vmax=max)
+    heatplot_truth = ax.imshow(grid_truth.T, cmap='magma')#, vmin=min, vmax=max)
     ax.set_title("truth offset", fontsize=f_size)
     ax.set_ylabel("phi", fontsize=f_size)
     ax.set_xlabel("z", fontsize=f_size)
-    cbar = fig.colorbar(heatplot_truth, ax=ax)
+    cbar = fig.colorbar(heatplot_truth, ax=ax, fraction=0.05, pad=0.04)
     cbar.set_label("[ns]")
 
     # plot calibrated offsets
@@ -58,7 +57,7 @@ def plot_station_calibration(mu3e_detector, station: int):
     ax.set_title("calibrated offset", fontsize=f_size)
     ax.set_ylabel("phi", fontsize=f_size)
     ax.set_xlabel("z", fontsize=f_size)
-    cbar = fig.colorbar(heatplot_truth, ax=ax)
+    cbar = fig.colorbar(heatplot_calibrated, ax=ax, fraction=0.05, pad=0.04)
     cbar.set_label("[ns]")
 
     # plot deviation
@@ -67,24 +66,26 @@ def plot_station_calibration(mu3e_detector, station: int):
     ax.set_title("relative error to truth", fontsize=f_size)
     ax.set_ylabel("phi", fontsize=f_size)
     ax.set_xlabel("z", fontsize=f_size)
-    cbar = fig.colorbar(heatplot_truth, ax=ax)
+    cbar = fig.colorbar(heatplot_relative, ax=ax, fraction=0.05, pad=0.04)
     cbar.set_label("[ns]")
 
     # plot deviation with same range as offsets
     ax = ax_arr[1][1]
     heatplot_calibrated = ax.imshow(grid_relative.T, cmap='magma', vmin=min, vmax=max)
-    ax.set_title("relative error from truth \n(same scaling as offsets)", fontsize=f_size)
+    ax.set_title("relative error from truth \n(same scaling as calibrated offsets)", fontsize=f_size)
     ax.set_ylabel("phi", fontsize=f_size)
     ax.set_xlabel("z", fontsize=f_size)
-    cbar = fig.colorbar(heatplot_truth, ax=ax)
+    cbar = fig.colorbar(heatplot_calibrated, ax=ax, fraction=0.05, pad=0.04)
     cbar.set_label("[ns]")
 
+    plt.tight_layout()
     plt.show()
 
 
 # --------------------------------------------------------
-def plot_calibration(mu3e_detector):
-    f_size = 15
+def plot_calibration(mu3e_detector, f_size = 20):
+    plt.rcParams.update({'font.size': f_size})
+
     # ---------------------------------------
     # get data
     # ---------------------------------------
@@ -110,18 +111,21 @@ def plot_calibration(mu3e_detector):
     ax = ax_arr[0]
     heatplot_truth = ax.imshow(grid_relative_1.T, cmap='magma')
     ax.set_title("error station 1", fontsize=f_size)
-    ax.set_ylabel("phi (column)", fontsize=f_size)
+    ax.set_ylabel("phi", fontsize=f_size)
     ax.set_xlabel("z", fontsize=f_size)
-    fig.colorbar(heatplot_truth, ax=ax)
+    cbar = fig.colorbar(heatplot_truth, ax=ax, fraction=0.05, pad=0.04)
+    cbar.set_label("[ns]")
 
     # plot calibrated offsets
     ax = ax_arr[1]
     heatplot_calibrated = ax.imshow(grid_relative_2.T, cmap='magma')
     ax.set_title("error station 2", fontsize=f_size)
-    ax.set_ylabel("phi (column)", fontsize=f_size)
+    ax.set_ylabel("phi", fontsize=f_size)
     ax.set_xlabel("z", fontsize=f_size)
-    fig.colorbar(heatplot_calibrated, ax=ax)
+    cbar = fig.colorbar(heatplot_calibrated, ax=ax, fraction=0.05, pad=0.04)
+    cbar.set_label("[ns]")
 
+    plt.tight_layout()
     plt.show()
 
     min1 = np.min(grid_relative_1)
@@ -179,7 +183,9 @@ def plot_error_dist(mu3e_detector):
     print("Station 2: max error: ", np.round(max2, 5), " min error: ", np.round(min2, 5))
 
 
-def plot_correction_function(cal_function, popt1, popt2):
+def plot_correction_function(cal_function, popt1, popt2, f_size=25):
+    plt.rcParams.update({'font.size': f_size})
+
     fig, ax_arr = plt.subplots(1, 2, figsize=(20, 10))
 
     x1 = np.linspace(0, 51, 52)
@@ -188,11 +194,21 @@ def plot_correction_function(cal_function, popt1, popt2):
 
     ax = ax_arr[0]
     plot1 = ax.imshow(cal_function((x2, y2), *popt1) - cal_function((0, 0), *popt1), cmap="magma")
-    fig.colorbar(plot1, ax=ax)
+    ax.set_title("correction station 1", fontsize=f_size)
+    ax.set_ylabel("phi", fontsize=f_size)
+    ax.set_xlabel("z", fontsize=f_size)
+    cbar = fig.colorbar(plot1, ax=ax, fraction=0.05, pad=0.04)
+    cbar.set_label("[ns]")
 
     ax = ax_arr[1]
     plot2 = ax.imshow(cal_function((x2, y2), *popt2) - cal_function((0, 0), *popt2), cmap="magma")
-    fig.colorbar(plot2, ax=ax)
+    ax.set_title("correction station 2", fontsize=f_size)
+    ax.set_ylabel("phi", fontsize=f_size)
+    ax.set_xlabel("z", fontsize=f_size)
+    cbar = fig.colorbar(plot2, ax=ax, fraction=0.05, pad=0.04)
+    cbar.set_label("[ns]")
+
+    plt.tight_layout()
     plt.show()
 
 
