@@ -85,7 +85,6 @@ class Visualizer:
         self.trajectories = trajectories
 
     def show(self):
-        index_current = self.trajectories[0]
         x, y, z = self._calculate_helix_path_()
         x_t, y_t, z_t = self._get_tile_hit_positions_()
 
@@ -94,11 +93,13 @@ class Visualizer:
         fig, ax_arr = plt.subplots(1, 2, figsize=(30, 10))
 
         ax = ax_arr[0]
-        ax.scatter(self.list_traj_vx[index_current], self.list_traj_vy[index_current])
-        ax.scatter(np.array(x_t), np.array(y_t), marker="o", color="r", linewidths=3)
-        ax.arrow(self.list_traj_vx[index_current], self.list_traj_vy[index_current], self.list_traj_px[index_current],
-                 self.list_traj_py[index_current], length_includes_head=True, head_width=5, head_length=5)
-        ax.plot(x, y)
+        for index_current in self.trajectories:
+            ax.scatter(self.list_traj_vx[index_current], self.list_traj_vy[index_current])
+            ax.scatter(np.array(x_t), np.array(y_t), marker="o", color="r", linewidths=3)
+            ax.arrow(self.list_traj_vx[index_current], self.list_traj_vy[index_current], self.list_traj_px[index_current],
+                     self.list_traj_py[index_current], length_includes_head=True, head_width=5, head_length=5)
+        for i in range(len(x)):
+            ax.plot(x[i], y[i])
         ax.scatter(x_T, y_T, marker=".", alpha=0.1, color="g")
 
         circle2 = plt.Circle((0, 0), 19, color='black', alpha=0.1)
@@ -106,11 +107,13 @@ class Visualizer:
         ax.axis('equal')
 
         ax = ax_arr[1]
-        ax.scatter(self.list_traj_vz[index_current], self.list_traj_vx[index_current])
-        ax.scatter(np.array(z_t), np.array(x_t), marker="o", color="r", linewidths=3)
-        ax.arrow(self.list_traj_vz[index_current], self.list_traj_vx[index_current], self.list_traj_pz[index_current],
-                 self.list_traj_px[index_current], length_includes_head=True, head_width=5, head_length=5)
-        ax.plot(z, x)
+        for index_current in self.trajectories:
+            ax.scatter(self.list_traj_vz[index_current], self.list_traj_vx[index_current])
+            ax.scatter(np.array(z_t), np.array(x_t), marker="o", color="r", linewidths=3)
+            ax.arrow(self.list_traj_vz[index_current], self.list_traj_vx[index_current], self.list_traj_pz[index_current],
+                     self.list_traj_px[index_current], length_includes_head=True, head_width=5, head_length=5)
+        for i in range(len(x)):
+            ax.plot(z[i], x[i])
         ax.scatter(z_T, x_T, marker=".", alpha=0.1, color="g")
 
         ax.axis('equal')
@@ -119,7 +122,6 @@ class Visualizer:
 
     def show_3d(self):
         #matplotlib.use('WebAgg')
-        index_current = self.trajectories[0]
         x, y, z = self._calculate_helix_path_()
         x_t, y_t, z_t = self._get_tile_hit_positions_()
         x_T, y_T, z_T = self._get_tile_detector_positions_()
@@ -130,7 +132,8 @@ class Visualizer:
         circle2 = plt.Circle((0, 0), 19, color='black', alpha=0.3)
         ax.add_patch(circle2)
         art3d.pathpatch_2d_to_3d(circle2, z=0, zdir="x")
-        ax.plot(z, x, y)
+        for i in range(len(x)):
+            ax.plot(z[i], x[i], y[i])
         ax.scatter(np.array(z_t), np.array(x_t), np.array(y_t), marker="o", color="r", linewidths=3)
         ax.scatter(np.array(z_T), np.array(x_T), np.array(y_T), marker=".", alpha=0.1, color="g")
         ax.set_xlim(-600, 600)
@@ -151,16 +154,15 @@ class Visualizer:
         return x, y, z
 
     def _get_tile_hit_positions_(self):
-        index_current = self.trajectories[0]
-
         x_t = []
         y_t = []
         z_t = []
-        for index in range(len(self.list_tilehit_tid)):
-            if self.list_tilehit_tid[index] == self.list_traj[index_current]:
-                x_t.append(self.mu3e_detector.TileDetector.tile[self.list_tilehit_tile[index]].pos[0])
-                y_t.append(self.mu3e_detector.TileDetector.tile[self.list_tilehit_tile[index]].pos[1])
-                z_t.append(self.mu3e_detector.TileDetector.tile[self.list_tilehit_tile[index]].pos[2])
+        for index_current in self.trajectories:
+            for index in range(len(self.list_tilehit_tid)):
+                if self.list_tilehit_tid[index] == self.list_traj[index_current]:
+                    x_t.append(self.mu3e_detector.TileDetector.tile[self.list_tilehit_tile[index]].pos[0])
+                    y_t.append(self.mu3e_detector.TileDetector.tile[self.list_tilehit_tile[index]].pos[1])
+                    z_t.append(self.mu3e_detector.TileDetector.tile[self.list_tilehit_tile[index]].pos[2])
 
         return x_t, y_t, z_t
 
@@ -200,11 +202,13 @@ class Visualizer:
 
 
         # calculating helix path
-        x, y, z = [], [], []
+        x, y, z = {}, {}, {}
         for i in range(len(self.trajectories)):
             x_tmp, y_tmp, z_tmp = self._get_helix_(hx[i], hy[i],  hz[i], list_traj_r[i], list_traj_theta[i], phi_offsets[i], 2)
-
-        return x_tmp, y_tmp, z_tmp
+            x[i] = x_tmp
+            y[i] = y_tmp
+            z[i] = z_tmp
+        return x, y, z
 
     # -------------------------
     # "STATIC" METHODS
