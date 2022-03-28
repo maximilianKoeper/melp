@@ -16,9 +16,8 @@ from melp.libs import mathfunctions as mf
 class Visualizer:
 
     def __init__(self, filename, frame_id=0, trajectories=[]):
-        self.frame = frame_id
         self.trajectories = trajectories
-        # self.fig, self.ax_arr = plt.subplots(1, 2, figsize=(20, 10))
+        self.frame = frame_id
 
         self.mu3e_detector = Detector.initFromROOT(filename)
 
@@ -29,6 +28,14 @@ class Visualizer:
         self.ttree_mu3e = self.file.Get("mu3e")
         self.ttree_mu3e_mc = self.file.Get("mu3e_mchits")
         self.__update__()
+
+        # -------------------------
+        # Set default configuration for visuals
+        # -------------------------
+        self.color_tile = "gray"
+        self.color_electrons = "blue"
+        self.color_positrons = "red"
+        self.f_size = 25
 
     def __str__(self):
         return "Visualizer info:  Frame:" + self.frame + " Trajectories: " + self.trajectories
@@ -73,6 +80,7 @@ class Visualizer:
             self.ttree_mu3e_mc.GetEntry(index)
             self.list_tilehit_tid.append(self.ttree_mu3e_mc.tid)
 
+        self.trajectories = list(range(0, len(self.list_traj)))
         print("done | #TRAJ: ", len(self.list_traj))
 
     # -------------------------
@@ -86,6 +94,7 @@ class Visualizer:
         self.trajectories = trajectories
 
     def show(self):
+        plt.rcParams.update({'font.size': self.f_size})
         x, y, z = self._calculate_helix_path_()
         x_t, y_t, z_t = self._get_tile_hit_positions_()
 
@@ -101,11 +110,15 @@ class Visualizer:
                      self.list_traj_py[index_current], length_includes_head=True, head_width=5, head_length=5)
         for i in range(len(x)):
             ax.plot(x[i], y[i])
-        ax.scatter(x_T, y_T, marker=".", alpha=0.1, color="g")
+        ax.scatter(x_T, y_T, marker=".", alpha=0.1, color=self.color_tile)
 
         circle2 = plt.Circle((0, 0), 19, color='black', alpha=0.1)
         ax.add_patch(circle2)
+
         ax.axis('equal')
+        ax.set_title("xy-plane", fontsize=self.f_size)
+        ax.set_ylabel("y", fontsize=self.f_size)
+        ax.set_xlabel("x", fontsize=self.f_size)
 
         ax = ax_arr[1]
         for index_current in self.trajectories:
@@ -115,9 +128,12 @@ class Visualizer:
                      self.list_traj_px[index_current], length_includes_head=True, head_width=5, head_length=5)
         for i in range(len(x)):
             ax.plot(z[i], x[i])
-        ax.scatter(z_T, x_T, marker=".", alpha=0.1, color="g")
+        ax.scatter(z_T, x_T, marker=".", alpha=0.1, color=self.color_tile)
 
         ax.axis('equal')
+        ax.set_title("zx-plane", fontsize=self.f_size)
+        ax.set_ylabel("y", fontsize=self.f_size)
+        ax.set_xlabel("z", fontsize=self.f_size)
 
         plt.show()
 
@@ -127,7 +143,7 @@ class Visualizer:
         x_t, y_t, z_t = self._get_tile_hit_positions_()
         x_T, y_T, z_T = self._get_tile_detector_positions_()
 
-        fig = plt.figure(figsize=plt.figaspect(1))
+        fig = plt.figure(figsize=plt.figaspect(1)*3)
         ax = fig.add_subplot(111, projection='3d')
 
         circle2 = plt.Circle((0, 0), 19, color='black', alpha=0.3)
@@ -136,7 +152,7 @@ class Visualizer:
         for i in range(len(x)):
             ax.plot(z[i], x[i], y[i])
         ax.scatter(np.array(z_t), np.array(x_t), np.array(y_t), marker="o", color="r", linewidths=3)
-        ax.scatter(np.array(z_T), np.array(x_T), np.array(y_T), marker=".", alpha=0.1, color="g")
+        ax.scatter(np.array(z_T), np.array(x_T), np.array(y_T), marker=".", alpha=0.1, color=self.color_tile)
         ax.set_xlim(-600, 600)
         ax.set_ylim(-600, 600)
         ax.set_zlim(-600, 600)
