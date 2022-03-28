@@ -5,8 +5,7 @@ ___
 # MELP V2
 - TAFT - Time alignment for tiles
 - CLUMP - Clustering MELP
-___
-# IN DEVELOPMENT: UNSTABLE API
+- VIS - Visualizer for single Tracks
 ___
 ## Improvements to V1:
 

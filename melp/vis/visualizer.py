@@ -140,7 +140,14 @@ class Visualizer:
         ax.set_ylim(-600, 600)
         ax.set_zlim(-600, 600)
         plt.show(block=True)
-        #return fig
+
+    def list_traj_info(self):
+        for i in range(len(self.list_traj)):
+            str_print = ""
+            str_print += str(i) + " | Traj_ID: " + str(self.list_traj[i])
+            str_print += " | p_z: " + str(np.round(self.list_traj_pz[i], 2))
+            str_print += " | particle: " + str(self.list_traj_particle_type[i]) + "\n"
+            print(str_print)
 
     # -------------------------
     # "PRIVATE" METHODS
@@ -178,7 +185,11 @@ class Visualizer:
             px = self.list_traj_px[i]
             py = self.list_traj_py[i]
             pz = self.list_traj_pz[i]
-            list_traj_theta.append(mf.angle_between(np.array([px, py, pz]), np.array([0, 0, 1]))-90)
+
+            sign = 1
+            if self.list_traj_particle_type[i] == 2:
+                sign *= -1
+            list_traj_theta.append(sign*mf.angle_between(np.array([px, py, pz]), np.array([0, 0, 1]))-90)
 
         # calculate middle point of helices
         hx, hy, hz = [], [], []
@@ -198,8 +209,7 @@ class Visualizer:
         for i in range(len(self.trajectories)):
             index_traj = self.trajectories[i]
             phi = mf.angle_between_phi(np.array([hx[i]-self.list_traj_vx[index_traj], hy[i]-self.list_traj_vy[index_traj]]), np.array([0, 1]))
-            phi_offsets.append(np.deg2rad(-phi+90))
-
+            phi_offsets.append(np.deg2rad(-phi+270))
 
         # calculating helix path
         x, y, z = {}, {}, {}
@@ -236,8 +246,8 @@ class Visualizer:
         theta_max = l * np.pi
         theta = np.linspace(0, theta_max, 100)
 
-        x = r * np.cos(theta + phi_offset) + hx
-        y = r * np.sin(theta + phi_offset) + hy
+        x = abs(r) * np.cos(-np.sign(r)*theta + phi_offset) + hx
+        y = abs(r) * np.sin(-np.sign(r)*theta + phi_offset) + hy
         z = 2 * np.pi * r * np.tan(np.pi * theta_i / 180) * theta / (2 * np.pi) + hz
 
         return x, y, z
