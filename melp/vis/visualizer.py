@@ -46,6 +46,7 @@ class Visualizer:
 
         # traj ids
         self.list_traj = list(self.ttree_mu3e.traj_ID)
+        self.list_traj_mother = list(self.ttree_mu3e.traj_mother)
 
         # vertex position
         self.list_traj_vx = list(self.ttree_mu3e.traj_vx)
@@ -146,7 +147,8 @@ class Visualizer:
             str_print = ""
             str_print += str(i) + " | Traj_ID: " + str(self.list_traj[i])
             str_print += " | p_z: " + str(np.round(self.list_traj_pz[i], 2))
-            str_print += " | particle: " + str(self.list_traj_particle_type[i]) + "\n"
+            str_print += " | particle: " + str(self.list_traj_particle_type[i])
+            str_print += " | mother: " + str(self.list_traj_mother[i]) + "\n"
             print(str_print)
 
     # -------------------------
