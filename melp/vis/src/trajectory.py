@@ -36,6 +36,17 @@ class Trajectory:
             return false
 
     def get_helix_path(self):
+        x, y, z = [], [], []
+        if self.get_particle_type() in [1,2]:
+            x, y, z = self._get_e_helix_path_()
+        elif self.get_particle_type() == 0:
+            x, y, z = self._get_photon_path_()
+        return x, y, z
+
+    # -------------------------
+    # "PRIVATE" METHODS
+    # -------------------------
+    def _get_e_helix_path_(self):
         # calculate radius for helix
         radius = self._get_helix_radius_()
 
@@ -52,16 +63,22 @@ class Trajectory:
         hz = self.vz
 
         # calculating phi offsets
-        phi = mf.angle_between_phi(np.array([hx-self.vx, hy-self.vy]), np.array([0, 1]))
+        phi = mf.angle_between_phi(np.array([hx - self.vx, hy - self.vy]), np.array([0, 1]))
         phi_offset = np.deg2rad(-phi + 270)
 
         # calculating helix path
         x, y, z = self._get_helix_(hx, hy, hz, radius, theta, phi_offset, 2)
         return x, y, z
 
-    # -------------------------
-    # "PRIVATE" METHODS
-    # -------------------------
+    def _get_photon_path_(self):
+        x, y, z = [self.vx], [self.vy], [self.vz]
+
+        x.append(self.vx + 50 * self.px)
+        y.append(self.vy + 50 * self.py)
+        z.append(self.vz + 50 * self.pz)
+
+        return x, y, z
+
     def _get_helix_radius_(self, magnetic_field: float = -1.):
 
         # transversal momentum

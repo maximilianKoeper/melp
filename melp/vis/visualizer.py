@@ -40,6 +40,11 @@ class Visualizer:
         self.color_positrons = "red"
         self.f_size = 25
 
+        self.dpi = 250
+        self.xlim = (-300, 300)
+        self.ylim = (-300, 300)
+        self.zlim = (-600, 600)
+
     def __str__(self):
         return "Visualizer info:  Frame:" + self.frame + " Trajectories: " + self.trajectories
 
@@ -123,20 +128,35 @@ class Visualizer:
             if traj.mother == -1:
                 self.trajectories.append(traj.id)
 
+    def set_plt_options_2d(self, **kwargs):
+        # -------------------------
+        # Set plt options for selected settings
+        if kwargs.get("xlim") is not None:
+            self.xlim = kwargs.get("xlim")
+        if kwargs.get("ylim") is not None:
+            self.ylim = kwargs.get("ylim")
+        if kwargs.get("zlim") is not None:
+            self.zlim = kwargs.get("zlim")
+        if kwargs.get("dpi") is not None:
+            self.dpi = kwargs.get("dpi")
+        if kwargs.get("fontsize") is not None:
+            self.f_size = kwargs.get("fontsize")
+
     def show(self):
         warnings.filterwarnings(action='ignore')
-        plt.rcParams.update({'font.size': self.f_size})
-        x_t, y_t, z_t = self._get_tile_hit_positions_()
 
+        plt.rcParams.update({'font.size': self.f_size})
+
+        x_t, y_t, z_t = self._get_tile_hit_positions_()
         x_t_geom, y_t_geom, z_t_geom = self._get_tile_detector_positions_()
 
-        fig, ax_arr = plt.subplots(1, 2, figsize=(30, 10))
+        fig, ax_arr = plt.subplots(1, 2, figsize=(30, 10), dpi=self.dpi)
 
         ax = ax_arr[0]
         for index_current in self.trajectories:
-            #ax.scatter(self.list_traj_vx[index_current], self.list_traj_vy[index_current])
+            # ax.scatter(self.list_traj_vx[index_current], self.list_traj_vy[index_current])
             ax.scatter(np.array(x_t), np.array(y_t), marker="o", color="r", linewidths=3)
-            #ax.arrow(self.list_traj_vx[index_current],
+            # ax.arrow(self.list_traj_vx[index_current],
             #         self.list_traj_vy[index_current],
             #         self.list_traj_px[index_current],
             #         self.list_traj_py[index_current], length_includes_head=True, head_width=5, head_length=5)
@@ -150,7 +170,7 @@ class Visualizer:
             elif traj.get_particle_type() == 2:
                 color = "blue"
             elif traj.get_particle_type() == 0:
-                color = "green"
+                color = "yellow"
             ax.plot(x, y, color=color)
 
         ax.scatter(x_t_geom, y_t_geom, marker=".", alpha=0.1, color=self.color_tile)
@@ -159,15 +179,16 @@ class Visualizer:
         ax.add_patch(circle2)
 
         ax.axis('equal')
+        ax.set(xlim=self.xlim, ylim=self.ylim)
         ax.set_title("xy-plane", fontsize=self.f_size)
         ax.set_ylabel("y", fontsize=self.f_size)
         ax.set_xlabel("x", fontsize=self.f_size)
 
         ax = ax_arr[1]
         for index_current in self.trajectories:
-            #ax.scatter(self.list_traj_vz[index_current], self.list_traj_vx[index_current])
+            # ax.scatter(self.list_traj_vz[index_current], self.list_traj_vx[index_current])
             ax.scatter(np.array(z_t), np.array(x_t), marker="o", color="r", linewidths=3)
-            #ax.arrow(self.list_traj_vz[index_current],
+            # ax.arrow(self.list_traj_vz[index_current],
             #         self.list_traj_vx[index_current],
             #         self.list_traj_pz[index_current],
             #         self.list_traj_px[index_current], length_includes_head=True, head_width=5, head_length=5)
@@ -181,11 +202,12 @@ class Visualizer:
             elif traj.get_particle_type() == 2:
                 color = "blue"
             elif traj.get_particle_type() == 0:
-                color = "green"
+                color = "yellow"
             ax.plot(z, x, color=color)
         ax.scatter(z_t_geom, x_t_geom, marker=".", alpha=0.1, color=self.color_tile)
 
         ax.axis('equal')
+        ax.set(xlim=self.zlim, ylim=self.ylim)
         ax.set_title("zx-plane", fontsize=self.f_size)
         ax.set_ylabel("y", fontsize=self.f_size)
         ax.set_xlabel("z", fontsize=self.f_size)
@@ -196,7 +218,7 @@ class Visualizer:
         x_t, y_t, z_t = self._get_tile_hit_positions_()
         x_t_geom, y_t_geom, z_t_geom = self._get_tile_detector_positions_()
 
-        fig = plt.figure(figsize=plt.figaspect(1) * 3)
+        fig = plt.figure(figsize=plt.figaspect(1) * 4)
         ax = fig.add_subplot(111, projection='3d')
 
         # plot 2d target (3d not yet working)
@@ -215,14 +237,15 @@ class Visualizer:
             elif traj.get_particle_type() == 2:
                 color = "blue"
             elif traj.get_particle_type() == 0:
-                color = "green"
+                color = "yellow"
             ax.plot(z, x, y, color=color)
 
         # add tile hits
         ax.scatter(np.array(z_t), np.array(x_t), np.array(y_t), marker="o", color="r", linewidths=3)
 
         # add tile detector geometry
-        ax.scatter(np.array(z_t_geom), np.array(x_t_geom), np.array(y_t_geom), marker=".", alpha=0.1, color=self.color_tile)
+        ax.scatter(np.array(z_t_geom), np.array(x_t_geom), np.array(y_t_geom), marker=".", alpha=0.1,
+                   color=self.color_tile)
 
         ax.set_xlim(-600, 600)
         ax.set_ylim(-600, 600)

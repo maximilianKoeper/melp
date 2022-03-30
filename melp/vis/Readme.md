@@ -20,6 +20,7 @@ vis = Visualizer("run42_20000_sorted_test.root")
 - select_all_trajectories()
 - select_all_toy_trajectories()
 - reset_frame()
+- set_plt_options_2d(**kwargs)  -> xlim, ylim, zlim, dpi, fontsize 
 - show()
 - show_3d()
 - list_traj_info()
