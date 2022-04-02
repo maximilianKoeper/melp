@@ -1,6 +1,10 @@
 # MELP.VIS - Visualizer for single Tracks
 ___
 
+### Example Jupyter Notebook:
+[Jupyter Notebook](../../jupyter-notbooks/melpVis/melpVis.ipynb)
+
+___
 ## Visualizer
 - import Visualizer and import matplotlib
 ```

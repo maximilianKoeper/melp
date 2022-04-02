@@ -17,14 +17,14 @@ ___
 
 ## TAFT - Time alignment for tiles
 
-[Readme for Visualizer and ToyEventGenerator](./melp/taft/Readme.md)
+[Readme for TAFT](./melp/taft/Readme.md)
 
 
 ___
 
 ## CLUMP - Clustering
 
-[Readme for Visualizer and ToyEventGenerator](./melp/clump/Readme.md)
+[Readme for CLUMP](./melp/clustering/Readme.md)
 
 ___
 
