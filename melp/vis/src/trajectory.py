@@ -37,7 +37,7 @@ class Trajectory:
 
     def get_helix_path(self):
         x, y, z = [], [], []
-        if self.get_particle_type() in [1,2]:
+        if self.get_particle_type() in [1, 2, 3, 4]:
             x, y, z = self._get_e_helix_path_()
         elif self.get_particle_type() == 0:
             x, y, z = self._get_photon_path_()
@@ -50,9 +50,9 @@ class Trajectory:
         # calculate radius for helix
         radius = self._get_helix_radius_()
 
-        # calculate theta for helix
-        theta = mf.angle_between(np.array([self.px, self.py, self.pz]), np.array([0, 0, 1])) - 90
-        if self.get_particle_type() == 2:
+        # calculate theta for helix (angle towards z direction)
+        theta = abs(np.arctan2(self.pz, self.get_pt()))
+        if self.pz < 0:
             theta *= -1
 
         # calculate middle point of helices
@@ -67,7 +67,10 @@ class Trajectory:
         phi_offset = np.deg2rad(-phi + 270)
 
         # calculating helix path
-        x, y, z = self._get_helix_(hx, hy, hz, radius, theta, phi_offset, 2)
+        if self.get_particle_type() in [3, 4]:  # MU+-
+            x, y, z = self._get_helix_(hx, hy, hz, radius, theta, phi_offset, 3)
+        elif self.get_particle_type() in [1, 2]:  # e+-
+            x, y, z = self._get_helix_(hx, hy, hz, radius, theta, phi_offset, 2)
         return x, y, z
 
     def _get_photon_path_(self):
@@ -90,6 +93,10 @@ class Trajectory:
             charge_q = +1
         elif self.get_particle_type() == 2:  # electron
             charge_q = -1
+        elif self.get_particle_type() == 3:  # Mu+
+            charge_q = +1
+        elif self.get_particle_type() == 4:  # Mu-
+            charge_q = -1
         else:
             return np.NaN
 
@@ -106,6 +113,6 @@ class Trajectory:
 
         x = abs(r) * np.cos(-np.sign(r) * theta + phi_offset) + hx
         y = abs(r) * np.sin(-np.sign(r) * theta + phi_offset) + hy
-        z = 2 * np.pi * r * np.tan(np.pi * theta_i / 180) * theta / (2 * np.pi) + hz
+        z = abs(r) * np.tan(theta_i) * theta + hz
 
         return x, y, z

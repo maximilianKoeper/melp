@@ -23,11 +23,20 @@ vis = Visualizer("run42_20000_sorted_test.root")
 - add_toy_event(Trajectory (returned by ToyEventGenerator.new_event()))
 - select_all_trajectories()
 - select_all_toy_trajectories()
+- select_only_particle_types(list (e.g. \[1,2\]))
 - reset_frame()
 - set_plt_options_2d(**kwargs)  -> xlim, ylim, zlim, dpi, fontsize 
 - show()
 - show_3d()
 - list_traj_info()
+
+___
+
+- 0: photon
+- 1: e+
+- 2: e+
+- 3: mu+
+- 4: mu-
 
 ___
 ## ToyEventGenerator
@@ -40,7 +49,6 @@ from melp.vis import ToyEventGenerator
 ```
 TEG = ToyEventGenerator(pt=20, pz=-15, particle_type=1)
 ```
-(electron = 2 / positron = 1)
 ### Functions:
 - new_event() -> Trajectory object
 

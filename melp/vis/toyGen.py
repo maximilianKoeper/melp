@@ -19,7 +19,7 @@ class ToyEventGenerator:
         py = self.pt * np.sin(theta)
 
         pid = self.particle_type
-        self.id += 1
+        self.id -= 1
         return Trajectory(id=self.id,
                           vx=vx,
                           vy=vy,

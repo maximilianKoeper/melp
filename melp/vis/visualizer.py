@@ -38,6 +38,9 @@ class Visualizer:
         self.color_tile = "gray"
         self.color_electrons = "blue"
         self.color_positrons = "red"
+        self.color_muons = "green"
+        self.color_photon = "yellow"
+        self.color_std = "gray"
         self.f_size = 25
 
         self.dpi = 250
@@ -128,6 +131,12 @@ class Visualizer:
             if traj.mother == -1:
                 self.trajectories.append(traj.id)
 
+    def select_only_particle_types(self, pids: list):
+        self.trajectories = []
+        for traj in self.traj_objects:
+            if traj.get_particle_type() in pids:
+                self.trajectories.append(traj.id)
+
     def set_plt_options_2d(self, **kwargs):
         # -------------------------
         # Set plt options for selected settings
@@ -153,26 +162,21 @@ class Visualizer:
         fig, ax_arr = plt.subplots(1, 2, figsize=(30, 10), dpi=self.dpi)
 
         ax = ax_arr[0]
-        for index_current in self.trajectories:
-            # ax.scatter(self.list_traj_vx[index_current], self.list_traj_vy[index_current])
-            ax.scatter(np.array(x_t), np.array(y_t), marker="o", color="r", linewidths=3)
-            # ax.arrow(self.list_traj_vx[index_current],
-            #         self.list_traj_vy[index_current],
-            #         self.list_traj_px[index_current],
-            #         self.list_traj_py[index_current], length_includes_head=True, head_width=5, head_length=5)
+
+        for traj in self.traj_objects:
+            if traj.id not in self.trajectories:
+                continue
+            ax.arrow(traj.vx, traj.vy, traj.px, traj.py,
+                     length_includes_head=True, head_width=3, head_length=3)
+
         for traj in self.traj_objects:
             if traj.id not in self.trajectories:
                 continue
             x, y, z = traj.get_helix_path()
-            color = "gray"
-            if traj.get_particle_type() == 1:
-                color = "red"
-            elif traj.get_particle_type() == 2:
-                color = "blue"
-            elif traj.get_particle_type() == 0:
-                color = "yellow"
-            ax.plot(x, y, color=color)
 
+            ax.plot(x, y, color=self._color_for_particle_(traj.get_particle_type()))
+
+        ax.scatter(np.array(x_t), np.array(y_t), marker="o", color="r", linewidths=3)
         ax.scatter(x_t_geom, y_t_geom, marker=".", alpha=0.1, color=self.color_tile)
 
         circle2 = plt.Circle((0, 0), 19, color='black', alpha=0.1)
@@ -185,25 +189,20 @@ class Visualizer:
         ax.set_xlabel("x", fontsize=self.f_size)
 
         ax = ax_arr[1]
-        for index_current in self.trajectories:
-            # ax.scatter(self.list_traj_vz[index_current], self.list_traj_vx[index_current])
-            ax.scatter(np.array(z_t), np.array(x_t), marker="o", color="r", linewidths=3)
-            # ax.arrow(self.list_traj_vz[index_current],
-            #         self.list_traj_vx[index_current],
-            #         self.list_traj_pz[index_current],
-            #         self.list_traj_px[index_current], length_includes_head=True, head_width=5, head_length=5)
+
+        for traj in self.traj_objects:
+            if traj.id not in self.trajectories:
+                continue
+            ax.arrow(traj.vz, traj.vx, traj.pz, traj.px,
+                     length_includes_head=True, head_width=3, head_length=3)
+
         for traj in self.traj_objects:
             if traj.id not in self.trajectories:
                 continue
             x, y, z = traj.get_helix_path()
-            color = "gray"
-            if traj.get_particle_type() == 1:
-                color = "red"
-            elif traj.get_particle_type() == 2:
-                color = "blue"
-            elif traj.get_particle_type() == 0:
-                color = "yellow"
-            ax.plot(z, x, color=color)
+            ax.plot(z, x, color=self._color_for_particle_(traj.get_particle_type()))
+
+        ax.scatter(np.array(z_t), np.array(x_t), marker="o", color="r", linewidths=3)
         ax.scatter(z_t_geom, x_t_geom, marker=".", alpha=0.1, color=self.color_tile)
 
         ax.axis('equal')
@@ -231,14 +230,7 @@ class Visualizer:
             if traj.id not in self.trajectories:
                 continue
             x, y, z = traj.get_helix_path()
-            color = "gray"
-            if traj.get_particle_type() == 1:
-                color = "red"
-            elif traj.get_particle_type() == 2:
-                color = "blue"
-            elif traj.get_particle_type() == 0:
-                color = "yellow"
-            ax.plot(z, x, y, color=color)
+            ax.plot(z, x, y, color=self._color_for_particle_(traj.get_particle_type()))
 
         # add tile hits
         ax.scatter(np.array(z_t), np.array(x_t), np.array(y_t), marker="o", color="r", linewidths=3)
@@ -288,3 +280,16 @@ class Visualizer:
                     z_t.append(self.mu3e_detector.TileDetector.tile[self.list_tilehit_tile[index]].pos[2])
 
         return x_t, y_t, z_t
+
+    def _color_for_particle_(self, pid: int):
+        color = self.color_std
+        if pid == 1:
+            color = self.color_positrons
+        elif pid == 2:
+            color = self.color_electrons
+        elif pid == 0:
+            color = self.color_photon
+        elif pid == 3 or pid == 4:
+            color = self.color_muons
+
+        return color
