@@ -1,5 +1,7 @@
 # MELP.VIS - Visualizer for single Tracks
 ___
+<img src="../../pictures/vis_2d.png" alt="vis_2d" style="width:300px;"/>
+<img src="../../pictures/vis_3d.png" alt="vis_3d" style="width:300px;"/>
 
 ### Example Jupyter Notebook:
 [Jupyter Notebook](../../jupyter-notbooks/melpVis/melpVis.ipynb)
