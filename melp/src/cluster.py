@@ -11,6 +11,12 @@ class ClusterHit:
     primary: int = 0
     time: float = -1
     edep: float = -1
+    pdg: int = -1
+    traj_PID: float = -100
+    traj_type: float = -100
+    traj_tlhid: float = -100
+    traj_ID: float = -100
+
     #run_id: int = -1
     #hid: int = 0
     #impact_vec: list = None
@@ -85,6 +91,13 @@ class Cluster:
         for hit in self.hits:
             tids.append(hit.tid)
         return tids
+    
+    #returns all tids in cluster
+    def get_pdgs(self):
+        pdgs = []
+        for hit in self.hits:
+            pdgs.append(hit.pdg)
+        return pdgs
 
     #return all frame ids in cluster
     def get_frame_ids(self):
@@ -106,6 +119,34 @@ class Cluster:
         for hit in self.hits:
             edeps.append(hit.edep)
         return edeps
+
+    #returns all traj_PIDs in cluster
+    def get_traj_PIDs(self):
+        traj_PIDs = []
+        for hit in self.hits:
+            traj_PIDs.append(hit.traj_PID)
+        return traj_PIDs
+
+    #returns all traj_types in cluster
+    def get_traj_types(self):
+        traj_types = []
+        for hit in self.hits:
+            traj_types.append(hit.traj_type)
+        return traj_types
+
+    #returns all traj_tlhids in cluster
+    def get_traj_tlhids(self):
+        traj_tlhids = []
+        for hit in self.hits:
+            traj_tlhids.append(hit.traj_tlhid)
+        return traj_tlhids
+
+    #returns all traj_ids in cluster
+    def get_traj_ids(self):
+        traj_ids = []
+        for hit in self.hits:
+            traj_ids.append(hit.traj_ID)
+        return traj_ids
 
     #return the value and index of hit with smallest time in cluster
     def get_min_time(self):
