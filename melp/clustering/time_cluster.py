@@ -98,7 +98,7 @@ def add_hit_time_to_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles
     return time_spatial_clusters
 
 ################################
-def time_clustering_frame_improv(ttree_mu3e, ttree_mu3e_mc, frame: int, time_threshold: float = 2.) -> dict:
+def time_clustering_frame_improv(ttree_mu3e, ttree_mu3e_mc, frame: int, time_threshold: float = 0.4) -> dict:
     indices           = np.argsort(list(ttree_mu3e.tilehit_time))
     tilehit_times     = np.asarray(list(ttree_mu3e.tilehit_time))[indices]
     tilehit_ids       = np.asarray(list(ttree_mu3e.tilehit_tile))[indices]
@@ -115,7 +115,9 @@ def time_clustering_frame_improv(ttree_mu3e, ttree_mu3e_mc, frame: int, time_thr
         index_start_track = 0
         for index in range(len(tilehit_times)):
             if abs(tmp_time_reference - tilehit_times[index]) > time_threshold:
-                clusters_dict[index] = [tilehit_ids[index_start_track:index], tilehit_primaries[index_start_track:index], tilehit_times[index_start_track:index], tilehit_mcis[index_start_track:index], tilehit_edep[index_start_track:index]]
+                clusters_dict[index] = [tilehit_ids[index_start_track:index], tilehit_primaries[index_start_track:index], 
+                                        tilehit_times[index_start_track:index], tilehit_mcis[index_start_track:index], 
+                                        tilehit_edep[index_start_track:index]]
                 index_start_track = index
                 tmp_time_reference = tilehit_times[index]
 
@@ -135,14 +137,18 @@ def time_clustering_frame_improv(ttree_mu3e, ttree_mu3e_mc, frame: int, time_thr
                 mc_i = clusters_dict[key][3][i]
                 ttree_mu3e_mc.GetEntry(mc_i)
                 tid = ttree_mu3e_mc.tid
-                cluster_tmp.append(ClusterHit(tile_id=clusters_dict[key][0][i], frame_id=frame, primary=clusters_dict[key][1][i], time=clusters_dict[key][2][i], mc_i=clusters_dict[key][3][i], tid = tid, edep = clusters_dict[key][4][i]))                
-            clusters.append(Cluster(id=key, frame_id=frame, master_id=cluster_tmp[0].tile_id, master_primary=cluster_tmp[0].primary, master_tid = cluster_tmp[0].tid, hits=cluster_tmp))
+                pdg = ttree_mu3e_mc.pdg
+                cluster_tmp.append(ClusterHit(tile_id=clusters_dict[key][0][i], frame_id=frame, primary=clusters_dict[key][1][i], 
+                                              time=clusters_dict[key][2][i], mc_i=clusters_dict[key][3][i], tid = tid, pdg = pdg, 
+                                              edep = clusters_dict[key][4][i]))                
+            clusters.append(Cluster(id=key, frame_id=frame, master_id=cluster_tmp[0].tile_id, master_primary=cluster_tmp[0].primary, 
+                                    master_tid = cluster_tmp[0].tid, hits=cluster_tmp))
 
     return clusters
 
 
 ################################
-def time_clustering_frame_improv_energy_cut(ttree_mu3e, ttree_mu3e_mc, frame: int, time_threshold: float = 2.) -> dict:
+def time_clustering_frame_improv_energy_cut(ttree_mu3e, ttree_mu3e_mc, frame: int, time_threshold: float = 0.4) -> dict:
     indices           = np.argsort(list(ttree_mu3e.tilehit_time))
     tilehit_times     = np.asarray(list(ttree_mu3e.tilehit_time))[indices]
     tilehit_ids       = np.asarray(list(ttree_mu3e.tilehit_tile))[indices]
@@ -159,7 +165,11 @@ def time_clustering_frame_improv_energy_cut(ttree_mu3e, ttree_mu3e_mc, frame: in
         index_start_track = 0
         for index in range(len(tilehit_times)):
             if abs(tmp_time_reference - tilehit_times[index]) > time_threshold:
-                clusters_dict[index] = [tilehit_ids[index_start_track:index], tilehit_primaries[index_start_track:index], tilehit_times[index_start_track:index], tilehit_mcis[index_start_track:index], tilehit_edep[index_start_track:index]]
+                clusters_dict[index] = [tilehit_ids[index_start_track:index], 
+                                        tilehit_primaries[index_start_track:index], 
+                                        tilehit_times[index_start_track:index], 
+                                        tilehit_mcis[index_start_track:index], 
+                                        tilehit_edep[index_start_track:index]]
                 index_start_track = index
                 tmp_time_reference = tilehit_times[index]
 
@@ -183,8 +193,12 @@ def time_clustering_frame_improv_energy_cut(ttree_mu3e, ttree_mu3e_mc, frame: in
                 mc_i = clusters_dict[key][3][i]
                 ttree_mu3e_mc.GetEntry(mc_i)
                 tid = ttree_mu3e_mc.tid
-                cluster_tmp.append(ClusterHit(tile_id=clusters_dict[key][0][i], frame_id=frame, primary=clusters_dict[key][1][i], time=clusters_dict[key][2][i], mc_i=clusters_dict[key][3][i], tid = tid, edep = clusters_dict[key][4][i]))                
-            clusters.append(Cluster(id=key, frame_id=frame, master_id=cluster_tmp[0].tile_id, master_primary=cluster_tmp[0].primary, master_tid = cluster_tmp[0].tid, hits=cluster_tmp))
+                pdg = ttree_mu3e_mc.pdg
+                cluster_tmp.append(ClusterHit(tile_id=clusters_dict[key][0][i], frame_id=frame, primary=clusters_dict[key][1][i], 
+                                              time=clusters_dict[key][2][i], mc_i=clusters_dict[key][3][i], tid = tid, pdg = pdg,
+                                              edep = clusters_dict[key][4][i]))                
+            clusters.append(Cluster(id=key, frame_id=frame, master_id=cluster_tmp[0].tile_id, master_primary=cluster_tmp[0].primary, 
+                                    master_tid = cluster_tmp[0].tid, hits=cluster_tmp))
 
         #----------------
         #apply energy cut
@@ -194,6 +208,48 @@ def time_clustering_frame_improv_energy_cut(ttree_mu3e, ttree_mu3e_mc, frame: in
                 if cluster_hit.edep < 0.3: #MeV
                     cluster.hits.remove(cluster_hit)
 
-
-
     return clusters
+
+
+#############################
+#returns average number of time cluster hits
+def average_number_of_cluster_hits(ttree_mu3e, ttree_mu3e_mc, number_of_frames: int, time_threshold: float = 0.4):
+    hits_in_clusters            = []
+    number_of_clusters_in_frame = []
+    number_of_hits_in_frame     = []
+    #set frame number
+    if number_of_frames == None:
+        frames_to_analyze = ttree_mu3e.GetEntries()
+    else:
+        frames_to_analyze = number_of_frames
+
+    for frame in np.arange(2, frames_to_analyze-2, 1):
+        ttree_mu3e.GetEntry(frame)
+        #Printing status info
+        if frame % 5000 == 0:
+            print("Progress: ", np.round(frame / frames_to_analyze * 100), " %","of ", frames_to_analyze, " frames", end='\r')
+
+        #get clusters
+        clusters = time_clustering_frame_improv(ttree_mu3e, ttree_mu3e_mc, frame, time_threshold)
+
+        #get number of clusters in frame
+        number_of_clusters_in_frame.append(len(clusters))
+
+        #get number of tile hits in frame
+        number_of_hits_in_frame.append(ttree_mu3e.Ntilehit)
+
+        #calculate number of hits
+        for cluster in clusters:
+            hits_in_clusters.append(len(cluster))
+
+    print("Progress: 100 %","of ", frames_to_analyze, " frames")
+
+    #calculate average number of hits and clusters
+    mean_cluster_hits   = np.mean(hits_in_clusters)
+    mean_clusters_frame = np.mean(number_of_clusters_in_frame)
+    mean_hits_frame     = np.mean(number_of_hits_in_frame)
+
+    return mean_cluster_hits, mean_clusters_frame, mean_hits_frame
+
+
+

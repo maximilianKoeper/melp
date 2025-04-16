@@ -671,3 +671,155 @@ def efficiency_as_function_of_cluster_width(ttree_mu3e, ttree_mu3e_mc, ttree_sen
     return efficiency, threshold_cluster_width_array
 
 
+#####################
+#returns time differences of sorted hits (sorted in time)
+def delta_t_frame(ttree_mu3e, ttree_mu3e_mc, number_of_frames):
+    delta_ts = []
+    #set frame number
+    if number_of_frames == None:
+        frames_to_analyze = ttree_mu3e.GetEntries()
+    else:
+        frames_to_analyze = number_of_frames
+
+    for frame in np.arange(2, frames_to_analyze-2, 1):
+        ttree_mu3e.GetEntry(frame)
+        #Printing status info
+        if frame % 5000 == 0:
+            print("Progress: ", np.round(frame / frames_to_analyze * 100), " %","of ", frames_to_analyze, " frames", end='\r')
+
+        #get times and sort them
+        times = np.sort(list(ttree_mu3e.tilehit_time))
+
+        #compute time differences
+        for i in range(len(times)-1):
+            delta_t = times[i+1]-times[i]
+            if delta_t != 0:
+                delta_ts.append(delta_t)
+
+    print("Progress: 100 %","of ", frames_to_analyze, " frames")
+
+    return delta_ts
+
+
+def delta_t_clusters(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector: melp.Detector, time_threshold, threshold_cluster_width, mask_type, number_of_frames = None, rec_type = None, cluster_type = None):
+    delta_ts = []
+
+    #set frame number
+    if number_of_frames == None:
+        frames_to_analyze = ttree_mu3e.GetEntries()
+    else:
+        frames_to_analyze = number_of_frames
+
+    for frame in range(frames_to_analyze):
+        ttree_mu3e.GetEntry(frame)
+        #Printing status info
+        if frame % 5000 == 0:
+            print("Progress: ", np.round(frame / frames_to_analyze * 100), " %","of ", frames_to_analyze, " frames", end='\r')
+
+        #get clusters
+        if cluster_type == "time":
+            clusters = clump.time_cluster.time_clustering_frame_improv(ttree_mu3e, ttree_mu3e_mc, frame, time_threshold)
+        elif cluster_type == "timethenspatial":
+            clusters = clump.three_dim_cluster.spatial_clustering_for_time_clusters(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, time_threshold, mask_type, rec_type)
+        elif cluster_type == "timetheniterativespatial":
+            clusters = clump.three_dim_cluster.iterative_masks_after_time_clustering(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, time_threshold, mask_type, rec_type)
+        elif cluster_type == "iterativespatial":
+            clusters = clump.spatial_cluster.iterative_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
+        elif cluster_type == "truth":
+            clusters = clump.spatial_cluster.build_truth_cluster(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
+        else:
+            clusters = clump.spatial_cluster.build_clusters_in_masks(ttree_mu3e, ttree_mu3e_mc, ttree_sensor, ttree_tiles,  mu3e_detector, frame, mask_type, rec_type)
+        
+        #get times in clusters and compute time differences
+        for i in range(len(clusters)):
+            times = np.sort(clusters[i].get_times())
+            for j in range(len(times)-1):
+                delta_t = times[j+1] - times [j]
+                if delta_t != 0:
+                    delta_ts.append(delta_t)
+
+    print("Progress: 100 %","of ", frames_to_analyze, " frames")
+
+    return delta_ts
+
+
+#################
+#returns time difference between last hit of frame and first hit of the next frame
+def delta_t_between_frames(ttree_mu3e, ttree_mu3e_mc, number_of_frames):
+    edge_times = []
+    delta_ts = []
+    #set frame number
+    if number_of_frames == None:
+        frames_to_analyze = ttree_mu3e.GetEntries()
+    else:
+        frames_to_analyze = number_of_frames
+
+    for frame in np.arange(2, frames_to_analyze-2, 1):
+        ttree_mu3e.GetEntry(frame)
+        #Printing status info
+        if frame % 5000 == 0:
+            print("Progress: ", np.round(frame / frames_to_analyze * 100), " %","of ", frames_to_analyze, " frames", end='\r')
+
+        #get times and sort them
+        times = np.sort(list(ttree_mu3e.tilehit_time))
+
+        #add first and last hit to list
+        if len(times) != 0:
+            edge_times.append(times[0])
+            edge_times.append(times[-1])
+    
+    #compute time differences
+    del edge_times[0]
+    for i in range(len(edge_times)-1):
+        delta_t = edge_times[i+1] - edge_times[i]
+        if delta_t != 0:
+            delta_ts.append(delta_t)
+
+    print("Progress: 100 %","of ", frames_to_analyze, " frames")
+
+    return delta_ts
+
+
+#############################
+#returns time differences of sorted hits (sorted in time) and differantiates between differences from two hits with same tid
+def delta_t_frames_truth(ttree_mu3e, ttree_mu3e_mc, number_of_frames):
+    
+
+    delta_ts_diff_tid = []
+    delta_ts_same_tid = []
+    delta_ts_tot      = []
+    #set frame number
+    if number_of_frames == None:
+        frames_to_analyze = ttree_mu3e.GetEntries()
+    else:
+        frames_to_analyze = number_of_frames
+
+    for frame in np.arange(2, frames_to_analyze-2, 1):
+        ttree_mu3e.GetEntry(frame)
+        #Printing status info
+        if frame % 5000 == 0:
+            print("Progress: ", np.round(frame / frames_to_analyze * 100), " %","of ", frames_to_analyze, " frames", end='\r')
+
+        #get times and tids and sort them by time
+        indices           = np.argsort(list(ttree_mu3e.tilehit_time))
+        tilehit_times     = np.asarray(list(ttree_mu3e.tilehit_time))[indices]
+        tilehit_mcis      = np.asarray(list(ttree_mu3e.tilehit_mc_i))[indices]
+        tids = []
+        for mc_i in tilehit_mcis:
+            ttree_mu3e_mc.GetEntry(mc_i)
+            tid = ttree_mu3e_mc.tid
+            tids.append(tid)
+
+        #compute time differences
+        for i in range(len(tilehit_times)-1):
+            delta_t = tilehit_times[i+1]-tilehit_times[i]
+            if delta_t != 0:
+                delta_ts_tot.append(delta_t)
+                if tids[i+1] == tids[i]:
+                    delta_ts_same_tid.append(delta_t)
+                elif tids[i+1] != tids[i]:
+                    delta_ts_diff_tid.append(delta_t)
+
+    print("Progress: 100 %","of ", frames_to_analyze, " frames")
+
+    return delta_ts_tot, delta_ts_same_tid, delta_ts_diff_tid
